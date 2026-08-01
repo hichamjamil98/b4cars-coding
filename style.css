@@ -112,6 +112,52 @@ body.is--locked {
 }
 
 /* ========================================================================== 
+   IMAGE PARALLAX
+========================================================================== */
+
+[image="parallax"] {
+  display: block;
+  width: 100%;
+  height: 116%;
+  max-width: none;
+  object-fit: cover;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [image="parallax"] {
+    height: 100%;
+    transform: none !important;
+  }
+}
+
+/* ========================================================================== 
+   NAVBAR BACKGROUND ON SCROLL
+========================================================================== */
+
+.navbar {
+  transition: background-color 0.35s ease;
+}
+
+/*
+  Webflow keeps control of all colors when the mobile/tablet menu is open.
+  The dark background applies only after scrolling while the menu is closed.
+*/
+.navbar.is--scrolled:not(.is--menu-open) {
+  background-color: #01070b !important;
+}
+
+
+/*
+  IMPORTANT:
+  No background or text color is forced on .navbar.is--menu-open.
+  The open menu therefore keeps the colors configured in Webflow.
+*/
+.navbar.is--menu-open {
+  transition: background-color 0.35s ease;
+}
+
+/* ========================================================================== 
    TABLET / MOBILE NAVBAR
 ========================================================================== */
 
@@ -145,7 +191,7 @@ body.is--locked {
     height: 100dvh;
     padding: 7rem 1.5rem 2rem;
 
-    background: #f3f0e9;
+    /* Background and text colors remain controlled by Webflow. */
     opacity: 0;
     pointer-events: none;
     overflow-y: auto;
@@ -164,11 +210,6 @@ body.is--locked {
     will-change: transform, opacity, filter;
   }
 
-  .navbar.is--menu-open,
-  .navbar.is--menu-open .nav--brand,
-  .navbar.is--menu-open .menu--trigger {
-    color: inherit;
-  }
 }
 
 /* Restore normal desktop navigation. */

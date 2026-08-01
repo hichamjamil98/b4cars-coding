@@ -21,6 +21,8 @@
     initButtonCharacterHover();
     initLoadAnimations(EASE);
     initScrollAnimations(EASE);
+    initImageParallax();
+    initNavbarScroll();
     initMobileNavbar(EASE);
   });
 
@@ -257,7 +259,101 @@
   }
 
   /* ========================================================================
-     4. TABLET / MOBILE NAVBAR
+     4. IMAGE PARALLAX
+
+     Add image="parallax" directly to an image.
+     The parent wrapper should have overflow: hidden.
+  ======================================================================== */
+
+  function initImageParallax() {
+    if (typeof ScrollTrigger === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const images = document.querySelectorAll('[image="parallax"]');
+
+    images.forEach((image) => {
+      if (image.dataset.parallaxReady === "true") return;
+
+      image.dataset.parallaxReady = "true";
+
+      gsap.fromTo(
+        image,
+        {
+          yPercent: -8,
+        },
+        {
+          yPercent: 8,
+          ease: "none",
+          scrollTrigger: {
+            trigger: image.parentElement || image,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+            invalidateOnRefresh: true,
+          },
+        },
+      );
+    });
+  }
+
+  /* ========================================================================
+     5. NAVBAR BACKGROUND ON SCROLL
+
+     - At the top: restores the background defined in Webflow.
+     - While scrolling: applies #01070b.
+     - While the mobile menu is open: restores Webflow's original background.
+  ======================================================================== */
+
+  function initNavbarScroll() {
+    const navbar = document.querySelector(".navbar");
+    if (!navbar) return;
+
+    const originalInlineBackground = navbar.style.backgroundColor;
+    const originalComputedBackground =
+      window.getComputedStyle(navbar).backgroundColor;
+
+    const restoreWebflowBackground = () => {
+      if (originalInlineBackground) {
+        navbar.style.backgroundColor = originalInlineBackground;
+      } else if (
+        originalComputedBackground &&
+        originalComputedBackground !== "rgba(0, 0, 0, 0)"
+      ) {
+        navbar.style.backgroundColor = originalComputedBackground;
+      } else {
+        navbar.style.removeProperty("background-color");
+      }
+    };
+
+    const updateNavbar = () => {
+      const menuIsOpen = navbar.classList.contains("is--menu-open");
+      const pageIsScrolled = window.scrollY > 1;
+
+      navbar.classList.toggle("is--scrolled", pageIsScrolled);
+
+      if (menuIsOpen) {
+        restoreWebflowBackground();
+        return;
+      }
+
+      if (pageIsScrolled) {
+        navbar.style.setProperty("background-color", "#01070b", "important");
+      } else {
+        restoreWebflowBackground();
+      }
+    };
+
+    navbar.__updateScrollBackground = updateNavbar;
+
+    updateNavbar();
+
+    window.addEventListener("scroll", updateNavbar, {
+      passive: true,
+    });
+  }
+
+  /* ========================================================================
+     6. TABLET / MOBILE NAVBAR
 
      Existing B4Cars classes:
      .navbar
@@ -324,6 +420,7 @@
 
       timeline?.kill();
       navbar.classList.add("is--menu-open");
+      navbar.__updateScrollBackground?.();
       menu.classList.add("is--open");
       trigger.classList.add("is--open");
       trigger.setAttribute("aria-expanded", "true");
@@ -376,6 +473,7 @@
 
       if (immediate) {
         navbar.classList.remove("is--menu-open");
+        navbar.__updateScrollBackground?.();
         menu.classList.remove("is--open");
         trigger.classList.remove("is--open");
         setClosedState();
@@ -385,6 +483,7 @@
       timeline = gsap.timeline({
         onComplete: () => {
           navbar.classList.remove("is--menu-open");
+          navbar.__updateScrollBackground?.();
           menu.classList.remove("is--open");
           trigger.classList.remove("is--open");
         },
