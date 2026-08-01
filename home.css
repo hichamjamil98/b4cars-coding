@@ -184,13 +184,7 @@ body.is-loading {
   color: inherit !important;
 }
 
-.car--search-item.is--hovered .car--thumbnail {
-  transform: scale(1.04);
-}
 
-.car--search-item.is--hovered .car--thumbnail img {
-  transform: scale(1.06);
-}
 
 @media (hover: none), (pointer: coarse) {
   .search--hover-highlight {
@@ -216,4 +210,14 @@ body.is-loading {
   .car--search-item * {
     transition: none !important;
   }
+}
+
+/* ==========================================================================
+   SEARCH IMAGE LOCK — NO HOVER SCALE
+========================================================================== */
+
+.car--search-item .car--thumbnail,
+.car--search-item .car--thumbnail img {
+  transform: none !important;
+  scale: 1 !important;
 }
