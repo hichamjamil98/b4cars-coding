@@ -544,10 +544,10 @@
         });
       };
   
-      const updateFrozenImageSize = () => {
-        if (!activeItem) return;
+      const captureFrozenImageSize = (referenceItem) => {
+        if (!referenceItem) return;
   
-        const wrapper = activeItem.querySelector(".car--image-wrapper");
+        const wrapper = referenceItem.querySelector(".car--image-wrapper");
         if (!wrapper) return;
   
         const rect = wrapper.getBoundingClientRect();
@@ -576,8 +576,6 @@
             ?.classList.toggle("is--active", isActive);
         });
   
-        requestAnimationFrame(updateFrozenImageSize);
-  
         if (
           !immediate &&
           typeof window.gsap !== "undefined"
@@ -592,12 +590,6 @@
               overwrite: true,
             }
           );
-  
-          window.gsap.to({}, {
-            duration: 0.8,
-            onUpdate: updateFrozenImageSize,
-            onComplete: updateFrozenImageSize,
-          });
         }
       };
   
@@ -642,6 +634,12 @@
   
         if (centerItem) {
           setActiveCard(centerItem, true);
+  
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              captureFrozenImageSize(centerItem);
+            });
+          });
         } else {
           activeItem = null;
         }
@@ -748,7 +746,10 @@
   
       window.addEventListener("resize", () => {
         if (!activeItem) return;
-        requestAnimationFrame(updateFrozenImageSize);
+  
+        requestAnimationFrame(() => {
+          captureFrozenImageSize(activeItem);
+        });
       });
   
       const defaultFilterItem =

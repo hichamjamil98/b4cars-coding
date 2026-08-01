@@ -309,6 +309,8 @@ body.is-loading {
   transform: translate(-50%, -50%) !important;
   scale: 1 !important;
   transition: none !important;
+  animation: none !important;
+  will-change: auto;
 }
 
 .section.is--home-slider
@@ -373,4 +375,13 @@ body.is-loading {
 /* No matching CMS items: the collection stays empty by design. */
 .section.is--home-slider .grid--cars:empty {
   display: none;
+}
+
+
+/*
+  The image dimensions are captured once after each filter change.
+  Hovering another card only changes the mask width; the image does not move.
+*/
+.section.is--home-slider .grid--cars .car--slide-image {
+  transform-origin: center center !important;
 }
