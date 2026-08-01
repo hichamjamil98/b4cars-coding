@@ -1,0 +1,134 @@
+/* ==========================================================================
+   B4CARS — HOME LOADING SCREEN
+========================================================================== */
+
+html.is-loading,
+body.is-loading {
+  overflow: hidden !important;
+}
+
+.loading--screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #fdfdfd;
+  clip-path: inset(0% 0% 0% 0%);
+  isolation: isolate;
+  will-change: clip-path, opacity;
+}
+
+/* Subtle dark layer for better contrast over the image. */
+.loading--screen::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  content: "";
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(1, 7, 11, 0.18) 0%,
+      rgba(1, 7, 11, 0.08) 48%,
+      rgba(1, 7, 11, 0.32) 100%
+    );
+}
+
+.loading--screen .image--absolute100 {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+.loading--top,
+.loading--bottom,
+.brand--loading-wrapper {
+  position: relative;
+  z-index: 3;
+}
+
+.brand--loading-wrapper {
+  width: 5rem;
+  color: currentColor;
+  transform-origin: center;
+  will-change: transform, opacity, filter;
+}
+
+.brand--loading {
+  display: block;
+  width: 100% !important;
+  height: auto;
+  overflow: visible;
+}
+
+.brand--loading path {
+  vector-effect: non-scaling-stroke;
+  will-change: stroke-dashoffset, opacity, fill;
+}
+
+.loading--top,
+.loading--bottom {
+  will-change: transform, opacity, filter;
+}
+
+/* The page stays hidden until the loader starts closing. */
+.main-wrapper,
+.navbar {
+  opacity: 0;
+  visibility: hidden;
+  will-change: opacity;
+}
+
+/* Never hide the Webflow Designer canvas. */
+.w-editor .main-wrapper,
+.w-editor .navbar {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.w-editor .loading--screen {
+  display: none !important;
+}
+
+
+/* ==========================================================================
+   RESPONSIVE
+========================================================================== */
+
+@media screen and (max-width: 767px) {
+  .brand--loading-wrapper {
+    width: 4.25rem;
+  }
+}
+
+
+/* ==========================================================================
+   REDUCED MOTION
+========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html.is-loading,
+  body.is-loading {
+    overflow: auto !important;
+  }
+
+  .loading--screen {
+    display: none !important;
+  }
+
+  .main-wrapper,
+  .navbar {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+}
