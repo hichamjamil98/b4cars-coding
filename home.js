@@ -1,4 +1,3 @@
-/* B4CARS HOME JS — VERSION 6 — NO IMAGE HOVER SCALE */
 /* ==========================================================================
    B4CARS — HOME LOADING SCREEN
    Requires GSAP

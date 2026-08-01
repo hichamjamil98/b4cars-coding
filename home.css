@@ -279,19 +279,33 @@ body.is-loading {
   overflow: hidden;
 }
 
+.grid--cars {
+  --expanded-image-width: 42rem;
+}
+
 .grid--cars .car--image-wrapper {
+  position: relative;
   width: 100%;
   min-width: 0;
+  height: 100%;
   overflow: hidden;
+  clip-path: inset(0 0 0 0);
 }
 
 .grid--cars .car--slide-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   display: block;
-  width: 100%;
+  width: var(--expanded-image-width);
+  max-width: none;
   height: 100%;
   object-fit: cover;
-  transform: none !important;
+  object-position: center;
+  pointer-events: none;
+  transform: translate(-50%, -50%) !important;
   scale: 1 !important;
+  transition: none !important;
 }
 
 .grid--cars .card--item > p:not([filter="category"]) {
@@ -320,6 +334,7 @@ body.is-loading {
 
 @media screen and (max-width: 991px) {
   .grid--cars {
+    --expanded-image-width: 100%;
     grid-template-columns: 1fr !important;
   }
 
