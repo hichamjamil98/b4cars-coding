@@ -544,6 +544,19 @@
         });
       };
   
+      const updateFrozenImageSize = () => {
+        if (!activeItem) return;
+  
+        const wrapper = activeItem.querySelector(".car--image-wrapper");
+        if (!wrapper) return;
+  
+        const rect = wrapper.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+  
+        grid.style.setProperty("--frozen-image-width", `${rect.width}px`);
+        grid.style.setProperty("--frozen-image-height", `${rect.height}px`);
+      };
+  
       const setActiveCard = (item, immediate = false) => {
         if (!item || !visibleItems.includes(item)) return;
   
@@ -563,6 +576,8 @@
             ?.classList.toggle("is--active", isActive);
         });
   
+        requestAnimationFrame(updateFrozenImageSize);
+  
         if (
           !immediate &&
           typeof window.gsap !== "undefined"
@@ -577,6 +592,12 @@
               overwrite: true,
             }
           );
+  
+          window.gsap.to({}, {
+            duration: 0.8,
+            onUpdate: updateFrozenImageSize,
+            onComplete: updateFrozenImageSize,
+          });
         }
       };
   
@@ -628,10 +649,25 @@
         bindCardEvents();
       };
   
-      const getMatchingItems = (filterValue) =>
-        collectionItems
+      const getMatchingItems = (filterValue) => {
+        const matches = collectionItems
           .filter((item) => getItemCategory(item) === filterValue)
           .slice(-MAX_VISIBLE);
+  
+        if (!matches.length) {
+          const availableCategories = [
+            ...new Set(collectionItems.map(getItemCategory).filter(Boolean)),
+          ];
+  
+          console.warn(
+            `[B4Cars] Aucun véhicule trouvé pour "${filterValue}".`,
+            "Catégories réellement présentes dans la collection :",
+            availableCategories
+          );
+        }
+  
+        return matches;
+      };
   
       const applyFilter = (filterItem, immediate = false) => {
         const filterValue = getFilterValue(filterItem);
@@ -708,6 +744,11 @@
           event.preventDefault();
           applyFilter(filterItem);
         });
+      });
+  
+      window.addEventListener("resize", () => {
+        if (!activeItem) return;
+        requestAnimationFrame(updateFrozenImageSize);
       });
   
       const defaultFilterItem =

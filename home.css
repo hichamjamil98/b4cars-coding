@@ -285,20 +285,28 @@ body.is-loading {
 }
 
 .section.is--home-slider .grid--cars .car--image-wrapper {
+  position: relative;
   width: 100%;
   min-width: 0;
   overflow: hidden;
 }
 
 /*
-  Webflow keeps full control of the image ratio, height, object-fit,
-  object-position and responsive dimensions.
+  Webflow still controls the wrapper height and ratio.
+  The image itself is frozen at the dimensions of the expanded card
+  and remains centered while the card opens to the left and right.
 */
 .section.is--home-slider .grid--cars .car--slide-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   display: block;
+  width: var(--frozen-image-width, 100%);
   max-width: none;
+  height: var(--frozen-image-height, 100%);
+  max-height: none;
   pointer-events: none;
-  transform: none !important;
+  transform: translate(-50%, -50%) !important;
   scale: 1 !important;
   transition: none !important;
 }
@@ -359,4 +367,10 @@ body.is-loading {
   .section.is--home-slider .filter--item[filter] .button {
     transition: none !important;
   }
+}
+
+
+/* No matching CMS items: the collection stays empty by design. */
+.section.is--home-slider .grid--cars:empty {
+  display: none;
 }
