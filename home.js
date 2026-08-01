@@ -478,7 +478,7 @@
   (() => {
     "use strict";
   
-    document.addEventListener("DOMContentLoaded", () => {
+    window.addEventListener("load", () => {
       const section = document.querySelector(".section.is--home-slider");
       if (!section) return;
   
@@ -539,8 +539,26 @@
         const activeIndex = visibleItems.indexOf(activeItem);
         const columns = getGridColumns(visibleItems, activeIndex);
   
+        const updateFixedImageWidth = () => {
+          const activeWrapper = activeItem.querySelector(".car--image-wrapper");
+          if (!activeWrapper) return;
+  
+          const expandedWidth = activeWrapper.getBoundingClientRect().width;
+          if (expandedWidth > 0) {
+            grid.style.setProperty(
+              "--expanded-image-width",
+              `${expandedWidth}px`
+            );
+          }
+        };
+  
         if (immediate || typeof window.gsap === "undefined") {
           grid.style.gridTemplateColumns = columns;
+  
+          requestAnimationFrame(() => {
+            updateFixedImageWidth();
+          });
+  
           return;
         }
   
@@ -549,6 +567,8 @@
           duration: 0.75,
           ease: "expo.out",
           overwrite: true,
+          onUpdate: updateFixedImageWidth,
+          onComplete: updateFixedImageWidth,
         });
       };
   
@@ -713,14 +733,37 @@
         });
       });
   
+      window.addEventListener("resize", () => {
+        if (!activeItem) return;
+  
+        requestAnimationFrame(() => {
+          setActiveCard(activeItem, true);
+        });
+      });
+  
       const defaultFilterItem =
         filterItems.find(
           (filterItem) =>
             getFilterValue(filterItem) === normalizeValue(DEFAULT_FILTER)
         ) || filterItems[0];
   
+      /*
+       * Always start from a clean state.
+       * This removes any Webflow preview or previous interaction state.
+       */
+      filterItems.forEach((filterItem) => {
+        filterItem.classList.remove("is--active");
+        filterItem.setAttribute("aria-pressed", "false");
+  
+        const link = filterItem.querySelector("a");
+        link?.setAttribute("aria-current", "false");
+      });
+  
       hideAllItems();
       activeFilter = "";
-      applyFilter(defaultFilterItem, true);
+  
+      requestAnimationFrame(() => {
+        applyFilter(defaultFilterItem, true);
+      });
     });
   })();
