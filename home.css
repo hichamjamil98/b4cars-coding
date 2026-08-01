@@ -80,21 +80,7 @@ body.is-loading {
   opacity: 1;
 }
 
-/* The page stays hidden until the loader starts closing. */
-.main-wrapper,
-.navbar {
-  opacity: 0;
-  visibility: hidden;
-  will-change: opacity;
-}
-
 /* Never hide the Webflow Designer canvas. */
-.w-editor .main-wrapper,
-.w-editor .navbar {
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
 .w-editor .loading--screen {
   display: none !important;
 }
@@ -125,9 +111,4 @@ body.is-loading {
     display: none !important;
   }
 
-  .main-wrapper,
-  .navbar {
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
 }

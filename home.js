@@ -20,12 +20,13 @@
   
       const revealPageWithoutAnimation = () => {
         pageElements.forEach((element) => {
-          element.style.opacity = "1";
-          element.style.visibility = "visible";
+          element.style.removeProperty("opacity");
+          element.style.removeProperty("visibility");
         });
   
         if (loader) {
           loader.style.display = "none";
+          loader.style.pointerEvents = "none";
         }
   
         html.classList.remove("is-loading");
@@ -134,14 +135,25 @@
         });
       }
   
+      const safetyTimeout = window.setTimeout(() => {
+        console.warn("B4Cars loader safety fallback triggered.");
+        revealPageWithoutAnimation();
+      }, 7000);
+  
       const timeline = gsap.timeline({
         defaults: {
           ease: "power3.out",
         },
         onComplete: () => {
+          window.clearTimeout(safetyTimeout);
           loader.style.display = "none";
           html.classList.remove("is-loading");
           body.classList.remove("is-loading");
+  
+          gsap.set(pageElements, {
+            opacity: 1,
+            visibility: "visible",
+          });
   
           gsap.set(pageElements, {
             clearProps: "opacity,visibility",
