@@ -271,3 +271,17 @@ body.is--locked {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ==========================================================================
+   HOME CARS - OVERLAY HOVER
+========================================================================== */
+
+.section.is--home-slider .overlay-orange70 {
+  opacity: 1;
+  transition:
+    opacity .9s cubic-bezier(.22,1,.36,1);
+}
+
+.section.is--home-slider .card--item.is--active .overlay-orange70 {
+  opacity: .08;
+}
