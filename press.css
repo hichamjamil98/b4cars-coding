@@ -1,91 +1,103 @@
 /* ==========================================================================
-   PRESS PAGE — NAVBAR BACKGROUND OVERRIDES
-   Scoped to the Press page only
+   PRESS PAGE — NAVBAR OVERRIDES
+   Ne modifie ni la position ni le comportement fixed défini dans Webflow.
 ========================================================================== */
 
 /*
-  The global script adds an inline background-color with !important.
-  The regular declaration is kept, and ::before guarantees the visible
-  background even when the inline style wins the CSS cascade.
+  Le script global ajoute parfois :
+  style="background-color: rgb(1, 7, 11) !important;"
+
+  Un pseudo-élément placé devant ce fond inline permet d'afficher #F6F9F8
+  sans modifier position: fixed, top, left, width ou z-index de la navbar.
 */
 
-body:has(.section.is--press-hero) .navbar {
+
+/* ==========================================================================
+   NAVBAR AU SCROLL — PAGE PRESSE UNIQUEMENT
+========================================================================== */
+
+body:has(.section.is--press-hero)
+.navbar.is--scrolled::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  content: "";
+  display: block;
+  pointer-events: none;
+  background-color: #f6f9f8 !important;
+}
+
+body:has(.section.is--press-hero)
+.navbar.is--scrolled > * {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ==========================================================================
+   NAVBAR OUVERTE — TABLETTE / MOBILE
+========================================================================== */
+
+@media screen and (max-width: 991px) {
+  body:has(.section.is--press-hero)
+  .navbar.is--menu-open::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    content: "";
+    display: block;
+    pointer-events: none;
+    background-color: #f6f9f8 !important;
+  }
+
+  body:has(.section.is--press-hero)
+  .navbar.is--menu-open > * {
     position: relative;
-    isolation: isolate;
+    z-index: 1;
   }
-  
-  /* Navbar after leaving the top of the page */
-  body:has(.section.is--press-hero) .navbar.is--scrolled {
-    background: #f6f9f8 !important;
+
+  body:has(.section.is--press-hero)
+  .navbar.is--menu-open
+  .nav--menu,
+  body:has(.section.is--press-hero)
+  .nav--menu.is--open {
     background-color: #f6f9f8 !important;
   }
-  
-  /* Visual fallback against inline style="background-color: ... !important" */
-  body:has(.section.is--press-hero) .navbar.is--scrolled::before {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    content: "";
-    pointer-events: none;
+}
+
+
+/* ==========================================================================
+   FALLBACK
+   Ajouter class="is--press-page" au body seulement si nécessaire.
+========================================================================== */
+
+body.is--press-page
+.navbar.is--scrolled::before,
+body.is--press-page
+.navbar.is--menu-open::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  content: "";
+  display: block;
+  pointer-events: none;
+  background-color: #f6f9f8 !important;
+}
+
+body.is--press-page
+.navbar.is--scrolled > *,
+body.is--press-page
+.navbar.is--menu-open > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media screen and (max-width: 991px) {
+  body.is--press-page
+  .navbar.is--menu-open
+  .nav--menu,
+  body.is--press-page
+  .nav--menu.is--open {
     background-color: #f6f9f8 !important;
   }
-  
-  
-  /* ==========================================================================
-     TABLET / MOBILE — OPEN NAVBAR
-  ========================================================================== */
-  
-  @media screen and (max-width: 991px) {
-    body:has(.section.is--press-hero) .navbar.is--menu-open {
-      background: #f6f9f8 !important;
-      background-color: #f6f9f8 !important;
-    }
-  
-    body:has(.section.is--press-hero) .navbar.is--menu-open::before {
-      position: absolute;
-      inset: 0;
-      z-index: -1;
-      content: "";
-      pointer-events: none;
-      background-color: #f6f9f8 !important;
-    }
-  
-    body:has(.section.is--press-hero)
-    .navbar.is--menu-open
-    .nav--menu,
-    body:has(.section.is--press-hero)
-    .nav--menu.is--open {
-      background: #f6f9f8 !important;
-      background-color: #f6f9f8 !important;
-    }
-  }
-  
-  
-  /* ==========================================================================
-     FALLBACK WITHOUT :has()
-     Add class="is--press-page" to <body> only if needed.
-  ========================================================================== */
-  
-  body.is--press-page .navbar.is--scrolled,
-  body.is--press-page .navbar.is--menu-open {
-    background: #f6f9f8 !important;
-    background-color: #f6f9f8 !important;
-  }
-  
-  body.is--press-page .navbar.is--scrolled::before,
-  body.is--press-page .navbar.is--menu-open::before {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    content: "";
-    pointer-events: none;
-    background-color: #f6f9f8 !important;
-  }
-  
-  @media screen and (max-width: 991px) {
-    body.is--press-page .navbar.is--menu-open .nav--menu,
-    body.is--press-page .nav--menu.is--open {
-      background: #f6f9f8 !important;
-      background-color: #f6f9f8 !important;
-    }
-  }
+}
