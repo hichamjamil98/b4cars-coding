@@ -1,0 +1,144 @@
+/* ==========================================================================
+   B4CARS — PRESS TEMPLATE
+========================================================================== */
+
+
+/* ==========================================================================
+   NAVBAR AU SCROLL — TEMPLATE PRESSE UNIQUEMENT
+========================================================================== */
+
+body:has(.section.is--tempress-hero)
+.navbar.is--scrolled::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  content: "";
+  pointer-events: none;
+  background-color: #f6f9f8 !important;
+}
+
+body:has(.section.is--tempress-hero)
+.navbar.is--scrolled > * {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ==========================================================================
+   NAVBAR OUVERTE — TABLETTE / MOBILE
+========================================================================== */
+
+@media screen and (max-width: 991px) {
+  body:has(.section.is--tempress-hero)
+  .navbar.is--menu-open::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    content: "";
+    pointer-events: none;
+    background-color: #f6f9f8 !important;
+  }
+
+  body:has(.section.is--tempress-hero)
+  .navbar.is--menu-open > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  body:has(.section.is--tempress-hero)
+  .navbar.is--menu-open
+  .nav--menu,
+  body:has(.section.is--tempress-hero)
+  .nav--menu.is--open {
+    background-color: #f6f9f8 !important;
+  }
+}
+
+
+/* ==========================================================================
+   SOCIAL SHARE BUTTONS
+========================================================================== */
+
+.section.is--press-body .post--social {
+  display: flex;
+  align-items: center;
+}
+
+.section.is--press-body .social--share {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: inherit;
+  transition:
+    color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.section.is--press-body .social--share:hover {
+  color: #f6f9f8;
+  background-color: #031e4d;
+  border-color: #031e4d;
+  transform: translateY(-0.125rem);
+}
+
+.section.is--press-body .social--share:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 0.2rem;
+}
+
+.section.is--press-body .social--share .icon--16 {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.section.is--press-body .social--share:hover .icon--16 {
+  transform: scale(1.08);
+}
+
+
+/* ==========================================================================
+   FALLBACK SANS :has()
+========================================================================== */
+
+body.is--press-template
+.navbar.is--scrolled::before,
+body.is--press-template
+.navbar.is--menu-open::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  content: "";
+  pointer-events: none;
+  background-color: #f6f9f8 !important;
+}
+
+body.is--press-template
+.navbar.is--scrolled > *,
+body.is--press-template
+.navbar.is--menu-open > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media screen and (max-width: 991px) {
+  body.is--press-template
+  .navbar.is--menu-open
+  .nav--menu,
+  body.is--press-template
+  .nav--menu.is--open {
+    background-color: #f6f9f8 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section.is--press-body .social--share,
+  .section.is--press-body .social--share .icon--16 {
+    transition: none !important;
+  }
+}
