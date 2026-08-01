@@ -222,54 +222,59 @@ body.is-loading {
   scale: 1 !important;
 }
 
-
 /* ==========================================================================
    VEHICLES FILTER + EXPANDING FIVE-CARD GRID
+   Scoped only to .section.is--home-slider
 ========================================================================== */
 
-.filter--item[filter] {
+.section.is--home-slider .filter--item[filter] {
   cursor: pointer;
 }
 
-.filter--item[filter] .btn,
-.filter--item[filter] .button {
+.section.is--home-slider .filter--item[filter] .btn,
+.section.is--home-slider .filter--item[filter] .button {
   transition:
     color 0.4s cubic-bezier(0.22, 1, 0.36, 1),
     border-color 0.4s cubic-bezier(0.22, 1, 0.36, 1),
     background-color 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.filter--item[filter].is--active .btn,
-.filter--item[filter].is--active .button {
+.section.is--home-slider .filter--item[filter].is--active .btn,
+.section.is--home-slider .filter--item[filter].is--active .button {
   color: #031e4d !important;
 }
 
-.filter--item[filter].is--active .btn *,
-.filter--item[filter].is--active .button * {
+.section.is--home-slider .filter--item[filter].is--active .btn * ,
+.section.is--home-slider .filter--item[filter].is--active .button * {
   color: inherit !important;
 }
 
-.grid--cars {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+.section.is--home-slider .grid--cars {
+  display: flex;
   align-items: stretch;
   width: 100%;
-  transition:
-    grid-template-columns 0.75s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: grid-template-columns;
-}
-
-.grid--cars > .collection--item {
-  min-width: 0;
-  align-self: start;
   overflow: hidden;
 }
 
-.grid--cars > .collection--item:not(.is--visible) {
-  display: none !important;
+.section.is--home-slider
+.grid--cars > .collection--item {
+  position: relative;
+  display: none;
+  flex: var(--card-grow, 1) 1 0%;
+  min-width: 0;
+  overflow: hidden;
+  transition:
+    flex-grow 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.35s ease;
+  will-change: flex-grow;
 }
 
-.grid--cars .card--item {
+.section.is--home-slider
+.grid--cars > .collection--item.is--visible {
+  display: block;
+}
+
+.section.is--home-slider .grid--cars .card--item {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -279,46 +284,40 @@ body.is-loading {
   overflow: hidden;
 }
 
-/*
-  Webflow controls the wrapper ratio, height and image proportions.
-  The custom code only freezes the rendered image width and lets the
-  changing column reveal more or less of the same image.
-*/
-.grid--cars {
-  --expanded-image-width: 100%;
-}
-
-.grid--cars .car--image-wrapper {
+.section.is--home-slider .grid--cars .car--image-wrapper {
   width: 100%;
   min-width: 0;
   overflow: hidden;
 }
 
-.grid--cars .car--slide-image {
+/*
+  Webflow keeps full control of the image ratio, height, object-fit,
+  object-position and responsive dimensions.
+*/
+.section.is--home-slider .grid--cars .car--slide-image {
   display: block;
-  width: var(--expanded-image-width);
   max-width: none;
-  height: auto;
-  margin-left: 50%;
   pointer-events: none;
-  transform: translateX(-50%) !important;
+  transform: none !important;
   scale: 1 !important;
   transition: none !important;
 }
 
+.section.is--home-slider
 .grid--cars .card--item > p:not([filter="category"]) {
   overflow: hidden;
   max-height: 0;
   margin-top: 0;
   opacity: 0;
-  transform: translateY(0.6rem);
+  transform: translateY(0.5rem);
   transition:
-    max-height 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-    margin-top 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.4s ease,
-    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    max-height 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    margin-top 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s ease,
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.section.is--home-slider
 .grid--cars .card--item.is--active > p:not([filter="category"]) {
   max-height: 4rem;
   margin-top: 0.75rem;
@@ -326,20 +325,23 @@ body.is-loading {
   transform: translateY(0);
 }
 
-.grid--cars [filter="category"] {
+.section.is--home-slider .grid--cars [filter="category"] {
   display: none !important;
 }
 
 @media screen and (max-width: 991px) {
-  .grid--cars {
-    --expanded-image-width: 100%;
-    grid-template-columns: 1fr !important;
+  .section.is--home-slider .grid--cars {
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow: visible;
   }
 
+  .section.is--home-slider
   .grid--cars > .collection--item {
-    display: block;
+    flex: none;
   }
 
+  .section.is--home-slider
   .grid--cars .card--item > p:not([filter="category"]) {
     max-height: 4rem;
     margin-top: 0.75rem;
@@ -349,10 +351,12 @@ body.is-loading {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .grid--cars,
+  .section.is--home-slider
+  .grid--cars > .collection--item,
+  .section.is--home-slider
   .grid--cars .card--item > p:not([filter="category"]),
-  .filter--item[filter] .btn,
-  .filter--item[filter] .button {
+  .section.is--home-slider .filter--item[filter] .btn,
+  .section.is--home-slider .filter--item[filter] .button {
     transition: none !important;
   }
 }

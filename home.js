@@ -473,6 +473,7 @@
   
   /* ==========================================================================
      VEHICLES FILTER + EXPANDING FIVE-CARD GRID
+     Scoped only to .section.is--home-slider
   ========================================================================== */
   
   (() => {
@@ -495,33 +496,53 @@
   
       if (!collectionItems.length) return;
   
-      const DEFAULT_FILTER = "En stock";
+      const DEFAULT_FILTER = "En Stock";
       const MAX_VISIBLE = 5;
   
-      let activeFilter = "";
       let visibleItems = [];
       let activeItem = null;
-      let transitionToken = 0;
+      let activeFilterValue = "";
   
       const normalizeValue = (value = "") =>
         value
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "")
+          .replace(/\s+/g, " ")
           .trim()
           .toLowerCase();
-  
-      const getItemCategory = (item) => {
-        const categoryElement = item.querySelector('[filter="category"]');
-        return normalizeValue(categoryElement?.textContent || "");
-      };
   
       const getFilterValue = (filterItem) =>
         normalizeValue(filterItem.getAttribute("filter") || "");
   
-      const getGridColumns = (items, activeIndex) =>
-        items
-          .map((_, index) => (index === activeIndex ? "5fr" : "1fr"))
-          .join(" ");
+      const getItemCategory = (item) =>
+        normalizeValue(
+          item.querySelector('[filter="category"]')?.textContent || ""
+        );
+  
+      const updateFilterButtons = (selectedItem) => {
+        filterItems.forEach((filterItem) => {
+          const isActive = filterItem === selectedItem;
+  
+          filterItem.classList.toggle("is--active", isActive);
+          filterItem.setAttribute("aria-pressed", isActive ? "true" : "false");
+  
+          const link = filterItem.querySelector("a");
+          link?.setAttribute("aria-current", isActive ? "true" : "false");
+        });
+      };
+  
+      const hideAllItems = () => {
+        collectionItems.forEach((item) => {
+          item.classList.remove("is--visible", "is--active");
+          item.setAttribute("aria-hidden", "true");
+          item.style.display = "none";
+          item.style.removeProperty("--card-grow");
+  
+          item
+            .querySelector(".card--item")
+            ?.classList.remove("is--active");
+        });
+      };
   
       const setActiveCard = (item, immediate = false) => {
         if (!item || !visibleItems.includes(item)) return;
@@ -530,49 +551,36 @@
   
         visibleItems.forEach((visibleItem) => {
           const isActive = visibleItem === activeItem;
+  
           visibleItem.classList.toggle("is--active", isActive);
+          visibleItem.style.setProperty(
+            "--card-grow",
+            isActive ? "5" : "1"
+          );
   
-          const card = visibleItem.querySelector(".card--item");
-          card?.classList.toggle("is--active", isActive);
+          visibleItem
+            .querySelector(".card--item")
+            ?.classList.toggle("is--active", isActive);
         });
   
-        const activeIndex = visibleItems.indexOf(activeItem);
-        const columns = getGridColumns(visibleItems, activeIndex);
-  
-        const updateFixedImageWidth = () => {
-          const activeWrapper = activeItem.querySelector(".car--image-wrapper");
-          if (!activeWrapper) return;
-  
-          const expandedWidth = activeWrapper.getBoundingClientRect().width;
-          if (expandedWidth > 0) {
-            grid.style.setProperty(
-              "--expanded-image-width",
-              `${expandedWidth}px`
-            );
-          }
-        };
-  
-        if (immediate || typeof window.gsap === "undefined") {
-          grid.style.gridTemplateColumns = columns;
-  
-          requestAnimationFrame(() => {
-            updateFixedImageWidth();
-          });
-  
-          return;
+        if (
+          !immediate &&
+          typeof window.gsap !== "undefined"
+        ) {
+          window.gsap.fromTo(
+            activeItem,
+            { opacity: 0.96 },
+            {
+              opacity: 1,
+              duration: 0.28,
+              ease: "power2.out",
+              overwrite: true,
+            }
+          );
         }
-  
-        window.gsap.to(grid, {
-          gridTemplateColumns: columns,
-          duration: 0.75,
-          ease: "expo.out",
-          overwrite: true,
-          onUpdate: updateFixedImageWidth,
-          onComplete: updateFixedImageWidth,
-        });
       };
   
-      const bindCardInteractions = () => {
+      const bindCardEvents = () => {
         visibleItems.forEach((item) => {
           const card = item.querySelector(".card--item");
           if (!card || card.dataset.expandReady === "true") return;
@@ -580,52 +588,26 @@
           card.dataset.expandReady = "true";
   
           card.addEventListener("mouseenter", () => {
-            if (!visibleItems.includes(item)) return;
-            setActiveCard(item);
+            if (visibleItems.includes(item)) {
+              setActiveCard(item);
+            }
           });
   
           card.addEventListener("focusin", () => {
-            if (!visibleItems.includes(item)) return;
-            setActiveCard(item);
+            if (visibleItems.includes(item)) {
+              setActiveCard(item);
+            }
           });
   
           card.addEventListener("click", () => {
-            if (!visibleItems.includes(item)) return;
-            setActiveCard(item);
+            if (visibleItems.includes(item)) {
+              setActiveCard(item);
+            }
           });
         });
       };
   
-      const updateFilterButtons = (selectedFilterItem) => {
-        filterItems.forEach((filterItem) => {
-          const isActive = filterItem === selectedFilterItem;
-          filterItem.classList.toggle("is--active", isActive);
-          filterItem.setAttribute("aria-pressed", isActive ? "true" : "false");
-  
-          const link = filterItem.querySelector("a");
-          if (link) {
-            link.setAttribute("aria-current", isActive ? "true" : "false");
-          }
-        });
-      };
-  
-      const getMatchingItems = (filterValue) =>
-        collectionItems
-          .filter((item) => getItemCategory(item) === filterValue)
-          .slice(-MAX_VISIBLE);
-  
-      const hideAllItems = () => {
-        collectionItems.forEach((item) => {
-          item.classList.remove("is--visible", "is--active");
-          item.setAttribute("aria-hidden", "true");
-          item.style.display = "none";
-  
-          const card = item.querySelector(".card--item");
-          card?.classList.remove("is--active");
-        });
-      };
-  
-      const showFilteredItems = (items) => {
+      const showItems = (items) => {
         visibleItems = items;
   
         items.forEach((item) => {
@@ -634,8 +616,6 @@
           item.classList.add("is--visible");
         });
   
-        grid.style.setProperty("--visible-count", String(items.length));
-  
         const centerIndex = Math.floor((items.length - 1) / 2);
         const centerItem = items[centerIndex] || null;
   
@@ -643,44 +623,46 @@
           setActiveCard(centerItem, true);
         } else {
           activeItem = null;
-          grid.style.gridTemplateColumns = "";
         }
   
-        bindCardInteractions();
+        bindCardEvents();
       };
   
-      const applyFilter = (selectedFilterItem, immediate = false) => {
-        const filterValue = getFilterValue(selectedFilterItem);
-        if (!filterValue || filterValue === activeFilter) return;
+      const getMatchingItems = (filterValue) =>
+        collectionItems
+          .filter((item) => getItemCategory(item) === filterValue)
+          .slice(-MAX_VISIBLE);
   
-        activeFilter = filterValue;
-        updateFilterButtons(selectedFilterItem);
+      const applyFilter = (filterItem, immediate = false) => {
+        const filterValue = getFilterValue(filterItem);
+        if (!filterValue) return;
   
-        const matchingItems = getMatchingItems(filterValue);
-        const token = ++transitionToken;
+        activeFilterValue = filterValue;
+        updateFilterButtons(filterItem);
   
-        const completeSwap = () => {
-          if (token !== transitionToken) return;
+        const matches = getMatchingItems(filterValue);
+        const oldItems = visibleItems.slice();
   
+        const render = () => {
           hideAllItems();
-          showFilteredItems(matchingItems);
+          showItems(matches);
   
           if (
             !immediate &&
-            typeof window.gsap !== "undefined" &&
-            matchingItems.length
+            matches.length &&
+            typeof window.gsap !== "undefined"
           ) {
             window.gsap.fromTo(
-              matchingItems,
+              matches,
               {
                 opacity: 0,
-                y: "1rem",
+                y: "0.75rem",
               },
               {
                 opacity: 1,
                 y: 0,
-                duration: 0.65,
-                stagger: 0.065,
+                duration: 0.5,
+                stagger: 0.05,
                 ease: "power3.out",
                 clearProps: "opacity,transform",
               }
@@ -688,30 +670,25 @@
           }
         };
   
-        const currentlyVisible = visibleItems.filter(
-          (item) => item.style.display !== "none"
-        );
-  
         if (
           immediate ||
-          typeof window.gsap === "undefined" ||
-          !currentlyVisible.length
+          !oldItems.length ||
+          typeof window.gsap === "undefined"
         ) {
-          completeSwap();
+          render();
           return;
         }
   
-        window.gsap.to(currentlyVisible, {
+        window.gsap.to(oldItems, {
           opacity: 0,
-          y: "-0.6rem",
-          duration: 0.32,
+          duration: 0.22,
           stagger: {
-            each: 0.035,
+            each: 0.025,
             from: "center",
           },
           ease: "power2.in",
           overwrite: true,
-          onComplete: completeSwap,
+          onComplete: render,
         });
       };
   
@@ -733,34 +710,19 @@
         });
       });
   
-      window.addEventListener("resize", () => {
-        if (!activeItem) return;
-  
-        requestAnimationFrame(() => {
-          setActiveCard(activeItem, true);
-        });
-      });
-  
       const defaultFilterItem =
         filterItems.find(
-          (filterItem) =>
-            getFilterValue(filterItem) === normalizeValue(DEFAULT_FILTER)
+          (item) =>
+            getFilterValue(item) === normalizeValue(DEFAULT_FILTER)
         ) || filterItems[0];
   
-      /*
-       * Always start from a clean state.
-       * This removes any Webflow preview or previous interaction state.
-       */
-      filterItems.forEach((filterItem) => {
-        filterItem.classList.remove("is--active");
-        filterItem.setAttribute("aria-pressed", "false");
-  
-        const link = filterItem.querySelector("a");
-        link?.setAttribute("aria-current", "false");
+      filterItems.forEach((item) => {
+        item.classList.remove("is--active");
+        item.setAttribute("aria-pressed", "false");
+        item.querySelector("a")?.setAttribute("aria-current", "false");
       });
   
       hideAllItems();
-      activeFilter = "";
   
       requestAnimationFrame(() => {
         applyFilter(defaultFilterItem, true);
