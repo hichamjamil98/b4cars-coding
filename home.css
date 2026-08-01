@@ -112,3 +112,108 @@ body.is-loading {
   }
 
 }
+
+
+/* ==========================================================================
+   SEARCH ITEMS — MOVING HOVER HIGHLIGHT
+========================================================================== */
+
+.search--collection {
+  position: relative;
+  isolation: isolate;
+}
+
+.search--collection > .w-dyn-item {
+  position: relative;
+  z-index: 2;
+}
+
+.search--hover-highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  background-color: #f6f9f8;
+  transform: translate3d(0, 0, 0);
+  will-change: transform, width, height, opacity;
+}
+
+.car--search-item {
+  position: relative;
+  z-index: 2;
+  background-color: transparent;
+  color: inherit;
+  transition:
+    color 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.car--search-item,
+.car--search-item * {
+  transition-property:
+    color,
+    border-color,
+    background-color,
+    opacity,
+    transform;
+  transition-duration: 0.42s;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.car--search-item.is--hovered {
+  color: #031e4d;
+}
+
+.car--search-item.is--hovered .rod--100 {
+  background-color: #031e4d;
+}
+
+.car--search-item.is--hovered .btn,
+.car--search-item.is--hovered .button {
+  color: #031e4d !important;
+  border-color: #031e4d !important;
+  background-color: #f6f9f8 !important;
+}
+
+.car--search-item.is--hovered .btn *,
+.car--search-item.is--hovered .button * {
+  color: inherit !important;
+}
+
+.car--search-item.is--hovered .car--thumbnail {
+  transform: scale(1.04);
+}
+
+.car--search-item.is--hovered .car--thumbnail img {
+  transform: scale(1.06);
+}
+
+@media (hover: none), (pointer: coarse) {
+  .search--hover-highlight {
+    display: none;
+  }
+
+  .car--search-item:active {
+    color: #031e4d;
+    background-color: #f6f9f8;
+  }
+
+  .car--search-item:active .btn,
+  .car--search-item:active .button {
+    color: #031e4d !important;
+    border-color: #031e4d !important;
+    background-color: #f6f9f8 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search--hover-highlight,
+  .car--search-item,
+  .car--search-item * {
+    transition: none !important;
+  }
+}

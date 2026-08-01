@@ -364,3 +364,108 @@
       );
     });
   })();
+  
+  
+  /* ==========================================================================
+     SEARCH ITEMS — MOVING HOVER HIGHLIGHT
+  ========================================================================== */
+  
+  (() => {
+    "use strict";
+  
+    document.addEventListener("DOMContentLoaded", () => {
+      const collections = document.querySelectorAll(".search--collection");
+  
+      collections.forEach((collection) => {
+        const items = [...collection.querySelectorAll(".car--search-item")];
+        if (!items.length) return;
+  
+        const highlight = document.createElement("div");
+        highlight.className = "search--hover-highlight";
+        highlight.setAttribute("aria-hidden", "true");
+        collection.prepend(highlight);
+  
+        let activeItem = null;
+        let leaveTimer = null;
+  
+        const moveHighlight = (item, immediate = false) => {
+          const collectionRect = collection.getBoundingClientRect();
+          const itemRect = item.getBoundingClientRect();
+  
+          const top = itemRect.top - collectionRect.top + collection.scrollTop;
+          const left = itemRect.left - collectionRect.left + collection.scrollLeft;
+  
+          const vars = {
+            x: left,
+            y: top,
+            width: itemRect.width,
+            height: itemRect.height,
+            opacity: 1,
+            duration: immediate ? 0 : 0.55,
+            ease: "expo.out",
+          };
+  
+          if (typeof window.gsap !== "undefined") {
+            window.gsap.to(highlight, vars);
+          } else {
+            highlight.style.transform = `translate(${left}px, ${top}px)`;
+            highlight.style.width = `${itemRect.width}px`;
+            highlight.style.height = `${itemRect.height}px`;
+            highlight.style.opacity = "1";
+          }
+        };
+  
+        const activateItem = (item) => {
+          window.clearTimeout(leaveTimer);
+  
+          if (activeItem && activeItem !== item) {
+            activeItem.classList.remove("is--hovered");
+          }
+  
+          activeItem = item;
+          activeItem.classList.add("is--hovered");
+          moveHighlight(activeItem);
+        };
+  
+        const deactivateAll = () => {
+          leaveTimer = window.setTimeout(() => {
+            items.forEach((item) => item.classList.remove("is--hovered"));
+            activeItem = null;
+  
+            if (typeof window.gsap !== "undefined") {
+              window.gsap.to(highlight, {
+                opacity: 0,
+                duration: 0.35,
+                ease: "power2.out",
+              });
+            } else {
+              highlight.style.opacity = "0";
+            }
+          }, 70);
+        };
+  
+        items.forEach((item) => {
+          item.addEventListener("mouseenter", () => activateItem(item));
+          item.addEventListener("focusin", () => activateItem(item));
+          item.addEventListener("mouseleave", deactivateAll);
+          item.addEventListener("focusout", (event) => {
+            if (!item.contains(event.relatedTarget)) deactivateAll();
+          });
+        });
+  
+        collection.addEventListener("mouseleave", deactivateAll);
+  
+        const refreshHighlight = () => {
+          if (activeItem) moveHighlight(activeItem, true);
+        };
+  
+        window.addEventListener("resize", refreshHighlight);
+  
+        if (typeof window.ResizeObserver !== "undefined") {
+          const observer = new ResizeObserver(refreshHighlight);
+          observer.observe(collection);
+          items.forEach((item) => observer.observe(item));
+        }
+      });
+    });
+  })();
