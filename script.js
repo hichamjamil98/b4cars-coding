@@ -24,6 +24,7 @@
     initImageParallax();
     initNavbarScroll();
     initMobileNavbar(EASE);
+    initCtaGallery();
   });
 
   /* ========================================================================
@@ -565,4 +566,114 @@
 
     if (breakpoint.matches) setClosedState();
   }
+
+  /* ========================================================================
+     7. CTA IMAGE GALLERY
+  ======================================================================== */
+
+  function initCtaGallery() {
+    const galleries = document.querySelectorAll(".cta--image-wrapper");
+
+    galleries.forEach((gallery) => {
+      if (gallery.dataset.ctaGalleryReady === "true") return;
+
+      const mainImage = gallery.querySelector(":scope > img");
+      const thumbnails = [...gallery.querySelectorAll(".cta-gallery-select")];
+
+      if (!mainImage || !thumbnails.length) return;
+
+      gallery.dataset.ctaGalleryReady = "true";
+
+      let activeThumbnail = null;
+      let isAnimating = false;
+
+      const normalizeUrl = (url) => {
+        try {
+          return new URL(url, window.location.href).href;
+        } catch {
+          return url;
+        }
+      };
+
+      const setActiveThumbnail = (thumbnail) => {
+        thumbnails.forEach((item) => {
+          const isActive = item === thumbnail;
+          item.classList.toggle("is--active", isActive);
+          item.setAttribute("aria-pressed", String(isActive));
+        });
+
+        activeThumbnail = thumbnail;
+      };
+
+      thumbnails.forEach((thumbnail) => {
+        const thumbnailImage = thumbnail.querySelector("img");
+        if (!thumbnailImage) return;
+
+        thumbnail.setAttribute("role", "button");
+        thumbnail.setAttribute("tabindex", "0");
+        thumbnail.setAttribute("aria-label", "Afficher cette image");
+        thumbnail.setAttribute("aria-pressed", "false");
+
+        if (
+          normalizeUrl(thumbnailImage.currentSrc || thumbnailImage.src) ===
+          normalizeUrl(mainImage.currentSrc || mainImage.src)
+        ) {
+          setActiveThumbnail(thumbnail);
+        }
+
+        const changeImage = () => {
+          const nextSource = thumbnailImage.currentSrc || thumbnailImage.src;
+
+          if (!nextSource || thumbnail === activeThumbnail || isAnimating) return;
+
+          isAnimating = true;
+          setActiveThumbnail(thumbnail);
+
+          const switchSource = () => {
+            mainImage.src = nextSource;
+            mainImage.removeAttribute("srcset");
+          };
+
+          if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            switchSource();
+            isAnimating = false;
+            return;
+          }
+
+          gsap.timeline({
+            onComplete: () => {
+              isAnimating = false;
+            },
+          })
+            .to(mainImage, {
+              opacity: 0,
+              scale: 1.025,
+              duration: 0.28,
+              ease: "power2.inOut",
+            })
+            .add(switchSource)
+            .fromTo(
+              mainImage,
+              { opacity: 0, scale: 1.025 },
+              {
+                opacity: 1,
+                scale: 1,
+                duration: 0.42,
+                ease: "power2.out",
+                clearProps: "opacity,scale",
+              },
+            );
+        };
+
+        thumbnail.addEventListener("click", changeImage);
+        thumbnail.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            changeImage();
+          }
+        });
+      });
+    });
+  }
+
 })();

@@ -132,6 +132,42 @@ body.is--locked {
 }
 
 /* ========================================================================== 
+   CTA IMAGE GALLERY
+========================================================================== */
+
+.cta-gallery-select {
+  position: relative;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Independent overlay: it does not modify the image border or its dimensions. */
+.cta-gallery-select::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  box-sizing: border-box;
+  border: 3px solid #f6f9f8;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.cta-gallery-select.is--active::after {
+  opacity: 1;
+}
+
+.cta-gallery-select:focus-visible {
+  outline: 2px solid #f6f9f8;
+  outline-offset: 0.2rem;
+}
+
+.cta-gallery-select > img {
+  pointer-events: none;
+}
+
+/* ========================================================================== 
    NAVBAR BACKGROUND ON SCROLL
 ========================================================================== */
 
@@ -146,7 +182,6 @@ body.is--locked {
 .navbar.is--scrolled:not(.is--menu-open) {
   background-color: #01070b !important;
 }
-
 
 /*
   IMPORTANT:
@@ -209,7 +244,6 @@ body.is--locked {
     filter: blur(6px);
     will-change: transform, opacity, filter;
   }
-
 }
 
 /* Restore normal desktop navigation. */
