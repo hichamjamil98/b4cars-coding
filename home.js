@@ -1,3 +1,4 @@
+/* B4CARS HOME JS — VERSION 6 — NO IMAGE HOVER SCALE */
 /* ==========================================================================
    B4CARS — HOME LOADING SCREEN
    Requires GSAP
@@ -467,5 +468,260 @@
           items.forEach((item) => observer.observe(item));
         }
       });
+    });
+  })();
+  
+  
+  /* ==========================================================================
+     VEHICLES FILTER + EXPANDING FIVE-CARD GRID
+  ========================================================================== */
+  
+  (() => {
+    "use strict";
+  
+    document.addEventListener("DOMContentLoaded", () => {
+      const section = document.querySelector(".section.is--home-slider");
+      if (!section) return;
+  
+      const filterItems = [
+        ...section.querySelectorAll(".filter--item[filter]"),
+      ];
+  
+      const grid = section.querySelector(".grid--cars");
+      if (!filterItems.length || !grid) return;
+  
+      const collectionItems = [
+        ...grid.querySelectorAll(":scope > .collection--item"),
+      ];
+  
+      if (!collectionItems.length) return;
+  
+      const DEFAULT_FILTER = "En stock";
+      const MAX_VISIBLE = 5;
+  
+      let activeFilter = "";
+      let visibleItems = [];
+      let activeItem = null;
+      let transitionToken = 0;
+  
+      const normalizeValue = (value = "") =>
+        value
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .trim()
+          .toLowerCase();
+  
+      const getItemCategory = (item) => {
+        const categoryElement = item.querySelector('[filter="category"]');
+        return normalizeValue(categoryElement?.textContent || "");
+      };
+  
+      const getFilterValue = (filterItem) =>
+        normalizeValue(filterItem.getAttribute("filter") || "");
+  
+      const getGridColumns = (items, activeIndex) =>
+        items
+          .map((_, index) => (index === activeIndex ? "5fr" : "1fr"))
+          .join(" ");
+  
+      const setActiveCard = (item, immediate = false) => {
+        if (!item || !visibleItems.includes(item)) return;
+  
+        activeItem = item;
+  
+        visibleItems.forEach((visibleItem) => {
+          const isActive = visibleItem === activeItem;
+          visibleItem.classList.toggle("is--active", isActive);
+  
+          const card = visibleItem.querySelector(".card--item");
+          card?.classList.toggle("is--active", isActive);
+        });
+  
+        const activeIndex = visibleItems.indexOf(activeItem);
+        const columns = getGridColumns(visibleItems, activeIndex);
+  
+        if (immediate || typeof window.gsap === "undefined") {
+          grid.style.gridTemplateColumns = columns;
+          return;
+        }
+  
+        window.gsap.to(grid, {
+          gridTemplateColumns: columns,
+          duration: 0.75,
+          ease: "expo.out",
+          overwrite: true,
+        });
+      };
+  
+      const bindCardInteractions = () => {
+        visibleItems.forEach((item) => {
+          const card = item.querySelector(".card--item");
+          if (!card || card.dataset.expandReady === "true") return;
+  
+          card.dataset.expandReady = "true";
+  
+          card.addEventListener("mouseenter", () => {
+            if (!visibleItems.includes(item)) return;
+            setActiveCard(item);
+          });
+  
+          card.addEventListener("focusin", () => {
+            if (!visibleItems.includes(item)) return;
+            setActiveCard(item);
+          });
+  
+          card.addEventListener("click", () => {
+            if (!visibleItems.includes(item)) return;
+            setActiveCard(item);
+          });
+        });
+      };
+  
+      const updateFilterButtons = (selectedFilterItem) => {
+        filterItems.forEach((filterItem) => {
+          const isActive = filterItem === selectedFilterItem;
+          filterItem.classList.toggle("is--active", isActive);
+          filterItem.setAttribute("aria-pressed", isActive ? "true" : "false");
+  
+          const link = filterItem.querySelector("a");
+          if (link) {
+            link.setAttribute("aria-current", isActive ? "true" : "false");
+          }
+        });
+      };
+  
+      const getMatchingItems = (filterValue) =>
+        collectionItems
+          .filter((item) => getItemCategory(item) === filterValue)
+          .slice(-MAX_VISIBLE);
+  
+      const hideAllItems = () => {
+        collectionItems.forEach((item) => {
+          item.classList.remove("is--visible", "is--active");
+          item.setAttribute("aria-hidden", "true");
+          item.style.display = "none";
+  
+          const card = item.querySelector(".card--item");
+          card?.classList.remove("is--active");
+        });
+      };
+  
+      const showFilteredItems = (items) => {
+        visibleItems = items;
+  
+        items.forEach((item) => {
+          item.style.display = "";
+          item.setAttribute("aria-hidden", "false");
+          item.classList.add("is--visible");
+        });
+  
+        grid.style.setProperty("--visible-count", String(items.length));
+  
+        const centerIndex = Math.floor((items.length - 1) / 2);
+        const centerItem = items[centerIndex] || null;
+  
+        if (centerItem) {
+          setActiveCard(centerItem, true);
+        } else {
+          activeItem = null;
+          grid.style.gridTemplateColumns = "";
+        }
+  
+        bindCardInteractions();
+      };
+  
+      const applyFilter = (selectedFilterItem, immediate = false) => {
+        const filterValue = getFilterValue(selectedFilterItem);
+        if (!filterValue || filterValue === activeFilter) return;
+  
+        activeFilter = filterValue;
+        updateFilterButtons(selectedFilterItem);
+  
+        const matchingItems = getMatchingItems(filterValue);
+        const token = ++transitionToken;
+  
+        const completeSwap = () => {
+          if (token !== transitionToken) return;
+  
+          hideAllItems();
+          showFilteredItems(matchingItems);
+  
+          if (
+            !immediate &&
+            typeof window.gsap !== "undefined" &&
+            matchingItems.length
+          ) {
+            window.gsap.fromTo(
+              matchingItems,
+              {
+                opacity: 0,
+                y: "1rem",
+              },
+              {
+                opacity: 1,
+                y: 0,
+                duration: 0.65,
+                stagger: 0.065,
+                ease: "power3.out",
+                clearProps: "opacity,transform",
+              }
+            );
+          }
+        };
+  
+        const currentlyVisible = visibleItems.filter(
+          (item) => item.style.display !== "none"
+        );
+  
+        if (
+          immediate ||
+          typeof window.gsap === "undefined" ||
+          !currentlyVisible.length
+        ) {
+          completeSwap();
+          return;
+        }
+  
+        window.gsap.to(currentlyVisible, {
+          opacity: 0,
+          y: "-0.6rem",
+          duration: 0.32,
+          stagger: {
+            each: 0.035,
+            from: "center",
+          },
+          ease: "power2.in",
+          overwrite: true,
+          onComplete: completeSwap,
+        });
+      };
+  
+      filterItems.forEach((filterItem) => {
+        const trigger = filterItem.querySelector("a") || filterItem;
+  
+        filterItem.setAttribute("role", "button");
+        filterItem.setAttribute("aria-pressed", "false");
+  
+        trigger.addEventListener("click", (event) => {
+          event.preventDefault();
+          applyFilter(filterItem);
+        });
+  
+        trigger.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          applyFilter(filterItem);
+        });
+      });
+  
+      const defaultFilterItem =
+        filterItems.find(
+          (filterItem) =>
+            getFilterValue(filterItem) === normalizeValue(DEFAULT_FILTER)
+        ) || filterItems[0];
+  
+      hideAllItems();
+      activeFilter = "";
+      applyFilter(defaultFilterItem, true);
     });
   })();
