@@ -50,14 +50,9 @@ body.is-loading {
   will-change: transform, opacity;
 }
 
-.loading--top,
-.loading--bottom,
 .brand--loading-wrapper {
   position: relative;
   z-index: 3;
-}
-
-.brand--loading-wrapper {
   width: 5rem;
   color: currentColor;
   transform-origin: center;
@@ -76,9 +71,13 @@ body.is-loading {
   will-change: stroke-dashoffset, opacity, fill;
 }
 
+/*
+  The loader script never sets position, inset, top, right, bottom, left,
+  width, height or transform on these Webflow-positioned elements.
+*/
 .loading--top,
 .loading--bottom {
-  will-change: transform, opacity, filter;
+  opacity: 1;
 }
 
 /* The page stays hidden until the loader starts closing. */

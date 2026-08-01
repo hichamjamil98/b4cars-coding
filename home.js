@@ -119,11 +119,18 @@
   
       const secondaryElements = [topContent, bottomContent].filter(Boolean);
   
+      /*
+       * Important:
+       * remove transforms/filters potentially left by an older loader version.
+       * Webflow remains the only source of positioning for these elements.
+       */
       if (secondaryElements.length) {
         gsap.set(secondaryElements, {
+          clearProps: "transform,filter",
+        });
+  
+        gsap.set(secondaryElements, {
           opacity: 0,
-          y: "1rem",
-          filter: "blur(6px)",
         });
       }
   
@@ -139,6 +146,22 @@
           gsap.set(pageElements, {
             clearProps: "opacity,visibility",
           });
+  
+          /*
+           * Remove only animation-generated inline properties.
+           * Position, top, bottom, left, right and layout remain untouched.
+           */
+          if (secondaryElements.length) {
+            gsap.set(secondaryElements, {
+              clearProps: "opacity,transform,filter",
+            });
+          }
+  
+          if (logoWrapper) {
+            gsap.set(logoWrapper, {
+              clearProps: "opacity,transform,filter",
+            });
+          }
   
           window.dispatchEvent(new Event("resize"));
   
@@ -247,8 +270,6 @@
           secondaryElements,
           {
             opacity: 1,
-            y: 0,
-            filter: "blur(0px)",
             duration: 0.75,
             stagger: 0.12,
           },
@@ -258,18 +279,31 @@
   
       timeline.addLabel("ready", 2.65);
   
-      timeline.to(
-        [logoWrapper, ...secondaryElements].filter(Boolean),
-        {
-          opacity: 0,
-          y: "-0.75rem",
-          filter: "blur(4px)",
-          duration: 0.55,
-          stagger: 0.04,
-          ease: "power2.inOut",
-        },
-        "ready"
-      );
+      if (logoWrapper) {
+        timeline.to(
+          logoWrapper,
+          {
+            opacity: 0,
+            scale: 0.96,
+            duration: 0.55,
+            ease: "power2.inOut",
+          },
+          "ready"
+        );
+      }
+  
+      if (secondaryElements.length) {
+        timeline.to(
+          secondaryElements,
+          {
+            opacity: 0,
+            duration: 0.45,
+            stagger: 0.04,
+            ease: "power2.inOut",
+          },
+          "ready"
+        );
+      }
   
       if (backgroundImage) {
         timeline.to(
