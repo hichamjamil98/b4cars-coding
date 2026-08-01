@@ -1,198 +1,469 @@
 /* ========================================================================== 
    B4CARS — INTERACTIONS & ANIMATIONS
+   Requires GSAP + ScrollTrigger
 ========================================================================== */
 
-/* Prevent horizontal overflow and lock page when mobile menu is open. */
-body {
-  overflow-x: hidden;
-}
+(() => {
+  "use strict";
 
-html.is--locked,
-body.is--locked {
-  overflow: hidden !important;
-  overscroll-behavior: none;
-}
+  document.addEventListener("DOMContentLoaded", () => {
+    if (typeof gsap === "undefined") {
+      console.warn("B4Cars: GSAP is missing.");
+      return;
+    }
 
-/* ========================================================================== 
-   BUTTON CHARACTER HOVER
-========================================================================== */
+    if (typeof ScrollTrigger !== "undefined") {
+      gsap.registerPlugin(ScrollTrigger);
+    }
 
-[data-button-animate-chars] {
-  display: inline-block;
-  overflow: hidden;
-  vertical-align: bottom;
-}
+    const EASE = "power4.out";
 
-[data-button-animate-chars] span {
-  position: relative;
-  display: inline-block;
-  transform: translateY(0);
-  text-shadow: 0 1.25em currentColor;
-  transition: transform 0.55s cubic-bezier(0.625, 0.05, 0, 1);
-  will-change: transform;
-}
+    initButtonCharacterHover();
+    initLoadAnimations(EASE);
+    initScrollAnimations(EASE);
+    initMobileNavbar(EASE);
+  });
 
-@media (hover: hover) and (pointer: fine) {
-  .btn:hover [data-button-animate-chars] span,
-  .button:hover [data-button-animate-chars] span,
-  .nav--menu a:hover [data-button-animate-chars] span {
-    transform: translateY(-1.25em);
-  }
-}
+  /* ========================================================================
+     1. BUTTON TEXT CHARACTER HOVER
+     Add data-button-animate-chars to the text element inside a button.
+  ======================================================================== */
 
-/* ========================================================================== 
-   LOAD / SCROLL ANIMATIONS
-========================================================================== */
+  function initButtonCharacterHover() {
+    const textElements = document.querySelectorAll("[data-button-animate-chars]");
+    const delayStep = 0.012;
 
-[animation="load"],
-[animation="load-up"],
-[animation="load-left"],
-[animation="load-right"],
-[animation="load-stagger"] > *,
-[animation="load-split"],
-[animation="fade"],
-[animation="fade-up"],
-[animation="fade-left"],
-[animation="fade-right"],
-[animation="fade-stagger"] > *,
-[animation="fade-split"] {
-  will-change: transform, opacity;
-}
+    textElements.forEach((element) => {
+      if (element.dataset.charsReady === "true") return;
 
-[animation="load-split"],
-[animation="fade-split"] {
-  opacity: 1 !important;
-  visibility: visible !important;
-}
+      const text = element.textContent || "";
+      element.textContent = "";
+      element.setAttribute("aria-label", text.trim());
 
-.load-split__line-mask,
-.fade-split__line-mask {
-  display: block;
-  overflow: hidden;
-}
+      [...text].forEach((character, index) => {
+        const span = document.createElement("span");
+        span.setAttribute("aria-hidden", "true");
+        span.textContent = character === " " ? "\u00A0" : character;
+        span.style.transitionDelay = `${index * delayStep}s`;
+        element.appendChild(span);
+      });
 
-.load-split__line,
-.fade-split__line {
-  display: block;
-  will-change: transform, opacity;
-}
-
-/* ========================================================================== 
-   MOBILE NAVBAR ICONS
-========================================================================== */
-
-.menu--trigger {
-  position: relative;
-  z-index: 1002;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.menu--trigger:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 0.3rem;
-}
-
-.menu--to-open,
-.menu--to-close {
-  display: block;
-  width: 100%;
-  height: auto;
-  color: currentColor;
-  transform-origin: center;
-  will-change: transform, opacity;
-}
-
-.menu--to-close {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transform: scale(0.75) rotate(-90deg);
-  pointer-events: none;
-}
-
-/* ========================================================================== 
-   TABLET / MOBILE NAVBAR
-========================================================================== */
-
-@media screen and (max-width: 991px) {
-  .navbar {
-    z-index: 1000;
+      element.dataset.charsReady = "true";
+    });
   }
 
-  .navbar .container--nav {
-    position: relative;
-    z-index: 1002;
+  /* ========================================================================
+     2. PAGE LOAD ANIMATIONS
+
+     animation="load"
+     animation="load-up"
+     animation="load-left"
+     animation="load-right"
+     animation="load-stagger"
+     animation="load-split"
+  ======================================================================== */
+
+  function initLoadAnimations(ease) {
+    const timeline = gsap.timeline({
+      defaults: { ease },
+      delay: 0.08,
+    });
+
+    addLoadTween(timeline, '[animation="load"]', {
+      opacity: 0,
+      y: "1rem",
+    }, 0);
+
+    addLoadTween(timeline, '[animation="load-up"]', {
+      opacity: 0,
+      y: "2rem",
+    }, 0.04);
+
+    addLoadTween(timeline, '[animation="load-left"]', {
+      opacity: 0,
+      x: "2rem",
+    }, 0.04);
+
+    addLoadTween(timeline, '[animation="load-right"]', {
+      opacity: 0,
+      x: "-2rem",
+    }, 0.04);
+
+    document.querySelectorAll('[animation="load-stagger"]').forEach((parent) => {
+      const children = [...parent.children];
+      if (!children.length) return;
+
+      timeline.fromTo(
+        children,
+        { opacity: 0, y: "1.5rem" },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          stagger: 0.08,
+          clearProps: "transform,opacity",
+        },
+        0.12,
+      );
+    });
+
+    document.querySelectorAll('[animation="load-split"]').forEach((element) => {
+      const line = prepareSplitLine(element, "load-split");
+      if (!line) return;
+
+      timeline.fromTo(
+        line,
+        { yPercent: 110, opacity: 0 },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 0.95,
+          clearProps: "transform,opacity",
+        },
+        0.14,
+      );
+    });
   }
 
-  .nav--brand {
-    position: relative;
-    z-index: 1002;
+  function addLoadTween(timeline, selector, fromVars, position) {
+    const elements = document.querySelectorAll(selector);
+    if (!elements.length) return;
+
+    timeline.fromTo(
+      elements,
+      fromVars,
+      {
+        opacity: 1,
+        x: 0,
+        y: 0,
+        duration: 0.85,
+        stagger: 0.08,
+        clearProps: "transform,opacity",
+      },
+      position,
+    );
   }
 
-  .nav--menu {
-    position: fixed;
-    inset: 0;
-    z-index: 1001;
+  /* ========================================================================
+     3. SCROLL ANIMATIONS
 
-    display: none;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 1.25rem;
+     animation="fade"
+     animation="fade-up"
+     animation="fade-left"
+     animation="fade-right"
+     animation="fade-stagger"
+     animation="fade-split"
+  ======================================================================== */
 
-    width: 100%;
-    height: 100dvh;
-    padding: 7rem 1.5rem 2rem;
+  function initScrollAnimations(ease) {
+    if (typeof ScrollTrigger === "undefined") return;
 
-    background: #f3f0e9;
-    opacity: 0;
-    pointer-events: none;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    initFade('[animation="fade"]', { opacity: 0, y: "1rem" }, ease);
+    initFade('[animation="fade-up"]', { opacity: 0, y: "2rem" }, ease);
+    initFade('[animation="fade-left"]', { opacity: 0, x: "2rem" }, ease);
+    initFade('[animation="fade-right"]', { opacity: 0, x: "-2rem" }, ease);
+    initFadeStagger(ease);
+    initFadeSplit(ease);
   }
 
-  .nav--menu.is--open {
-    pointer-events: auto;
+  function initFade(selector, fromVars, ease) {
+    document.querySelectorAll(selector).forEach((element) => {
+      gsap.fromTo(
+        element,
+        fromVars,
+        {
+          opacity: 1,
+          x: 0,
+          y: 0,
+          duration: 0.85,
+          ease,
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: element,
+            start: "top 86%",
+            once: true,
+          },
+        },
+      );
+    });
   }
 
-  .nav--menu > a {
-    width: 100%;
-    opacity: 0;
-    transform: translateY(1.5rem);
-    filter: blur(6px);
-    will-change: transform, opacity, filter;
+  function initFadeStagger(ease) {
+    document.querySelectorAll('[animation="fade-stagger"]').forEach((parent) => {
+      const children = [...parent.children];
+      if (!children.length) return;
+
+      gsap.fromTo(
+        children,
+        { opacity: 0, y: "1.5rem" },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.78,
+          stagger: 0.08,
+          ease,
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: parent,
+            start: "top 86%",
+            once: true,
+          },
+        },
+      );
+    });
   }
 
-  .navbar.is--menu-open,
-  .navbar.is--menu-open .nav--brand,
-  .navbar.is--menu-open .menu--trigger {
-    color: inherit;
-  }
-}
+  function initFadeSplit(ease) {
+    document.querySelectorAll('[animation="fade-split"]').forEach((element) => {
+      const line = prepareSplitLine(element, "fade-split");
+      if (!line) return;
 
-/* Restore normal desktop navigation. */
-@media screen and (min-width: 992px) {
-  .nav--menu {
-    opacity: 1 !important;
-    pointer-events: auto !important;
+      gsap.fromTo(
+        line,
+        { yPercent: 110, opacity: 0 },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 0.9,
+          ease,
+          clearProps: "transform,opacity",
+          scrollTrigger: {
+            trigger: element,
+            start: "top 86%",
+            once: true,
+          },
+        },
+      );
+    });
   }
 
-  .nav--menu > a {
-    opacity: 1 !important;
-    transform: none !important;
-    filter: none !important;
-  }
-}
+  function prepareSplitLine(element, prefix) {
+    const readyAttribute = `${prefix.replace(/-/g, "")}Ready`;
+    if (element.dataset[readyAttribute] === "true") {
+      return element.querySelector(`.${prefix}__line`);
+    }
 
-/* Accessibility: reduce motion when requested by the user. */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    const content = element.innerHTML.trim();
+    if (!content) return null;
+
+    element.innerHTML = `
+      <span class="${prefix}__line-mask">
+        <span class="${prefix}__line">${content}</span>
+      </span>
+    `;
+
+    element.dataset[readyAttribute] = "true";
+    return element.querySelector(`.${prefix}__line`);
   }
-}
+
+  /* ========================================================================
+     4. TABLET / MOBILE NAVBAR
+
+     Existing B4Cars classes:
+     .navbar
+     .nav--menu
+     .menu--trigger
+     .menu--to-open
+     .menu--to-close
+  ======================================================================== */
+
+  function initMobileNavbar(ease) {
+    const navbar = document.querySelector(".navbar");
+    const menu = document.querySelector(".nav--menu");
+    const trigger = document.querySelector(".menu--trigger");
+    const iconOpen = trigger?.querySelector(".menu--to-open");
+    const iconClose = trigger?.querySelector(".menu--to-close");
+    const breakpoint = window.matchMedia("(max-width: 991px)");
+
+    if (!navbar || !menu || !trigger) return;
+
+    const links = [...menu.querySelectorAll("a")];
+    let isOpen = false;
+    let timeline = null;
+
+    trigger.setAttribute("role", "button");
+    trigger.setAttribute("tabindex", "0");
+    trigger.setAttribute("aria-expanded", "false");
+    trigger.setAttribute("aria-label", "Ouvrir le menu");
+
+    function lockScroll() {
+      document.documentElement.classList.add("is--locked");
+      document.body.classList.add("is--locked");
+    }
+
+    function unlockScroll() {
+      document.documentElement.classList.remove("is--locked");
+      document.body.classList.remove("is--locked");
+    }
+
+    function setClosedState() {
+      gsap.set(menu, {
+        display: "none",
+        opacity: 0,
+        pointerEvents: "none",
+      });
+
+      gsap.set(links, {
+        opacity: 0,
+        y: "1.5rem",
+        filter: "blur(6px)",
+      });
+
+      if (iconOpen) {
+        gsap.set(iconOpen, { opacity: 1, scale: 1, rotate: 0 });
+      }
+
+      if (iconClose) {
+        gsap.set(iconClose, { opacity: 0, scale: 0.75, rotate: -90 });
+      }
+    }
+
+    function openMenu() {
+      if (isOpen || !breakpoint.matches) return;
+      isOpen = true;
+
+      timeline?.kill();
+      navbar.classList.add("is--menu-open");
+      menu.classList.add("is--open");
+      trigger.classList.add("is--open");
+      trigger.setAttribute("aria-expanded", "true");
+      trigger.setAttribute("aria-label", "Fermer le menu");
+      lockScroll();
+
+      timeline = gsap.timeline();
+
+      timeline
+        .set(menu, { display: "flex", pointerEvents: "auto" })
+        .to(menu, { opacity: 1, duration: 0.45, ease: "power2.out" }, 0)
+        .to(
+          links,
+          {
+            opacity: 1,
+            y: 0,
+            filter: "blur(0px)",
+            duration: 0.62,
+            stagger: 0.055,
+            ease,
+          },
+          0.16,
+        );
+
+      if (iconOpen) {
+        timeline.to(
+          iconOpen,
+          { opacity: 0, scale: 0.75, rotate: 90, duration: 0.3, ease },
+          0,
+        );
+      }
+
+      if (iconClose) {
+        timeline.to(
+          iconClose,
+          { opacity: 1, scale: 1, rotate: 0, duration: 0.4, ease },
+          0.06,
+        );
+      }
+    }
+
+    function closeMenu({ immediate = false } = {}) {
+      if (!isOpen && !immediate) return;
+      isOpen = false;
+
+      timeline?.kill();
+      trigger.setAttribute("aria-expanded", "false");
+      trigger.setAttribute("aria-label", "Ouvrir le menu");
+      unlockScroll();
+
+      if (immediate) {
+        navbar.classList.remove("is--menu-open");
+        menu.classList.remove("is--open");
+        trigger.classList.remove("is--open");
+        setClosedState();
+        return;
+      }
+
+      timeline = gsap.timeline({
+        onComplete: () => {
+          navbar.classList.remove("is--menu-open");
+          menu.classList.remove("is--open");
+          trigger.classList.remove("is--open");
+        },
+      });
+
+      timeline
+        .to(
+          links,
+          {
+            opacity: 0,
+            y: "1rem",
+            filter: "blur(6px)",
+            duration: 0.28,
+            stagger: { each: 0.025, from: "end" },
+            ease: "power2.inOut",
+          },
+          0,
+        )
+        .to(menu, { opacity: 0, duration: 0.42, ease: "power2.inOut" }, 0.1)
+        .set(menu, { display: "none", pointerEvents: "none" });
+
+      if (iconClose) {
+        timeline.to(
+          iconClose,
+          { opacity: 0, scale: 0.75, rotate: -90, duration: 0.3, ease },
+          0,
+        );
+      }
+
+      if (iconOpen) {
+        timeline.to(
+          iconOpen,
+          { opacity: 1, scale: 1, rotate: 0, duration: 0.4, ease },
+          0.05,
+        );
+      }
+    }
+
+    function toggleMenu() {
+      isOpen ? closeMenu() : openMenu();
+    }
+
+    trigger.addEventListener("click", (event) => {
+      event.preventDefault();
+      toggleMenu();
+    });
+
+    trigger.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        toggleMenu();
+      }
+    });
+
+    links.forEach((link) => {
+      link.addEventListener("click", () => closeMenu());
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && isOpen) closeMenu();
+    });
+
+    document.addEventListener("pointerdown", (event) => {
+      if (!isOpen) return;
+      if (menu.contains(event.target) || trigger.contains(event.target)) return;
+      closeMenu();
+    });
+
+    breakpoint.addEventListener("change", (event) => {
+      if (!event.matches) {
+        closeMenu({ immediate: true });
+        gsap.set(menu, { clearProps: "all" });
+        gsap.set(links, { clearProps: "all" });
+        gsap.set([iconOpen, iconClose].filter(Boolean), { clearProps: "all" });
+      } else {
+        closeMenu({ immediate: true });
+      }
+    });
+
+    if (breakpoint.matches) setClosedState();
+  }
+})();
