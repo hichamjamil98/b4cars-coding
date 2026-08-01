@@ -1,76 +1,58 @@
 /* ==========================================================================
-   B4CARS — PRESS TEMPLATE
+   B4CARS — PRESS TEMPLATE V2
+   Share current article on X and LinkedIn in a new tab
 ========================================================================== */
 
 (() => {
     "use strict";
   
     document.addEventListener("DOMContentLoaded", () => {
-      const templatePage = document.querySelector(".section.is--tempress-hero");
-      if (!templatePage) return;
-  
-      const buttons = document.querySelectorAll(
-        '.post--social .social--share[share]'
-      );
+      const page = document.querySelector(".section.is--tempress-hero");
+      if (!page) return;
   
       const currentUrl = window.location.href;
-      const pageTitle =
-        document.querySelector(".section.is--tempress-hero h1")?.textContent?.trim() ||
+      const currentTitle =
+        page.querySelector("h1")?.textContent?.trim() ||
         document.title ||
         "B4Cars";
   
-      buttons.forEach((button) => {
-        const network = button.getAttribute("share")?.trim().toLowerCase();
-        let shareUrl = "";
+      document
+        .querySelectorAll('.post--social .social--share[share]')
+        .forEach((button) => {
+          const network = (
+            button.getAttribute("share") || ""
+          ).trim().toLowerCase();
   
-        if (network === "x" || network === "twitter") {
-          shareUrl =
-            "https://twitter.com/intent/tweet" +
-            `?url=${encodeURIComponent(currentUrl)}` +
-            `&text=${encodeURIComponent(pageTitle)}`;
+          let shareUrl = "";
   
-          button.setAttribute("aria-label", "Partager cet article sur X");
-        }
+          if (network === "x" || network === "twitter") {
+            shareUrl =
+              "https://twitter.com/intent/tweet" +
+              `?url=${encodeURIComponent(currentUrl)}` +
+              `&text=${encodeURIComponent(currentTitle)}`;
   
-        if (network === "linkedin") {
-          shareUrl =
-            "https://www.linkedin.com/sharing/share-offsite/" +
-            `?url=${encodeURIComponent(currentUrl)}`;
+            button.setAttribute(
+              "aria-label",
+              "Partager cet article sur X"
+            );
+          }
   
-          button.setAttribute(
-            "aria-label",
-            "Partager cet article sur LinkedIn"
-          );
-        }
+          if (network === "linkedin") {
+            shareUrl =
+              "https://www.linkedin.com/sharing/share-offsite/" +
+              `?url=${encodeURIComponent(currentUrl)}`;
   
-        if (!shareUrl) return;
+            button.setAttribute(
+              "aria-label",
+              "Partager cet article sur LinkedIn"
+            );
+          }
   
-        button.href = shareUrl;
-        button.target = "_blank";
-        button.rel = "noopener noreferrer";
+          if (!shareUrl) return;
   
-        button.addEventListener("click", (event) => {
-          event.preventDefault();
-  
-          const width = 720;
-          const height = 620;
-          const left = Math.max(
-            0,
-            window.screenX + (window.outerWidth - width) / 2
-          );
-          const top = Math.max(
-            0,
-            window.screenY + (window.outerHeight - height) / 2
-          );
-  
-          const popup = window.open(
-            shareUrl,
-            `b4cars-share-${network}`,
-            `noopener,noreferrer,width=${width},height=${height},left=${left},top=${top}`
-          );
-  
-          if (!popup) window.location.href = shareUrl;
+          button.href = shareUrl;
+          button.target = "_blank";
+          button.rel = "noopener noreferrer";
         });
-      });
     });
   })();

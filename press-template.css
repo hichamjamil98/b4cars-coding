@@ -1,10 +1,11 @@
 /* ==========================================================================
-   B4CARS — PRESS TEMPLATE
+   B4CARS — PRESS TEMPLATE V2
 ========================================================================== */
 
 
 /* ==========================================================================
-   NAVBAR AU SCROLL — TEMPLATE PRESSE UNIQUEMENT
+   NAVBAR — SCROLL STATE
+   Press template only
 ========================================================================== */
 
 body:has(.section.is--tempress-hero)
@@ -26,7 +27,7 @@ body:has(.section.is--tempress-hero)
 
 
 /* ==========================================================================
-   NAVBAR OUVERTE — TABLETTE / MOBILE
+   NAVBAR — OPEN TABLET / MOBILE
 ========================================================================== */
 
 @media screen and (max-width: 991px) {
@@ -58,33 +59,19 @@ body:has(.section.is--tempress-hero)
 
 
 /* ==========================================================================
-   SOCIAL SHARE BUTTONS
+   SHARE BUTTONS
+   No color, background or border change
 ========================================================================== */
 
-.section.is--press-body .post--social {
-  display: flex;
-  align-items: center;
-}
-
 .section.is--press-body .social--share {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: inherit;
+  transform: translateY(0) scale(1);
   transition:
-    color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .section.is--press-body .social--share:hover {
-  color: #f6f9f8;
-  background-color: #031e4d;
-  border-color: #031e4d;
-  transform: translateY(-0.125rem);
+  transform: translateY(-0.125rem) scale(1.04);
 }
 
 .section.is--press-body .social--share:focus-visible {
@@ -93,7 +80,9 @@ body:has(.section.is--tempress-hero)
 }
 
 .section.is--press-body .social--share .icon--16 {
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: scale(1);
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .section.is--press-body .social--share:hover .icon--16 {
@@ -102,7 +91,8 @@ body:has(.section.is--tempress-hero)
 
 
 /* ==========================================================================
-   FALLBACK SANS :has()
+   FALLBACK WITHOUT :has()
+   Add class="is--press-template" to body only if needed
 ========================================================================== */
 
 body.is--press-template
@@ -136,9 +126,15 @@ body.is--press-template
   }
 }
 
+
+/* ==========================================================================
+   REDUCED MOTION
+========================================================================== */
+
 @media (prefers-reduced-motion: reduce) {
   .section.is--press-body .social--share,
   .section.is--press-body .social--share .icon--16 {
     transition: none !important;
+    transform: none !important;
   }
 }
