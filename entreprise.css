@@ -200,3 +200,34 @@
       transition: none !important;
     }
   }
+  
+  /* ==========================================================================
+     ENTREPRISE CAR OVERLAY — REMOVE ON ACTIVE / HOVERED CARD
+  ========================================================================== */
+  
+  /* Overlay visible on collapsed cards. */
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars .overlay-orange70 {
+    display: block;
+    opacity: 1;
+  }
+  
+  /*
+    The expanded card receives .is--active from entreprise.js.
+    display:none avoids Webflow variant opacity/background overrides.
+  */
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars .collection--item.is--active .overlay-orange70,
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars .card--item.is--active .overlay-orange70,
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars .card--item:hover .overlay-orange70 {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    background: transparent !important;
+  }
