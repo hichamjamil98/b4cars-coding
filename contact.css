@@ -1,0 +1,56 @@
+/* ==========================================================================
+   B4CARS — CONTACT PAGE
+========================================================================== */
+
+
+/* ==========================================================================
+   NAVBAR — SCROLL STATE
+========================================================================== */
+
+body.is--contact-page .navbar.is--scrolled::before,
+body:has(.section.is--contact) .navbar.is--scrolled::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  content: "";
+  pointer-events: none;
+  background-color: #f6f9f8 !important;
+}
+
+body.is--contact-page .navbar.is--scrolled > *,
+body:has(.section.is--contact) .navbar.is--scrolled > * {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ==========================================================================
+   NAVBAR — OPEN TABLET / MOBILE
+========================================================================== */
+
+@media screen and (max-width: 991px) {
+  body.is--contact-page .navbar.is--menu-open::before,
+  body:has(.section.is--contact) .navbar.is--menu-open::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: block;
+    content: "";
+    pointer-events: none;
+    background-color: #f6f9f8 !important;
+  }
+
+  body.is--contact-page .navbar.is--menu-open > *,
+  body:has(.section.is--contact) .navbar.is--menu-open > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  body.is--contact-page .navbar.is--menu-open .nav--menu,
+  body.is--contact-page .nav--menu.is--open,
+  body:has(.section.is--contact) .navbar.is--menu-open .nav--menu,
+  body:has(.section.is--contact) .nav--menu.is--open {
+    background-color: #f6f9f8 !important;
+  }
+}
