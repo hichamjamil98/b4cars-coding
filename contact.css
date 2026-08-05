@@ -1,5 +1,5 @@
 /* ==========================================================================
-   B4CARS — CONTACT PAGE
+   B4CARS — CONTACT PAGE V2
 ========================================================================== */
 
 
@@ -57,8 +57,7 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
 
 
 /* ==========================================================================
-   PHONE FIELD — INTL TEL INPUT
-   Keeps the Webflow font, color, border, background and field height
+   PHONE FIELD — WRAPPER
 ========================================================================== */
 
 .section.is--contact .iti {
@@ -70,17 +69,12 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
   color: inherit;
 }
 
-/*
-  Do not impose a new height, font, background, border or radius.
-  The existing .text--field Webflow styles remain in control.
-*/
 .section.is--contact .iti input,
 .section.is--contact .iti input[type="tel"] {
   width: 100% !important;
   padding-left: 6.25rem !important;
   font: inherit !important;
   color: inherit !important;
-  background-color: inherit;
 }
 
 
@@ -94,16 +88,15 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
   left: 1.25rem !important;
   display: flex !important;
   align-items: center !important;
-  font: inherit;
   color: inherit;
+  font: inherit;
 }
 
-.section.is--contact .iti__selected-country {
+.section.is--contact .iti__selected-country,
+.section.is--contact .iti__selected-country-primary {
   display: flex !important;
-  width: auto !important;
-  min-width: 0 !important;
   align-items: center !important;
-  gap: 0.35rem !important;
+  gap: 0.25rem !important;
   margin: 0 !important;
   padding: 0 !important;
   color: inherit !important;
@@ -112,11 +105,9 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
   font: inherit !important;
 }
 
-.section.is--contact .iti__selected-country-primary {
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.25rem !important;
-  padding: 0 !important;
+.section.is--contact .iti__selected-country {
+  width: auto !important;
+  min-width: 0 !important;
 }
 
 .section.is--contact .iti__selected-dial-code {
@@ -185,7 +176,7 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
   background-color: transparent !important;
   border: 1px solid rgba(3, 30, 77, 0.18) !important;
   border-radius: 0 !important;
-  outline: none;
+  outline: none !important;
   font: inherit !important;
 }
 
@@ -262,5 +253,48 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
   .section.is--contact .iti__dropdown-content {
     width: calc(100vw - 2rem) !important;
     max-width: calc(100vw - 2rem) !important;
+  }
+}
+
+
+/* ==========================================================================
+   PHONE FIELD — WEBFLOW GRID RESTORE
+========================================================================== */
+
+/*
+  intl-tel-input creates a wrapper around the Webflow input.
+  The JS transfers the w-node grid class to this wrapper so the original
+  desktop column span and grid placement remain exactly as configured.
+*/
+.section.is--contact .contact--phone-field {
+  width: 100%;
+  min-width: 0;
+  justify-self: stretch;
+  align-self: stretch;
+}
+
+/*
+  Keep the phone content aligned to the left inside the Webflow field.
+*/
+.section.is--contact .contact--phone-field input[type="tel"] {
+  text-align: left !important;
+}
+
+/*
+  Keep the dropdown anchored to the left edge of the phone field.
+*/
+.section.is--contact
+.contact--phone-field
+.iti__dropdown-content {
+  left: 0 !important;
+  right: auto !important;
+}
+
+/*
+  Do not let the wrapper alter the Webflow grid on desktop.
+*/
+@media screen and (min-width: 992px) {
+  .section.is--contact .contact--phone-field {
+    margin: 0;
   }
 }

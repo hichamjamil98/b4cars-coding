@@ -1,26 +1,96 @@
 /* ==========================================================================
-   B4CARS — CONTACT PAGE
+   B4CARS — CONTACT PAGE V2
+   Navbar + intl-tel-input loaded automatically
 ========================================================================== */
 
 (() => {
     "use strict";
   
-    document.addEventListener("DOMContentLoaded", () => {
+    const ITI_CSS =
+      "https://cdn.jsdelivr.net/npm/intl-tel-input@25/build/css/intlTelInput.css";
+  
+    const ITI_JS =
+      "https://cdn.jsdelivr.net/npm/intl-tel-input@25/build/js/intlTelInput.min.js";
+  
+    const ITI_UTILS =
+      "https://cdn.jsdelivr.net/npm/intl-tel-input@25/build/js/utils.js";
+  
+    document.addEventListener("DOMContentLoaded", async () => {
       const contactPage = document.querySelector(".section.is--contact");
       if (!contactPage) return;
   
       document.body.classList.add("is--contact-page");
   
-      initContactPhoneField();
+      try {
+        await loadIntlTelInput();
+        initContactPhoneField();
+      } catch (error) {
+        console.error(
+          "[B4Cars] Impossible de charger intl-tel-input.",
+          error
+        );
+      }
     });
+  
+    function loadIntlTelInput() {
+      loadStylesheet(ITI_CSS);
+  
+      if (typeof window.intlTelInput === "function") {
+        return Promise.resolve();
+      }
+  
+      return new Promise((resolve, reject) => {
+        const existingScript = document.querySelector(
+          'script[data-b4cars-intl-tel-input]'
+        );
+  
+        if (existingScript) {
+          existingScript.addEventListener("load", resolve, { once: true });
+          existingScript.addEventListener("error", reject, { once: true });
+          return;
+        }
+  
+        const script = document.createElement("script");
+        script.src = ITI_JS;
+        script.async = true;
+        script.dataset.b4carsIntlTelInput = "true";
+  
+        script.addEventListener("load", resolve, { once: true });
+        script.addEventListener("error", reject, { once: true });
+  
+        document.head.appendChild(script);
+      });
+    }
+  
+    function loadStylesheet(href) {
+      if (document.querySelector(`link[href="${href}"]`)) return;
+  
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = href;
+      link.dataset.b4carsIntlTelInput = "true";
+  
+      document.head.appendChild(link);
+    }
   
     function initContactPhoneField() {
       const form = document.querySelector("#email-form");
-      const phoneInput =
-        document.querySelector("#T-l-phone") ||
-        document.querySelector("#Phone-number");
+      const phoneInput = document.querySelector("#T-l-phone");
   
-      if (!form || !phoneInput) return;
+      if (!form || !phoneInput) {
+        console.warn(
+          "[B4Cars] #email-form ou #T-l-phone est introuvable."
+        );
+        return;
+      }
+  
+      if (typeof window.intlTelInput !== "function") {
+        console.warn("[B4Cars] intl-tel-input n'est pas disponible.");
+        return;
+      }
+  
+      if (phoneInput.dataset.itiReady === "true") return;
+      phoneInput.dataset.itiReady = "true";
   
       phoneInput.type = "tel";
       phoneInput.name = "Phone number";
@@ -28,23 +98,13 @@
       phoneInput.setAttribute("autocomplete", "tel");
       phoneInput.setAttribute("inputmode", "tel");
   
-      if (typeof window.intlTelInput !== "function") {
-        console.warn(
-          "[B4Cars] intl-tel-input n'est pas chargé sur la page Contact."
-        );
-        return;
-      }
-  
       const iti = window.intlTelInput(phoneInput, {
         initialCountry: "auto",
   
         geoIpLookup: (success) => {
           fetch("https://ipwho.is/")
             .then((response) => {
-              if (!response.ok) {
-                throw new Error("Geo-IP request failed");
-              }
-  
+              if (!response.ok) throw new Error("Geo-IP request failed");
               return response.json();
             })
             .then((data) => {
@@ -57,9 +117,7 @@
   
               success(countryCode);
             })
-            .catch(() => {
-              success("ma");
-            });
+            .catch(() => success("ma"));
         },
   
         preferredCountries: [
@@ -77,54 +135,46 @@
         formatAsYouType: true,
         autoPlaceholder: "off",
   
-        /*
-         * intl-tel-input v25+
-         */
-        loadUtils: () =>
-          import(
-            "https://cdn.jsdelivr.net/npm/intl-tel-input@25/build/js/utils.js"
-          ),
+        loadUtils: () => import(ITI_UTILS),
       });
   
-      const countryCodeInput = document.createElement("input");
-      countryCodeInput.type = "hidden";
-      countryCodeInput.name = "Country code";
-      countryCodeInput.setAttribute("data-name", "Country code");
+      /*
+       * intl-tel-input wraps the original Webflow input inside .iti.
+       * Webflow grid placement classes must therefore be moved to the wrapper.
+       */
+      const itiWrapper = phoneInput.closest(".iti");
   
-      const fullPhoneInput = document.createElement("input");
-      fullPhoneInput.type = "hidden";
-      fullPhoneInput.name = "Full phone number";
-      fullPhoneInput.setAttribute("data-name", "Full phone number");
+      if (itiWrapper) {
+        [...phoneInput.classList]
+          .filter((className) => className.startsWith("w-node-"))
+          .forEach((className) => {
+            itiWrapper.classList.add(className);
+            phoneInput.classList.remove(className);
+          });
   
-      form.append(countryCodeInput, fullPhoneInput);
+        itiWrapper.classList.add("contact--phone-field");
+      }
+  
+      const countryCodeInput = createHiddenInput(
+        form,
+        "Country code"
+      );
+  
+      const fullPhoneInput = createHiddenInput(
+        form,
+        "Full phone number"
+      );
   
       const updatePhoneValues = () => {
-        const selectedCountry = iti.getSelectedCountryData();
+        const country = iti.getSelectedCountryData();
   
-        countryCodeInput.value = selectedCountry?.dialCode
-          ? `+${selectedCountry.dialCode}`
+        countryCodeInput.value = country?.dialCode
+          ? `+${country.dialCode}`
           : "";
   
-        const internationalNumber = iti.getNumber();
-  
         fullPhoneInput.value =
-          internationalNumber || phoneInput.value.trim();
+          iti.getNumber() || phoneInput.value.trim();
       };
-  
-      const refreshPhoneField = () => {
-        updatePhoneValues();
-  
-        /*
-         * Keeps intl-tel-input correctly aligned after Webflow/GSAP layout
-         * changes without modifying the Webflow field dimensions.
-         */
-        window.dispatchEvent(new Event("resize"));
-      };
-  
-      refreshPhoneField();
-  
-      window.setTimeout(refreshPhoneField, 300);
-      window.setTimeout(refreshPhoneField, 800);
   
       phoneInput.addEventListener(
         "countrychange",
@@ -140,5 +190,27 @@
         phoneInput.value = phoneInput.value.trim();
         updatePhoneValues();
       });
+  
+      updatePhoneValues();
+  
+      window.setTimeout(updatePhoneValues, 400);
+      window.setTimeout(updatePhoneValues, 1000);
+    }
+  
+    function createHiddenInput(form, name) {
+      let input = form.querySelector(
+        `input[type="hidden"][name="${name}"]`
+      );
+  
+      if (input) return input;
+  
+      input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.setAttribute("data-name", name);
+  
+      form.appendChild(input);
+  
+      return input;
     }
   })();
