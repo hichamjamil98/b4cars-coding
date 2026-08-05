@@ -1,0 +1,202 @@
+/* ==========================================================================
+   B4CARS — ENTREPRISE VEHICLES FILTER + EXPANDING FIVE-CARD GRID
+   Scoped only to .section.is--entreprise-slider
+========================================================================== */
+
+.section.is--entreprise-slider .filter--item[filter] {
+    cursor: pointer;
+  }
+  
+  .section.is--entreprise-slider .filter--item[filter] .btn,
+  .section.is--entreprise-slider .filter--item[filter] .button {
+    transition:
+      color 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  
+  /* Active filter: #F6F9F8 at 100% opacity. */
+  .section.is--entreprise-slider
+  .filter--item[filter].is--active .btn,
+  .section.is--entreprise-slider
+  .filter--item[filter].is--active .button {
+    color: #f6f9f8 !important;
+    border-color: #f6f9f8 !important;
+    opacity: 1 !important;
+  }
+  
+  .section.is--entreprise-slider
+  .filter--item[filter].is--active .btn *,
+  .section.is--entreprise-slider
+  .filter--item[filter].is--active .button * {
+    color: inherit !important;
+    opacity: 1 !important;
+  }
+  
+  .section.is--entreprise-slider .cars--slide-wrapper {
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .section.is--entreprise-slider
+  .cars--slide-wrapper .grid--cars {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars > .collection--item {
+    position: relative;
+    display: none;
+    flex: var(--card-grow, 1) 1 0%;
+    min-width: 0;
+    overflow: hidden;
+    transition:
+      flex-grow 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 0.35s ease;
+    will-change: flex-grow;
+  }
+  
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars > .collection--item.is--visible {
+    display: block;
+  }
+  
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars .card--item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    cursor: pointer;
+    overflow: hidden;
+  }
+  
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars .car--image-wrapper {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+  
+  /*
+    Webflow controls the wrapper height and ratio.
+    The image keeps the dimensions captured from the expanded card.
+  */
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars .car--slide-image {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: block;
+    width: var(--frozen-image-width, 100%);
+    max-width: none;
+    height: var(--frozen-image-height, 100%);
+    max-height: none;
+    pointer-events: none;
+    transform: translate(-50%, -50%) !important;
+    transform-origin: center center !important;
+    scale: 1 !important;
+    transition: none !important;
+    animation: none !important;
+    will-change: auto;
+  }
+  
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars .card--item > p:not([filter="category"]) {
+    overflow: hidden;
+    max-height: 0;
+    margin-top: 0;
+    opacity: 0;
+    transform: translateY(0.5rem);
+    transition:
+      max-height 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      margin-top 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.35s ease,
+      transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars .card--item.is--active > p:not([filter="category"]) {
+    max-height: 4rem;
+    margin-top: 0.75rem;
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars [filter="category"] {
+    display: none !important;
+  }
+  
+  /* No matching CMS items: the collection remains empty. */
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars:empty {
+    display: none;
+  }
+  
+  
+  /* ==========================================================================
+     RESPONSIVE
+  ========================================================================== */
+  
+  @media screen and (max-width: 991px) {
+    .section.is--entreprise-slider .cars--slide-wrapper {
+      overflow: visible;
+    }
+  
+    .section.is--entreprise-slider
+    .cars--slide-wrapper
+    .grid--cars {
+      display: grid;
+      grid-template-columns: 1fr;
+      overflow: visible;
+    }
+  
+    .section.is--entreprise-slider
+    .cars--slide-wrapper
+    .grid--cars > .collection--item {
+      flex: none;
+    }
+  
+    .section.is--entreprise-slider
+    .cars--slide-wrapper
+    .grid--cars .card--item > p:not([filter="category"]) {
+      max-height: 4rem;
+      margin-top: 0.75rem;
+      opacity: 1;
+      transform: none;
+    }
+  }
+  
+  
+  /* ==========================================================================
+     REDUCED MOTION
+  ========================================================================== */
+  
+  @media (prefers-reduced-motion: reduce) {
+    .section.is--entreprise-slider
+    .cars--slide-wrapper
+    .grid--cars > .collection--item,
+    .section.is--entreprise-slider
+    .cars--slide-wrapper
+    .grid--cars .card--item > p:not([filter="category"]),
+    .section.is--entreprise-slider .filter--item[filter] .btn,
+    .section.is--entreprise-slider .filter--item[filter] .button {
+      transition: none !important;
+    }
+  }
