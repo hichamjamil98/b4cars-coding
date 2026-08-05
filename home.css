@@ -110,7 +110,6 @@ body.is-loading {
   .loading--screen {
     display: none !important;
   }
-
 }
 
 
@@ -185,7 +184,6 @@ body.is-loading {
 }
 
 
-
 @media (hover: none), (pointer: coarse) {
   .search--hover-highlight {
     display: none;
@@ -212,6 +210,7 @@ body.is-loading {
   }
 }
 
+
 /* ==========================================================================
    SEARCH IMAGE LOCK — NO HOVER SCALE
 ========================================================================== */
@@ -221,6 +220,7 @@ body.is-loading {
   transform: none !important;
   scale: 1 !important;
 }
+
 
 /* ==========================================================================
    VEHICLES FILTER + EXPANDING FIVE-CARD GRID
@@ -244,7 +244,7 @@ body.is-loading {
   color: #031e4d !important;
 }
 
-.section.is--home-slider .filter--item[filter].is--active .btn * ,
+.section.is--home-slider .filter--item[filter].is--active .btn *,
 .section.is--home-slider .filter--item[filter].is--active .button * {
   color: inherit !important;
 }
@@ -313,31 +313,43 @@ body.is-loading {
   will-change: auto;
 }
 
+/*
+  The text space is permanently reserved on desktop.
+  Only opacity and translation are animated, so the section height
+  does not change when another card becomes active.
+*/
 .section.is--home-slider
 .grid--cars .card--item > p:not([filter="category"]) {
-  overflow: hidden;
-  max-height: 0;
-  margin-top: 0;
+  min-height: 4rem;
+  margin-top: 0.75rem;
   opacity: 0;
+  visibility: hidden;
   transform: translateY(0.5rem);
   transition:
-    max-height 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-    margin-top 0.5s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.35s ease,
+    visibility 0s linear 0.35s,
     transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .section.is--home-slider
 .grid--cars .card--item.is--active > p:not([filter="category"]) {
-  max-height: 4rem;
-  margin-top: 0.75rem;
   opacity: 1;
+  visibility: visible;
   transform: translateY(0);
+  transition:
+    opacity 0.35s ease,
+    visibility 0s linear 0s,
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .section.is--home-slider .grid--cars [filter="category"] {
   display: none !important;
 }
+
+
+/* ==========================================================================
+   RESPONSIVE — VEHICLE GRID
+========================================================================== */
 
 @media screen and (max-width: 991px) {
   .section.is--home-slider .grid--cars {
@@ -353,12 +365,18 @@ body.is-loading {
 
   .section.is--home-slider
   .grid--cars .card--item > p:not([filter="category"]) {
-    max-height: 4rem;
+    min-height: 0;
     margin-top: 0.75rem;
     opacity: 1;
+    visibility: visible;
     transform: none;
   }
 }
+
+
+/* ==========================================================================
+   REDUCED MOTION — VEHICLE GRID
+========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
   .section.is--home-slider
