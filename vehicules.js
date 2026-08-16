@@ -1357,22 +1357,6 @@
         );
   
   
-  
-  
-        /* ==========================================================================
-           NAVBAR COLOR
-           --------------------------------------------------------------------------
-           No additional scroll listener is needed here.
-  
-           The site's existing navbar script already toggles:
-           - .navbar.is--scrolled
-           - .navbar.is--menu-open
-  
-           The Vehicles-page CSS in this file reacts to those classes and applies
-           the same #f6f9f8 background behavior used on the Press page.
-        ========================================================================== */
-  
-  
         /* ==========================================================================
            INIT
         ========================================================================== */
@@ -1382,4 +1366,1183 @@
       }
     );
   
+  })();
+  
+  
+  /* ==========================================================================
+     B4CARS — VEHICLES FILTER + VALUE FORMATTER
+  
+     Features:
+     - Live text search
+     - Dynamic Marque dropdown generated from CMS values
+     - Integer-only dual range for:
+         year / price / km
+     - All filters work together
+     - Live filtering while dragging
+     - Reset button
+     - Empty-results state
+     - [format="km"]    : 200000 -> 200.000km
+     - [format="price"] : 200000 -> 200.000€
+  ========================================================================== */
+  
+  (() => {
+    "use strict";
+  
+    document.addEventListener("DOMContentLoaded", () => {
+      const section = document.querySelector(".section.is--vehicule-filter");
+      if (!section) return;
+  
+      const collection = section.querySelector(".collection--cars");
+      if (!collection) return;
+  
+      const items = Array.from(
+        collection.querySelectorAll(":scope > .w-dyn-item")
+      );
+  
+      if (!items.length) return;
+  
+      const searchInput = section.querySelector(".search--field");
+  
+      const brandFilter = section.querySelector(
+        '.filter--card[filter="marque"]'
+      );
+  
+      const brandDropdown = brandFilter?.querySelector(".drop--wrapper") || null;
+  
+      const brandLabel =
+        brandFilter?.querySelector(":scope > p") || null;
+  
+      const emptyResults = section.querySelector(
+        '[filter="empty"], .empty--results'
+      );
+  
+      const form = section.querySelector("form.filter--wrapper");
+  
+      const resetButton =
+        section.querySelector(
+          'a[data-wf--slot-item-button--variant="reset"]'
+        ) ||
+        section.querySelector(
+          'a .btn-animate-chars__text[aria-label="Réinitialiser"]'
+        )?.closest("a") ||
+        null;
+  
+  
+      /* ==========================================================================
+         NORMALIZATION / NUMBERS
+      ========================================================================== */
+  
+      const normalizeText = (value = "") =>
+        String(value)
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase();
+  
+  
+      const parseInteger = (value) => {
+        if (value === null || value === undefined) return null;
+  
+        const stringValue = String(value)
+          .replace(/\u00a0/g, " ")
+          .trim();
+  
+        if (!stringValue) return null;
+  
+        const cleaned = stringValue.replace(/[^\d-]/g, "");
+  
+        if (!cleaned || cleaned === "-") return null;
+  
+        const number = Number.parseInt(cleaned, 10);
+  
+        return Number.isFinite(number)
+          ? number
+          : null;
+      };
+  
+  
+      const clamp = (value, min, max) =>
+        Math.min(
+          Math.max(value, min),
+          max
+        );
+  
+  
+      const formatGroupedInteger = (value) =>
+        Math.round(value)
+          .toString()
+          .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  
+  
+      const formatKm = (value) =>
+        `${formatGroupedInteger(value)}km`;
+  
+  
+      const formatPrice = (value) =>
+        `${formatGroupedInteger(value)}€`;
+  
+  
+      /* ==========================================================================
+         GLOBAL FORMAT ATTRIBUTES
+      ========================================================================== */
+  
+      const formatDocumentValues = () => {
+        document
+          .querySelectorAll('[format="km"], [format="price"]')
+          .forEach((element) => {
+            if (!element.dataset.b4RawValue) {
+              element.dataset.b4RawValue = element.textContent.trim();
+            }
+  
+            const raw = parseInteger(
+              element.dataset.b4RawValue
+            );
+  
+            if (raw === null) return;
+  
+            if (element.getAttribute("format") === "km") {
+              element.textContent = formatKm(raw);
+            }
+  
+            if (element.getAttribute("format") === "price") {
+              element.textContent = formatPrice(raw);
+            }
+          });
+      };
+  
+  
+      /* ==========================================================================
+         CMS DATA CACHE
+      ========================================================================== */
+  
+      const getRawElementValue = (element) => {
+        if (!element) return "";
+  
+        if (element.dataset.b4RawValue) {
+          return element.dataset.b4RawValue;
+        }
+  
+        return element.textContent.trim();
+      };
+  
+  
+      const getFilterText = (item, name) =>
+        getRawElementValue(
+          item.querySelector(`[filter="${name}"]`)
+        );
+  
+  
+      const cardData = items.map((item) => {
+        const brand = getFilterText(item, "marque");
+        const model = getFilterText(item, "modele");
+        const yearRaw = getFilterText(item, "annee");
+        const kmRaw = getFilterText(item, "km");
+        const priceRaw = getFilterText(item, "price");
+  
+        return {
+          item,
+          brand,
+          brandNormalized: normalizeText(brand),
+          model,
+          searchText: normalizeText(
+            [
+              brand,
+              model,
+              yearRaw,
+              kmRaw,
+              priceRaw,
+              item.querySelector(".caritem--text")?.textContent || "",
+            ].join(" ")
+          ),
+          year: parseInteger(yearRaw),
+          km: parseInteger(kmRaw),
+          price: parseInteger(priceRaw),
+        };
+      });
+  
+  
+      /* ==========================================================================
+         FILTER STATE
+      ========================================================================== */
+  
+      const state = {
+        query: "",
+        brand: "",
+        ranges: {
+          year: null,
+          price: null,
+          km: null,
+        },
+      };
+  
+  
+      /* ==========================================================================
+         RANGE CONFIG
+      ========================================================================== */
+  
+      const rangeConfigs = {
+        year: {
+          filterSelector: '[filter="year"]',
+          dataKey: "year",
+          format: (value) => String(value),
+        },
+  
+        price: {
+          filterSelector: '[filter="price"]',
+          dataKey: "price",
+          format: formatPrice,
+        },
+  
+        km: {
+          filterSelector: '[filter="km"]',
+          dataKey: "km",
+          format: formatKm,
+        },
+      };
+  
+  
+      const rangeControllers = {};
+  
+  
+      const getDataBounds = (dataKey) => {
+        const values = cardData
+          .map((card) => card[dataKey])
+          .filter(Number.isFinite);
+  
+        if (!values.length) {
+          return {
+            min: 0,
+            max: 0,
+          };
+        }
+  
+        return {
+          min: Math.min(...values),
+          max: Math.max(...values),
+        };
+      };
+  
+  
+      /* ==========================================================================
+         FILTER ENGINE
+      ========================================================================== */
+  
+      const matchesRange = (card, key) => {
+        const range = state.ranges[key];
+  
+        if (!range) return true;
+  
+        const value = card[key];
+  
+        const isFullRange =
+          range.min === range.absoluteMin &&
+          range.max === range.absoluteMax;
+  
+        /*
+          Missing CMS numeric values remain visible while the slider
+          is untouched. Once the user narrows the range, they are excluded.
+        */
+        if (!Number.isFinite(value)) {
+          return isFullRange;
+        }
+  
+        return (
+          value >= range.min &&
+          value <= range.max
+        );
+      };
+  
+  
+      const applyFilters = () => {
+        let visibleCount = 0;
+  
+        cardData.forEach((card) => {
+          const queryMatch =
+            !state.query ||
+            card.searchText.includes(state.query);
+  
+          const brandMatch =
+            !state.brand ||
+            card.brandNormalized === state.brand;
+  
+          const yearMatch =
+            matchesRange(card, "year");
+  
+          const priceMatch =
+            matchesRange(card, "price");
+  
+          const kmMatch =
+            matchesRange(card, "km");
+  
+          const shouldShow =
+            queryMatch &&
+            brandMatch &&
+            yearMatch &&
+            priceMatch &&
+            kmMatch;
+  
+          const wasHidden =
+            card.item.classList.contains(
+              "is--filter-hidden"
+            );
+  
+          if (shouldShow) {
+            visibleCount += 1;
+  
+            card.item.classList.remove(
+              "is--filter-hidden"
+            );
+  
+            if (wasHidden) {
+              card.item.classList.remove(
+                "is--filter-entering"
+              );
+  
+              /*
+                Restart the small entrance animation.
+              */
+              void card.item.offsetWidth;
+  
+              card.item.classList.add(
+                "is--filter-entering"
+              );
+  
+              window.setTimeout(() => {
+                card.item.classList.remove(
+                  "is--filter-entering"
+                );
+              }, 420);
+            }
+          } else {
+            card.item.classList.remove(
+              "is--filter-entering"
+            );
+  
+            card.item.classList.add(
+              "is--filter-hidden"
+            );
+          }
+        });
+  
+        if (emptyResults) {
+          emptyResults.classList.toggle(
+            "is--visible",
+            visibleCount === 0
+          );
+        }
+      };
+  
+  
+      /* ==========================================================================
+         SEARCH
+      ========================================================================== */
+  
+      if (searchInput) {
+        searchInput.addEventListener("input", () => {
+          state.query = normalizeText(
+            searchInput.value
+          );
+  
+          applyFilters();
+        });
+      }
+  
+  
+      /* ==========================================================================
+         MARQUE DROPDOWN — CMS GENERATED
+      ========================================================================== */
+  
+      const closeBrandDropdown = () => {
+        brandFilter?.classList.remove(
+          "is--open"
+        );
+      };
+  
+  
+      const openBrandDropdown = () => {
+        brandFilter?.classList.add(
+          "is--open"
+        );
+      };
+  
+  
+      const toggleBrandDropdown = () => {
+        brandFilter?.classList.toggle(
+          "is--open"
+        );
+      };
+  
+  
+      const setBrand = (
+        normalizedBrand,
+        displayLabel = "Marque"
+      ) => {
+        state.brand = normalizedBrand;
+  
+        if (brandLabel) {
+          brandLabel.textContent = displayLabel;
+        }
+  
+        brandDropdown
+          ?.querySelectorAll(".text--marque")
+          .forEach((option) => {
+            option.classList.toggle(
+              "is--selected",
+              option.dataset.brandValue === normalizedBrand
+            );
+          });
+  
+        closeBrandDropdown();
+        applyFilters();
+      };
+  
+  
+      const buildBrandDropdown = () => {
+        if (
+          !brandFilter ||
+          !brandDropdown
+        ) {
+          return;
+        }
+  
+        const uniqueBrands = new Map();
+  
+        cardData.forEach((card) => {
+          const normalized =
+            card.brandNormalized;
+  
+          if (
+            !normalized ||
+            uniqueBrands.has(normalized)
+          ) {
+            return;
+          }
+  
+          uniqueBrands.set(
+            normalized,
+            card.brand.trim()
+          );
+        });
+  
+        const template =
+          brandDropdown.querySelector(
+            ".text--marque"
+          );
+  
+        brandDropdown.innerHTML = "";
+  
+  
+        const createOption = (
+          label,
+          value
+        ) => {
+          const option =
+            template
+              ? template.cloneNode(true)
+              : document.createElement("div");
+  
+          option.classList.add(
+            "text--marque"
+          );
+  
+          option.removeAttribute("id");
+  
+          option.setAttribute(
+            "item",
+            "marque"
+          );
+  
+          option.setAttribute(
+            "role",
+            "option"
+          );
+  
+          option.setAttribute(
+            "tabindex",
+            "0"
+          );
+  
+          option.textContent =
+            label;
+  
+          option.dataset.brandValue =
+            value;
+  
+          const select = (
+            event
+          ) => {
+            event.preventDefault();
+            event.stopPropagation();
+  
+            setBrand(
+              value,
+              value ? label : "Marque"
+            );
+          };
+  
+          option.addEventListener(
+            "click",
+            select
+          );
+  
+          option.addEventListener(
+            "keydown",
+            (event) => {
+              if (
+                event.key !== "Enter" &&
+                event.key !== " "
+              ) {
+                return;
+              }
+  
+              select(event);
+            }
+          );
+  
+          return option;
+        };
+  
+  
+        brandDropdown.appendChild(
+          createOption(
+            "Toutes les marques",
+            ""
+          )
+        );
+  
+  
+        Array.from(
+          uniqueBrands.entries()
+        )
+          .sort((a, b) =>
+            a[1].localeCompare(
+              b[1],
+              "fr",
+              {
+                sensitivity: "base",
+              }
+            )
+          )
+          .forEach(
+            ([normalized, label]) => {
+              brandDropdown.appendChild(
+                createOption(
+                  label,
+                  normalized
+                )
+              );
+            }
+          );
+  
+  
+        brandFilter.setAttribute(
+          "role",
+          "combobox"
+        );
+  
+        brandFilter.setAttribute(
+          "aria-haspopup",
+          "listbox"
+        );
+  
+        brandDropdown.setAttribute(
+          "role",
+          "listbox"
+        );
+  
+  
+        brandFilter.addEventListener(
+          "click",
+          (event) => {
+            if (
+              event.target.closest(
+                ".drop--wrapper"
+              )
+            ) {
+              return;
+            }
+  
+            toggleBrandDropdown();
+          }
+        );
+  
+  
+        brandFilter.addEventListener(
+          "keydown",
+          (event) => {
+            if (
+              event.key === "Enter" ||
+              event.key === " "
+            ) {
+              event.preventDefault();
+              toggleBrandDropdown();
+            }
+  
+            if (
+              event.key === "Escape"
+            ) {
+              closeBrandDropdown();
+            }
+          }
+        );
+  
+  
+        if (!brandFilter.hasAttribute("tabindex")) {
+          brandFilter.setAttribute(
+            "tabindex",
+            "0"
+          );
+        }
+      };
+  
+  
+      document.addEventListener(
+        "click",
+        (event) => {
+          if (
+            brandFilter &&
+            !brandFilter.contains(
+              event.target
+            )
+          ) {
+            closeBrandDropdown();
+          }
+        }
+      );
+  
+  
+      /* ==========================================================================
+         DOUBLE RANGE BUILDER
+      ========================================================================== */
+  
+      const createRangeController = (
+        key,
+        config
+      ) => {
+        const filterCard =
+          section.querySelector(
+            config.filterSelector
+          );
+  
+        if (!filterCard) return null;
+  
+        const track =
+          filterCard.querySelector(
+            ".rod--grille-wrapper"
+          );
+  
+        const minDot =
+          filterCard.querySelector(
+            ".dot--min"
+          );
+  
+        const maxDot =
+          filterCard.querySelector(
+            ".dot--max"
+          );
+  
+        const bottom =
+          filterCard.querySelector(
+            ".grille--bottom"
+          );
+  
+        const labels =
+          bottom
+            ? Array.from(
+                bottom.querySelectorAll(
+                  ":scope > p"
+                )
+              )
+            : [];
+  
+        const minLabel =
+          labels[0] || null;
+  
+        const maxLabel =
+          labels[labels.length - 1] || null;
+  
+        if (
+          !track ||
+          !minDot ||
+          !maxDot
+        ) {
+          return null;
+        }
+  
+  
+        const bounds =
+          getDataBounds(
+            config.dataKey
+          );
+  
+  
+        const range = {
+          absoluteMin:
+            Math.round(
+              bounds.min
+            ),
+  
+          absoluteMax:
+            Math.round(
+              bounds.max
+            ),
+  
+          min:
+            Math.round(
+              bounds.min
+            ),
+  
+          max:
+            Math.round(
+              bounds.max
+            ),
+        };
+  
+  
+        state.ranges[key] =
+          range;
+  
+  
+        const valueToPercent = (
+          value
+        ) => {
+          const span =
+            range.absoluteMax -
+            range.absoluteMin;
+  
+          if (span <= 0) return 0;
+  
+          return (
+            (
+              value -
+              range.absoluteMin
+            ) /
+            span
+          ) * 100;
+        };
+  
+  
+        const pointerToIntegerValue = (
+          clientX
+        ) => {
+          const rect =
+            track.getBoundingClientRect();
+  
+          if (rect.width <= 0) {
+            return range.absoluteMin;
+          }
+  
+          const ratio =
+            clamp(
+              (
+                clientX -
+                rect.left
+              ) /
+              rect.width,
+              0,
+              1
+            );
+  
+          const raw =
+            range.absoluteMin +
+            ratio *
+            (
+              range.absoluteMax -
+              range.absoluteMin
+            );
+  
+          /*
+            Critical requirement:
+            values are ALWAYS integers.
+          */
+          return Math.round(
+            raw
+          );
+        };
+  
+  
+        const render = () => {
+          const minPercent =
+            valueToPercent(
+              range.min
+            );
+  
+          const maxPercent =
+            valueToPercent(
+              range.max
+            );
+  
+          track.style.setProperty(
+            "--range-min-pct",
+            `${minPercent}%`
+          );
+  
+          track.style.setProperty(
+            "--range-max-pct",
+            `${maxPercent}%`
+          );
+  
+          if (minLabel) {
+            minLabel.textContent =
+              config.format(
+                range.min
+              );
+          }
+  
+          if (maxLabel) {
+            maxLabel.textContent =
+              config.format(
+                range.max
+              );
+          }
+        };
+  
+  
+        const setMin = (
+          nextValue
+        ) => {
+          range.min =
+            clamp(
+              Math.round(nextValue),
+              range.absoluteMin,
+              range.max
+            );
+  
+          render();
+          applyFilters();
+        };
+  
+  
+        const setMax = (
+          nextValue
+        ) => {
+          range.max =
+            clamp(
+              Math.round(nextValue),
+              range.min,
+              range.absoluteMax
+            );
+  
+          render();
+          applyFilters();
+        };
+  
+  
+        const bindDot = (
+          dot,
+          type
+        ) => {
+          const onPointerDown = (
+            event
+          ) => {
+            if (
+              event.button !== undefined &&
+              event.button !== 0
+            ) {
+              return;
+            }
+  
+            event.preventDefault();
+  
+            dot.classList.add(
+              "is--dragging"
+            );
+  
+            try {
+              dot.setPointerCapture(
+                event.pointerId
+              );
+            } catch (error) {
+              /* Pointer capture is optional. */
+            }
+  
+            const update = (
+              pointerEvent
+            ) => {
+              const nextValue =
+                pointerToIntegerValue(
+                  pointerEvent.clientX
+                );
+  
+              if (type === "min") {
+                setMin(nextValue);
+              } else {
+                setMax(nextValue);
+              }
+            };
+  
+  
+            const end = () => {
+              dot.classList.remove(
+                "is--dragging"
+              );
+  
+              dot.removeEventListener(
+                "pointermove",
+                update
+              );
+  
+              dot.removeEventListener(
+                "pointerup",
+                end
+              );
+  
+              dot.removeEventListener(
+                "pointercancel",
+                end
+              );
+            };
+  
+  
+            dot.addEventListener(
+              "pointermove",
+              update
+            );
+  
+            dot.addEventListener(
+              "pointerup",
+              end
+            );
+  
+            dot.addEventListener(
+              "pointercancel",
+              end
+            );
+  
+            update(event);
+          };
+  
+  
+          dot.addEventListener(
+            "pointerdown",
+            onPointerDown
+          );
+  
+  
+          dot.setAttribute(
+            "role",
+            "slider"
+          );
+  
+          dot.setAttribute(
+            "tabindex",
+            "0"
+          );
+  
+  
+          dot.addEventListener(
+            "keydown",
+            (event) => {
+              const currentValue =
+                type === "min"
+                  ? range.min
+                  : range.max;
+  
+              let delta = 0;
+  
+              if (
+                event.key === "ArrowRight" ||
+                event.key === "ArrowUp"
+              ) {
+                delta = 1;
+              }
+  
+              if (
+                event.key === "ArrowLeft" ||
+                event.key === "ArrowDown"
+              ) {
+                delta = -1;
+              }
+  
+              if (!delta) return;
+  
+              event.preventDefault();
+  
+              if (type === "min") {
+                setMin(
+                  currentValue +
+                  delta
+                );
+              } else {
+                setMax(
+                  currentValue +
+                  delta
+                );
+              }
+            }
+          );
+        };
+  
+  
+        /*
+          Clicking the track moves the nearest handle.
+        */
+        track.addEventListener(
+          "pointerdown",
+          (event) => {
+            if (
+              event.target === minDot ||
+              event.target === maxDot
+            ) {
+              return;
+            }
+  
+            const value =
+              pointerToIntegerValue(
+                event.clientX
+              );
+  
+            const distanceToMin =
+              Math.abs(
+                value -
+                range.min
+              );
+  
+            const distanceToMax =
+              Math.abs(
+                value -
+                range.max
+              );
+  
+            if (
+              distanceToMin <=
+              distanceToMax
+            ) {
+              setMin(value);
+            } else {
+              setMax(value);
+            }
+          }
+        );
+  
+  
+        bindDot(
+          minDot,
+          "min"
+        );
+  
+        bindDot(
+          maxDot,
+          "max"
+        );
+  
+  
+        const reset = () => {
+          range.min =
+            range.absoluteMin;
+  
+          range.max =
+            range.absoluteMax;
+  
+          render();
+        };
+  
+  
+        render();
+  
+  
+        return {
+          range,
+          reset,
+          render,
+        };
+      };
+  
+  
+      Object.entries(
+        rangeConfigs
+      ).forEach(
+        ([key, config]) => {
+          rangeControllers[key] =
+            createRangeController(
+              key,
+              config
+            );
+        }
+      );
+  
+  
+      /* ==========================================================================
+         RESET
+      ========================================================================== */
+  
+      const resetAll = () => {
+        state.query = "";
+        state.brand = "";
+  
+        if (searchInput) {
+          searchInput.value = "";
+        }
+  
+        if (brandLabel) {
+          brandLabel.textContent =
+            "Marque";
+        }
+  
+        brandDropdown
+          ?.querySelectorAll(
+            ".text--marque"
+          )
+          .forEach(
+            (option) => {
+              option.classList.toggle(
+                "is--selected",
+                option.dataset.brandValue === ""
+              );
+            }
+          );
+  
+        Object.values(
+          rangeControllers
+        ).forEach(
+          (controller) => {
+            controller?.reset();
+          }
+        );
+  
+        closeBrandDropdown();
+  
+        applyFilters();
+      };
+  
+  
+      if (resetButton) {
+        resetButton.addEventListener(
+          "click",
+          (event) => {
+            event.preventDefault();
+            resetAll();
+          }
+        );
+      }
+  
+  
+      /* ==========================================================================
+         PREVENT WEBFLOW FORM SUBMISSION
+      ========================================================================== */
+  
+      if (form) {
+        form.addEventListener(
+          "submit",
+          (event) => {
+            event.preventDefault();
+          }
+        );
+      }
+  
+  
+      /* ==========================================================================
+         INIT
+      ========================================================================== */
+  
+      /*
+        Cache CMS raw values first, then format visible price/km text.
+      */
+      buildBrandDropdown();
+  
+      formatDocumentValues();
+  
+      applyFilters();
+    });
   })();

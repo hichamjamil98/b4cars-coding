@@ -429,13 +429,23 @@
   }
   
   
+  /* ==========================================================================
+     REDUCED MOTION — DESKTOP CUSTOM ANIMATION ONLY
+  ========================================================================== */
+  
+  @media screen and (min-width: 992px)
+  and (prefers-reduced-motion: reduce) {
+  
+    .section.is--vehicule-hero
+    .swiper-slide.is--featured {
+      transition: none !important;
+    }
+  }
   
   
   /* ==========================================================================
-     NAVBAR — VEHICLES PAGE ONLY
-     Same behavior as the Press page:
-     - light navbar background when scrolled
-     - light navbar background when mobile menu is open
+     B4CARS — VEHICLES PAGE NAVBAR
+     Same behavior as Press page.
   ========================================================================== */
   
   body:has(.section.is--vehicule-hero)
@@ -484,14 +494,238 @@
   
   
   /* ==========================================================================
-     REDUCED MOTION — DESKTOP CUSTOM ANIMATION ONLY
+     B4CARS — VEHICLES FILTER
+     Search + Marque dropdown + Year / Price / KM double ranges.
   ========================================================================== */
   
-  @media screen and (min-width: 992px)
-  and (prefers-reduced-motion: reduce) {
+  .section.is--vehicule-filter .filter--wrapper {
+    position: relative;
+  }
   
-    .section.is--vehicule-hero
-    .swiper-slide.is--featured {
+  
+  /* ==========================================================================
+     MARQUE DROPDOWN
+  ========================================================================== */
+  
+  .section.is--vehicule-filter
+  .filter--card[filter="marque"] {
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .section.is--vehicule-filter
+  .filter--card[filter="marque"]
+  .drop--8 {
+    transition:
+      transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  
+  .section.is--vehicule-filter
+  .filter--card[filter="marque"].is--open
+  .drop--8 {
+    transform: rotate(180deg);
+  }
+  
+  .section.is--vehicule-filter
+  .filter--card[filter="marque"]
+  .drop--wrapper {
+    z-index: 20;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-0.5rem);
+    transition:
+      opacity 0.25s ease,
+      transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear 0.4s;
+  }
+  
+  .section.is--vehicule-filter
+  .filter--card[filter="marque"].is--open
+  .drop--wrapper {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+    transition:
+      opacity 0.25s ease,
+      transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear 0s;
+  }
+  
+  .section.is--vehicule-filter
+  .drop--wrapper
+  .text--marque {
+    cursor: pointer;
+  }
+  
+  .section.is--vehicule-filter
+  .drop--wrapper
+  .text--marque.is--selected {
+    opacity: 0.55;
+  }
+  
+  
+  /* ==========================================================================
+     DOUBLE RANGE — YEAR / PRICE / KM
+  ========================================================================== */
+  
+  .section.is--vehicule-filter
+  [filter="year"] .rod--grille-wrapper,
+  .section.is--vehicule-filter
+  [filter="price"] .rod--grille-wrapper,
+  .section.is--vehicule-filter
+  [filter="km"] .rod--grille-wrapper {
+    --range-min-pct: 0%;
+    --range-max-pct: 100%;
+  
+    position: relative;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  
+  .section.is--vehicule-filter
+  [filter="year"] .rod--grille,
+  .section.is--vehicule-filter
+  [filter="price"] .rod--grille,
+  .section.is--vehicule-filter
+  [filter="km"] .rod--grille {
+    position: absolute;
+    left: var(--range-min-pct);
+    right: calc(100% - var(--range-max-pct));
+    width: auto;
+    transition:
+      left 0.12s linear,
+      right 0.12s linear;
+  }
+  
+  .section.is--vehicule-filter
+  [filter="year"] .dot--min,
+  .section.is--vehicule-filter
+  [filter="year"] .dot--max,
+  .section.is--vehicule-filter
+  [filter="price"] .dot--min,
+  .section.is--vehicule-filter
+  [filter="price"] .dot--max,
+  .section.is--vehicule-filter
+  [filter="km"] .dot--min,
+  .section.is--vehicule-filter
+  [filter="km"] .dot--max {
+    position: absolute;
+    top: 50%;
+    z-index: 3;
+    cursor: grab;
+    touch-action: none;
+    transform: translate(-50%, -50%);
+    transition:
+      left 0.12s linear,
+      transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: left;
+  }
+  
+  .section.is--vehicule-filter
+  [filter="year"] .dot--min,
+  .section.is--vehicule-filter
+  [filter="price"] .dot--min,
+  .section.is--vehicule-filter
+  [filter="km"] .dot--min {
+    left: var(--range-min-pct);
+  }
+  
+  .section.is--vehicule-filter
+  [filter="year"] .dot--max,
+  .section.is--vehicule-filter
+  [filter="price"] .dot--max,
+  .section.is--vehicule-filter
+  [filter="km"] .dot--max {
+    left: var(--range-max-pct);
+  }
+  
+  .section.is--vehicule-filter
+  .dot--min.is--dragging,
+  .section.is--vehicule-filter
+  .dot--max.is--dragging {
+    cursor: grabbing;
+    transform: translate(-50%, -50%) scale(1.18);
+  }
+  
+  
+  /* ==========================================================================
+     FILTERED RESULTS
+  ========================================================================== */
+  
+  .section.is--vehicule-filter
+  .collection--cars > .w-dyn-item.is--filter-hidden {
+    display: none !important;
+  }
+  
+  .section.is--vehicule-filter
+  .collection--cars > .w-dyn-item.is--filter-entering {
+    animation:
+      b4cars-filter-enter 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  
+  @keyframes b4cars-filter-enter {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
+  
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .section.is--vehicule-filter
+  .empty--results {
+    display: none;
+  }
+  
+  .section.is--vehicule-filter
+  .empty--results.is--visible {
+    display: flex;
+  }
+  
+  
+  /* ==========================================================================
+     TOUCH / REDUCED MOTION
+  ========================================================================== */
+  
+  @media (hover: none), (pointer: coarse) {
+    .section.is--vehicule-filter
+    [filter="year"] .dot--min,
+    .section.is--vehicule-filter
+    [filter="year"] .dot--max,
+    .section.is--vehicule-filter
+    [filter="price"] .dot--min,
+    .section.is--vehicule-filter
+    [filter="price"] .dot--max,
+    .section.is--vehicule-filter
+    [filter="km"] .dot--min,
+    .section.is--vehicule-filter
+    [filter="km"] .dot--max {
+      cursor: default;
+    }
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+    .section.is--vehicule-filter
+    .drop--wrapper,
+    .section.is--vehicule-filter
+    .drop--8,
+    .section.is--vehicule-filter
+    .rod--grille,
+    .section.is--vehicule-filter
+    .dot--min,
+    .section.is--vehicule-filter
+    .dot--max {
       transition: none !important;
+    }
+  
+    .section.is--vehicule-filter
+    .collection--cars > .w-dyn-item.is--filter-entering {
+      animation: none !important;
     }
   }
