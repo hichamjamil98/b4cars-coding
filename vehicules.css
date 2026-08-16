@@ -1,16 +1,22 @@
 /* ==========================================================================
-   B4CARS — VEHICLES HERO FEATURED SWIPER — V4
+   B4CARS — VEHICLES HERO — V5
 
    DESKTOP >= 992px
-   Current slide: 1138px / 16 = 71.125rem
-   Preview 1:      72px / 16 = 4.5rem
-   Preview 2:      52px / 16 = 3.25rem
-   Preview 3:      24px / 16 = 1.5rem
-   Preview 4:      12px / 16 = 0.75rem
-   Gap:            12px / 16 = 0.75rem
+   - No Swiper translation on desktop
+   - 5 CMS cards always stay in the row
+   - Only widths rotate:
+       current = 71.125rem
+       +1      = 4.5rem
+       +2      = 3.25rem
+       +3      = 1.5rem
+       +4      = 0.75rem
+   - Internal styling of the ACTIVE card remains controlled by Webflow
+   - Only inactive cards are visually reduced to image + overlay
 
-   TABLET + MOBILE <= 991px
-   Normal infinite Swiper, one slide at a time.
+   TABLET / MOBILE <= 991px
+   - Normal Swiper
+   - loop: true
+   - 1 slide per view
 ========================================================================== */
 
 .section.is--vehicule-hero {
@@ -48,83 +54,105 @@
   
   
   /* ==========================================================================
-     DESKTOP — EXACT COMPOSITION
+     DESKTOP
   ========================================================================== */
   
   @media screen and (min-width: 992px) {
   
+    /*
+      IMPORTANT:
+      On desktop the wrapper itself does NOT translate.
+      We animate only slide widths.
+    */
+    .section.is--vehicule-hero .swiper-wrapper.is--featured {
+      gap: var(--featured-gap);
+      transform: none !important;
+      transition: none !important;
+      cursor: default !important;
+    }
+  
     .section.is--vehicule-hero .swiper-slide.is--featured {
-      width: var(--featured-next-4) !important;
+      margin-right: 0 !important;
       height: 30rem;
+      width: var(--featured-next-4);
       cursor: pointer;
   
       transition:
-        width 1.15s cubic-bezier(0.76, 0, 0.24, 1);
+        width 1.05s cubic-bezier(0.76, 0, 0.24, 1);
   
       will-change: width;
     }
   
   
-    /* CURRENT — 1138px = 71.125rem */
+    /* CURRENT — 1138 / 16 */
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-active {
       width: var(--featured-current) !important;
+      cursor: default;
     }
   
   
-    /* SECOND — 72px = 4.5rem */
+    /* NEXT 1 — 72 / 16 */
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-next-1 {
       width: var(--featured-next-1) !important;
     }
   
   
-    /* THIRD — 52px = 3.25rem */
+    /* NEXT 2 — 52 / 16 */
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-next-2 {
       width: var(--featured-next-2) !important;
     }
   
   
-    /* FOURTH — 24px = 1.5rem */
+    /* NEXT 3 — 24 / 16 */
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-next-3 {
       width: var(--featured-next-3) !important;
     }
   
   
-    /* FIFTH — 12px = 0.75rem */
+    /* NEXT 4 — 12 / 16 */
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-next-4 {
       width: var(--featured-next-4) !important;
     }
   
   
-    /* Everything else stays collapsed. */
+    /* ==========================================================================
+       ACTIVE SLIDE
+  
+       We intentionally do NOT redefine:
+       - .featured--car-wrapper
+       - .featured--text width
+       - .featured--text flex
+       - .featured--image-wrapper width/flex
+       - internal spacing
+       - button layout
+  
+       These stay exactly as defined in Webflow.
+    ========================================================================== */
+  
     .section.is--vehicule-hero
-    .swiper-slide.is--featured.b4-featured-hidden {
-      width: var(--featured-next-4) !important;
+    .swiper-slide.is--featured.b4-featured-active
+    .featured--text {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+  
+    .section.is--vehicule-hero
+    .swiper-slide.is--featured.b4-featured-active
+    .featured--image-wrapper .overlay--80 {
+      opacity: 0 !important;
     }
   
   
-    /* --------------------------------------------------------------------------
-       SLIDE CONTENT
-    -------------------------------------------------------------------------- */
-  
-    .section.is--vehicule-hero .featured--car-wrapper {
-      position: relative;
-      display: flex;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: #031e4d;
-    }
-  
-  
-    /* --------------------------------------------------------------------------
-       NON-CURRENT SLIDES:
-       ONLY IMAGE + OVERLAY ARE VISIBLE
-    -------------------------------------------------------------------------- */
+    /* ==========================================================================
+       INACTIVE SLIDES
+       Only image + overlay remain visible.
+    ========================================================================== */
   
     .section.is--vehicule-hero
     .swiper-slide.is--featured:not(.b4-featured-active)
@@ -134,69 +162,31 @@
   
     .section.is--vehicule-hero
     .swiper-slide.is--featured:not(.b4-featured-active)
-    .featured--image-wrapper {
-      position: absolute;
-      inset: 0;
+    .featured--car-wrapper {
+      position: relative;
       width: 100%;
       height: 100%;
-    }
-  
-  
-    /* --------------------------------------------------------------------------
-       CURRENT SLIDE:
-       TEXT + COMPLETE IMAGE
-    -------------------------------------------------------------------------- */
-  
-    .section.is--vehicule-hero
-    .swiper-slide.is--featured.b4-featured-active
-    .featured--text {
-      position: relative;
-      z-index: 4;
-  
-      display: flex;
-      flex-direction: column;
-  
-      flex: 0 0 16.5rem;
-      width: 16.5rem;
-      min-width: 16.5rem;
-      height: 100%;
-  
-      opacity: 1;
-      visibility: visible;
-  
-      transform: translate3d(0, 0, 0);
-  
-      transition:
-        opacity 0.5s ease 0.22s,
-        transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.12s;
+      overflow: hidden;
     }
   
     .section.is--vehicule-hero
-    .swiper-slide.is--featured.b4-featured-active
+    .swiper-slide.is--featured:not(.b4-featured-active)
     .featured--image-wrapper {
-      position: relative;
+      position: absolute !important;
+      inset: 0 !important;
   
-      flex: 1 1 auto;
-  
-      width: auto;
-      min-width: 0;
-      height: 100%;
+      width: 100% !important;
+      height: 100% !important;
+      max-width: none !important;
   
       overflow: hidden;
     }
   
-  
-    /* --------------------------------------------------------------------------
-       IMAGE
-       No transform here because your project already uses animation="parallax".
-    -------------------------------------------------------------------------- */
-  
     .section.is--vehicule-hero
+    .swiper-slide.is--featured:not(.b4-featured-active)
     .featured--image-wrapper .image--absolute-100 {
       position: absolute;
       inset: 0;
-  
-      display: block;
   
       width: 100%;
       height: 100%;
@@ -204,60 +194,25 @@
   
       object-fit: cover;
       object-position: center;
-  
-      pointer-events: none;
-    }
-  
-  
-    /* --------------------------------------------------------------------------
-       OVERLAY
-  
-       Preview slides:
-       overlay stays visible.
-  
-       Current slide:
-       overlay is completely removed visually.
-    -------------------------------------------------------------------------- */
-  
-    .section.is--vehicule-hero
-    .featured--image-wrapper .overlay--80 {
-      position: absolute;
-      inset: 0;
-      z-index: 2;
-  
-      display: block;
-  
-      pointer-events: none;
-  
-      opacity: 0.8;
-  
-      transition:
-        opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-  
-      will-change: opacity;
     }
   
     .section.is--vehicule-hero
-    .swiper-slide.is--featured.b4-featured-active
+    .swiper-slide.is--featured:not(.b4-featured-active)
     .featured--image-wrapper .overlay--80 {
-      opacity: 0;
+      opacity: 0.8 !important;
+  
+      transition:
+        opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1);
     }
   
   
-    /* --------------------------------------------------------------------------
-       OPTIONAL PRICE DROP TAG
-       Only visible on current slide.
-    -------------------------------------------------------------------------- */
-  
-    .section.is--vehicule-hero .baisse--tag {
-      opacity: 0;
-      visibility: hidden;
-      transform: translate3d(0, 0.5rem, 0);
-  
-      transition:
-        opacity 0.4s ease,
-        transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
-        visibility 0s linear 0.4s;
+    /* Optional tag only on current card. */
+    .section.is--vehicule-hero
+    .swiper-slide.is--featured:not(.b4-featured-active)
+    .baisse--tag {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none;
     }
   
     .section.is--vehicule-hero
@@ -265,21 +220,19 @@
     .baisse--tag {
       opacity: 1;
       visibility: visible;
-      transform: translate3d(0, 0, 0);
-  
-      transition:
-        opacity 0.4s ease 0.28s,
-        transform 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.2s,
-        visibility 0s linear 0s;
     }
   }
   
   
   /* ==========================================================================
-     TABLET + MOBILE — NORMAL INFINITE SWIPER
+     TABLET + MOBILE — NORMAL SWIPER
   ========================================================================== */
   
   @media screen and (max-width: 991px) {
+  
+    .section.is--vehicule-hero .swiper-wrapper.is--featured {
+      gap: 0;
+    }
   
     .section.is--vehicule-hero .swiper-slide.is--featured,
     .section.is--vehicule-hero
@@ -291,123 +244,37 @@
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-next-3,
     .section.is--vehicule-hero
-    .swiper-slide.is--featured.b4-featured-next-4,
-    .section.is--vehicule-hero
-    .swiper-slide.is--featured.b4-featured-hidden {
+    .swiper-slide.is--featured.b4-featured-next-4 {
       width: 100% !important;
-      height: auto;
+      margin-right: 0;
       cursor: default;
       transition: none !important;
     }
   
-    .section.is--vehicule-hero .featured--car-wrapper {
-      position: relative;
-      display: flex;
-  
-      width: 100%;
-      min-height: 28rem;
-  
-      overflow: hidden;
-      background-color: #031e4d;
-    }
-  
-    .section.is--vehicule-hero .featured--text,
-    .section.is--vehicule-hero
-    .swiper-slide.is--featured:not(.b4-featured-active)
-    .featured--text {
-      position: relative;
-  
-      display: flex !important;
-      flex-direction: column;
-  
-      flex: 0 0 15.75rem;
-  
-      width: 15.75rem;
-      min-width: 15.75rem;
-  
+    /*
+      Remove only the desktop overrides.
+      Webflow keeps control of card internals.
+    */
+    .section.is--vehicule-hero .featured--text {
+      display: initial;
       opacity: 1;
       visibility: visible;
-      transform: none;
-  
-      transition: none;
+      pointer-events: auto;
     }
   
-    .section.is--vehicule-hero .featured--image-wrapper,
-    .section.is--vehicule-hero
-    .swiper-slide.is--featured:not(.b4-featured-active)
-    .featured--image-wrapper {
+    .section.is--vehicule-hero .featured--image-wrapper {
       position: relative;
       inset: auto;
-  
-      flex: 1 1 auto;
-  
-      width: auto;
-      min-width: 0;
-      height: auto;
-  
-      overflow: hidden;
-    }
-  
-    .section.is--vehicule-hero
-    .featured--image-wrapper .image--absolute-100 {
-      position: absolute;
-      inset: 0;
-  
-      width: 100%;
-      height: 100%;
-      max-width: none;
-  
-      object-fit: cover;
-      object-position: center;
     }
   
     .section.is--vehicule-hero
     .featured--image-wrapper .overlay--80 {
-      position: absolute;
-      inset: 0;
-      z-index: 2;
-  
-      opacity: 0;
-  
-      pointer-events: none;
-      transition: none;
+      opacity: 0 !important;
     }
   
     .section.is--vehicule-hero .baisse--tag {
       opacity: 1;
       visibility: visible;
-      transform: none;
-      transition: none;
-    }
-  }
-  
-  
-  /* ==========================================================================
-     MOBILE
-  ========================================================================== */
-  
-  @media screen and (max-width: 767px) {
-  
-    .section.is--vehicule-hero .featured--car-wrapper {
-      flex-direction: column-reverse;
-      min-height: 0;
-    }
-  
-    .section.is--vehicule-hero .featured--text,
-    .section.is--vehicule-hero
-    .swiper-slide.is--featured:not(.b4-featured-active)
-    .featured--text {
-      flex: none;
-      width: 100%;
-      min-width: 0;
-    }
-  
-    .section.is--vehicule-hero .featured--image-wrapper,
-    .section.is--vehicule-hero
-    .swiper-slide.is--featured:not(.b4-featured-active)
-    .featured--image-wrapper {
-      width: 100%;
-      min-height: 20rem;
     }
   }
   
@@ -419,6 +286,7 @@
   .section.is--vehicule-hero .swiper--btn {
     cursor: pointer;
     user-select: none;
+    -webkit-user-select: none;
   }
   
   
@@ -428,11 +296,8 @@
   
   @media (prefers-reduced-motion: reduce) {
   
-    .section.is--vehicule-hero .swiper-slide.is--featured,
-    .section.is--vehicule-hero .featured--text,
     .section.is--vehicule-hero
-    .featured--image-wrapper .overlay--80,
-    .section.is--vehicule-hero .baisse--tag {
+    .swiper-slide.is--featured {
       transition: none !important;
     }
   }

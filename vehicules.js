@@ -1,31 +1,34 @@
 /* ==========================================================================
-   B4CARS — VEHICLES HERO FEATURED SWIPER — V4
-   Requires Swiper
+   B4CARS — VEHICLES HERO — V5
 
-   DESKTOP:
-   current = 71.125rem
-   next 1  = 4.5rem
-   next 2  = 3.25rem
-   next 3  = 1.5rem
-   next 4  = 0.75rem
-   gap     = 0.75rem
+   DESKTOP >= 992px
+   ------------------------------------------------
+   We do NOT use Swiper movement on desktop.
 
-   TABLET + MOBILE:
-   standard infinite Swiper
+   The five CMS cards stay physically in place.
+   Next / Previous only rotate the visual state:
+
+   current
+   +1 = 4.5rem
+   +2 = 3.25rem
+   +3 = 1.5rem
+   +4 = 0.75rem
+
+   This makes the accordion animation stable and truly infinite.
+
+   TABLET + MOBILE <= 991px
+   ------------------------------------------------
+   A normal Swiper instance is created:
+   - loop: true
+   - 1 slide per view
+   - normal touch/swipe
 ========================================================================== */
 
 (() => {
     "use strict";
   
     const DESKTOP_BREAKPOINT = 992;
-  
-    /*
-      Swiper expects spaceBetween as a number.
-      We keep the design value in rem and convert it dynamically.
-    */
     const GAP_REM = 0.75;
-  
-    const DESKTOP_SPEED = 1100;
     const MOBILE_SPEED = 650;
   
     const STATE_CLASSES = [
@@ -34,11 +37,11 @@
       "b4-featured-next-2",
       "b4-featured-next-3",
       "b4-featured-next-4",
-      "b4-featured-hidden",
     ];
   
   
     document.addEventListener("DOMContentLoaded", () => {
+  
       const section = document.querySelector(
         ".section.is--vehicule-hero"
       );
@@ -53,22 +56,18 @@
       if (!swiperElement) return;
   
   
-      if (typeof window.Swiper === "undefined") {
-        console.warn("[B4Cars] Swiper is not loaded.");
-        return;
-      }
+      const wrapper = swiperElement.querySelector(
+        ".swiper-wrapper.is--featured"
+      );
+  
+      if (!wrapper) return;
   
   
-      const wrapper =
-        swiperElement.closest(".swiper--wrapper") || section;
-  
-  
-      const previousButton = wrapper.querySelector(
+      const previousButton = section.querySelector(
         ".swiper--btn.is--previous"
       );
   
-  
-      const nextButton = wrapper.querySelector(
+      const nextButton = section.querySelector(
         ".swiper--btn.is--next"
       );
   
@@ -78,324 +77,431 @@
       );
   
   
-      const reducedMotionMedia = window.matchMedia(
-        "(prefers-reduced-motion: reduce)"
-      );
+      let mobileSwiper = null;
+      let currentIndex = 0;
+      let isAnimating = false;
   
   
       /* ==========================================================================
          HELPERS
       ========================================================================== */
   
-      const isDesktop = () => desktopMedia.matches;
+      const isDesktop = () =>
+        desktopMedia.matches;
   
   
-      const prefersReducedMotion = () =>
-        reducedMotionMedia.matches;
+      const getSlides = () =>
+        Array.from(
+          wrapper.querySelectorAll(
+            ":scope > .swiper-slide.is--featured"
+          )
+        );
+  
+  
+      const mod = (value, total) =>
+        ((value % total) + total) % total;
   
   
       const remToPx = (rem) => {
-        const rootFontSize = parseFloat(
-          window
-            .getComputedStyle(document.documentElement)
-            .fontSize
+  
+        const rootSize = parseFloat(
+          getComputedStyle(
+            document.documentElement
+          ).fontSize
         );
   
         return rem * (
-          Number.isFinite(rootFontSize)
-            ? rootFontSize
+          Number.isFinite(rootSize)
+            ? rootSize
             : 16
         );
       };
   
   
-      const getSpeed = () => {
-        if (prefersReducedMotion()) return 0;
+      const clearStates = () => {
   
-        return isDesktop()
-          ? DESKTOP_SPEED
-          : MOBILE_SPEED;
-      };
+        getSlides().forEach((slide) => {
   
+          STATE_CLASSES.forEach(
+            (className) => {
+              slide.classList.remove(
+                className
+              );
+            }
+          );
   
-      const clearStateClasses = (swiper) => {
-        Array.from(swiper.slides).forEach((slide) => {
-          STATE_CLASSES.forEach((className) => {
-            slide.classList.remove(className);
-          });
         });
       };
   
   
       /* ==========================================================================
-         DESKTOP VISUAL ORDER
-  
-         active
-         +1 = 4.5rem
-         +2 = 3.25rem
-         +3 = 1.5rem
-         +4 = 0.75rem
+         DESKTOP STATE ENGINE
       ========================================================================== */
   
-      const applyDesktopStates = (swiper) => {
-        if (!isDesktop()) {
-          clearStateClasses(swiper);
-          return;
-        }
+      const applyDesktopState = (
+        animate = true
+      ) => {
   
-  
-        const slides = Array.from(swiper.slides);
+        const slides = getSlides();
         const total = slides.length;
   
         if (!total) return;
   
   
-        clearStateClasses(swiper);
+        currentIndex = mod(
+          currentIndex,
+          total
+        );
   
   
-        const activeIndex = swiper.activeIndex;
+        clearStates();
   
   
-        slides.forEach((slide, index) => {
-          const relativeIndex =
-            ((index - activeIndex) % total + total) % total;
+        slides.forEach(
+          (slide, index) => {
   
-  
-          switch (relativeIndex) {
-  
-            case 0:
-              slide.classList.add(
-                "b4-featured-active"
+            const relative =
+              mod(
+                index - currentIndex,
+                total
               );
-              break;
   
   
-            case 1:
-              slide.classList.add(
-                "b4-featured-next-1"
-              );
-              break;
+            switch (relative) {
+  
+              case 0:
+                slide.classList.add(
+                  "b4-featured-active"
+                );
+                break;
   
   
-            case 2:
-              slide.classList.add(
-                "b4-featured-next-2"
-              );
-              break;
+              case 1:
+                slide.classList.add(
+                  "b4-featured-next-1"
+                );
+                break;
   
   
-            case 3:
-              slide.classList.add(
-                "b4-featured-next-3"
-              );
-              break;
+              case 2:
+                slide.classList.add(
+                  "b4-featured-next-2"
+                );
+                break;
   
   
-            case 4:
-              slide.classList.add(
-                "b4-featured-next-4"
-              );
-              break;
+              case 3:
+                slide.classList.add(
+                  "b4-featured-next-3"
+                );
+                break;
   
   
-            default:
-              slide.classList.add(
-                "b4-featured-hidden"
-              );
-              break;
+              case 4:
+                slide.classList.add(
+                  "b4-featured-next-4"
+                );
+                break;
+            }
+  
           }
-        });
+        );
   
   
         /*
-          CSS changes the slide widths.
-          Swiper needs its geometry refreshed immediately after.
+          Prevent multiple rapid clicks from breaking
+          the width transition.
         */
-        requestAnimationFrame(() => {
-          swiper.updateSlides();
-          swiper.updateProgress();
-          swiper.updateSlidesClasses();
-        });
+        if (animate) {
+  
+          isAnimating = true;
+  
+          window.setTimeout(() => {
+            isAnimating = false;
+          }, 1080);
+  
+        }
+  
+      };
+  
+  
+      const goNextDesktop = () => {
+  
+        if (
+          !isDesktop() ||
+          isAnimating
+        ) {
+          return;
+        }
+  
+        currentIndex += 1;
+  
+        applyDesktopState(true);
+      };
+  
+  
+      const goPreviousDesktop = () => {
+  
+        if (
+          !isDesktop() ||
+          isAnimating
+        ) {
+          return;
+        }
+  
+        currentIndex -= 1;
+  
+        applyDesktopState(true);
       };
   
   
       /* ==========================================================================
-         MODE
+         DESKTOP MODE
       ========================================================================== */
   
-      const updateMode = (swiper) => {
-        swiper.params.speed = getSpeed();
+      const enableDesktop = () => {
   
-        swiper.params.spaceBetween =
-          remToPx(GAP_REM);
+        /*
+          If the mobile Swiper exists,
+          return the original CMS DOM to its clean state.
+        */
+        if (
+          mobileSwiper &&
+          typeof mobileSwiper.destroy ===
+            "function"
+        ) {
   
+          currentIndex =
+            mobileSwiper.realIndex || 0;
   
-        if (isDesktop()) {
+          mobileSwiper.destroy(
+            true,
+            true
+          );
   
-          swiper.params.slidesPerView = "auto";
-          swiper.params.slidesPerGroup = 1;
-          swiper.params.grabCursor = true;
-  
-          applyDesktopStates(swiper);
-  
-        } else {
-  
-          swiper.params.slidesPerView = 1;
-          swiper.params.slidesPerGroup = 1;
-          swiper.params.grabCursor = false;
-  
-          clearStateClasses(swiper);
+          mobileSwiper = null;
         }
   
   
-        requestAnimationFrame(() => {
-          swiper.update();
-        });
+        /*
+          Swiper may leave inline transforms / margins.
+          Remove only Swiper-generated movement properties.
+        */
+        wrapper.style.removeProperty(
+          "transform"
+        );
+  
+        wrapper.style.removeProperty(
+          "transition-duration"
+        );
+  
+        wrapper.style.removeProperty(
+          "transition-delay"
+        );
+  
+  
+        getSlides().forEach(
+          (slide) => {
+  
+            slide.style.removeProperty(
+              "margin-right"
+            );
+  
+            slide.style.removeProperty(
+              "width"
+            );
+  
+            slide.style.removeProperty(
+              "transform"
+            );
+  
+          }
+        );
+  
+  
+        applyDesktopState(false);
       };
   
   
       /* ==========================================================================
-         REMOVE AN OLD INSTANCE IF ONE EXISTS
+         MOBILE / TABLET SWIPER
       ========================================================================== */
   
-      if (
-        swiperElement.swiper &&
-        typeof swiperElement.swiper.destroy === "function"
-      ) {
-        swiperElement.swiper.destroy(true, true);
+      const enableMobile = () => {
+  
+        clearStates();
+  
+  
+        if (mobileSwiper) return;
+  
+  
+        if (
+          typeof window.Swiper ===
+          "undefined"
+        ) {
+  
+          console.warn(
+            "[B4Cars] Swiper is not loaded."
+          );
+  
+          return;
+        }
+  
+  
+        mobileSwiper =
+          new window.Swiper(
+            swiperElement,
+            {
+              loop: true,
+  
+              initialSlide:
+                mod(
+                  currentIndex,
+                  getSlides().length
+                ),
+  
+              slidesPerView: 1,
+              slidesPerGroup: 1,
+  
+              spaceBetween:
+                remToPx(GAP_REM),
+  
+              speed:
+                MOBILE_SPEED,
+  
+              allowTouchMove: true,
+              simulateTouch: true,
+  
+              threshold: 5,
+              resistanceRatio: 0.72,
+  
+              observer: true,
+              observeParents: true,
+              resizeObserver: true,
+  
+              navigation: {
+                prevEl:
+                  previousButton,
+                nextEl:
+                  nextButton,
+              },
+  
+              on: {
+  
+                slideChange(instance) {
+  
+                  currentIndex =
+                    instance.realIndex;
+  
+                },
+  
+              },
+            }
+          );
+      };
+  
+  
+      /* ==========================================================================
+         DESKTOP NAVIGATION
+         We own these clicks on desktop.
+      ========================================================================== */
+  
+      if (nextButton) {
+  
+        nextButton.addEventListener(
+          "click",
+          (event) => {
+  
+            if (!isDesktop()) return;
+  
+            event.preventDefault();
+            event.stopPropagation();
+  
+            goNextDesktop();
+          },
+          true
+        );
+  
+      }
+  
+  
+      if (previousButton) {
+  
+        previousButton.addEventListener(
+          "click",
+          (event) => {
+  
+            if (!isDesktop()) return;
+  
+            event.preventDefault();
+            event.stopPropagation();
+  
+            goPreviousDesktop();
+          },
+          true
+        );
+  
       }
   
   
       /* ==========================================================================
-         SWIPER
+         CLICK A PREVIEW ON DESKTOP
       ========================================================================== */
   
-      const swiper = new window.Swiper(
-        swiperElement,
-        {
-          loop: true,
-  
-          speed: getSpeed(),
-  
-          slidesPerView:
-            isDesktop()
-              ? "auto"
-              : 1,
-  
-          slidesPerGroup: 1,
-  
-          spaceBetween:
-            remToPx(GAP_REM),
-  
-          allowTouchMove: true,
-          simulateTouch: true,
-  
-          threshold: 5,
-          resistanceRatio: 0.72,
-  
-          watchSlidesProgress: true,
-  
-          observer: true,
-          observeParents: true,
-          resizeObserver: true,
-  
-          grabCursor: isDesktop(),
-  
-          navigation: {
-            prevEl: previousButton,
-            nextEl: nextButton,
-          },
-  
-  
-          on: {
-  
-            init(instance) {
-              if (isDesktop()) {
-                applyDesktopStates(instance);
-              } else {
-                clearStateClasses(instance);
-              }
-            },
-  
-  
-            slideChangeTransitionStart(instance) {
-              if (isDesktop()) {
-                applyDesktopStates(instance);
-              }
-            },
-  
-  
-            slideChange(instance) {
-              if (isDesktop()) {
-                applyDesktopStates(instance);
-              }
-            },
-  
-  
-            transitionEnd(instance) {
-              if (isDesktop()) {
-                applyDesktopStates(instance);
-              }
-            },
-  
-  
-            resize(instance) {
-              updateMode(instance);
-            },
-          },
-        }
-      );
-  
-  
-      /* ==========================================================================
-         DESKTOP — CLICK A PREVIEW TO MAKE IT CURRENT
-      ========================================================================== */
-  
-      swiperElement.addEventListener(
+      wrapper.addEventListener(
         "click",
         (event) => {
   
-          if (!isDesktop()) return;
-  
-  
-          const slide = event.target.closest(
-            ".swiper-slide.is--featured"
-          );
-  
-  
-          if (!slide) return;
-  
-  
-          const slides = Array.from(swiper.slides);
-  
-          const clickedIndex =
-            slides.indexOf(slide);
-  
-  
-          if (clickedIndex < 0) return;
-  
           if (
-            clickedIndex ===
-            swiper.activeIndex
+            !isDesktop() ||
+            isAnimating
           ) {
             return;
           }
   
   
-          swiper.slideTo(
-            clickedIndex,
-            getSpeed()
-          );
+          const slide =
+            event.target.closest(
+              ".swiper-slide.is--featured"
+            );
+  
+  
+          if (!slide) return;
+  
+  
+          const slides = getSlides();
+  
+          const index =
+            slides.indexOf(slide);
+  
+  
+          if (
+            index < 0 ||
+            index === currentIndex
+          ) {
+            return;
+          }
+  
+  
+          currentIndex = index;
+  
+          applyDesktopState(true);
         }
       );
   
   
       /* ==========================================================================
-         BREAKPOINT CHANGE
+         MODE SWITCH
       ========================================================================== */
   
-      const onBreakpointChange = () => {
-        updateMode(swiper);
+      const updateMode = () => {
+  
+        if (isDesktop()) {
+          enableDesktop();
+        } else {
+          enableMobile();
+        }
+  
       };
   
   
@@ -403,35 +509,27 @@
         typeof desktopMedia.addEventListener ===
         "function"
       ) {
+  
         desktopMedia.addEventListener(
           "change",
-          onBreakpointChange
+          updateMode
         );
+  
       } else {
+  
         desktopMedia.addListener(
-          onBreakpointChange
+          updateMode
         );
+  
       }
   
   
       /* ==========================================================================
-         FINAL REFRESH
+         START
       ========================================================================== */
   
-      window.addEventListener(
-        "load",
-        () => {
+      updateMode();
   
-          requestAnimationFrame(() => {
-  
-            updateMode(swiper);
-  
-            requestAnimationFrame(() => {
-              swiper.update();
-            });
-  
-          });
-        }
-      );
     });
+  
   })();
