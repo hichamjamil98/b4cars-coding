@@ -729,3 +729,105 @@
       animation: none !important;
     }
   }
+  
+  
+  /* ==========================================================================
+     VEHICLE CARD — HOVER
+  ========================================================================== */
+  
+  .section.is--vehicule-filter .car--card {
+    position: relative;
+  }
+  
+  
+  /* ==========================================================================
+     DEFAULT — HIDDEN
+  ========================================================================== */
+  
+  .section.is--vehicule-filter .car--card .hover--caritem,
+  .section.is--vehicule-filter .car--card .fiche--btn-wrapper {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  
+    transition:
+      opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear 0.45s;
+  }
+  
+  .section.is--vehicule-filter .car--card .fiche--btn-wrapper {
+    transform: translateY(0.75rem);
+  
+    transition:
+      opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear 0.45s;
+  }
+  
+  
+  /* ==========================================================================
+     CAR TEXT
+  ========================================================================== */
+  
+  .section.is--vehicule-filter .car--card .caritem--text {
+    transition:
+      color 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  
+  .section.is--vehicule-filter .car--card .caritem--text * {
+    color: inherit;
+  
+    transition:
+      color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  
+  
+  /* ==========================================================================
+     HOVER
+  ========================================================================== */
+  
+  @media (hover: hover) and (pointer: fine) {
+  
+    .section.is--vehicule-filter
+    .car--card:hover
+    .hover--caritem,
+  
+    .section.is--vehicule-filter
+    .car--card:hover
+    .fiche--btn-wrapper {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+  
+      transition-delay: 0s;
+    }
+  
+    .section.is--vehicule-filter
+    .car--card:hover
+    .fiche--btn-wrapper {
+      transform: translateY(0);
+    }
+  
+    .section.is--vehicule-filter
+    .car--card:hover
+    .caritem--text {
+      color: #f6f9f8;
+      background-color: #031e4d;
+    }
+  }
+  
+  
+  /* ==========================================================================
+     REDUCED MOTION
+  ========================================================================== */
+  
+  @media (prefers-reduced-motion: reduce) {
+  
+    .section.is--vehicule-filter .car--card .hover--caritem,
+    .section.is--vehicule-filter .car--card .fiche--btn-wrapper,
+    .section.is--vehicule-filter .car--card .caritem--text,
+    .section.is--vehicule-filter .car--card .caritem--text * {
+      transition: none !important;
+    }
+  }
