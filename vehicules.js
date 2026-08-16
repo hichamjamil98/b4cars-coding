@@ -1,35 +1,39 @@
 /* ==========================================================================
-   B4CARS — VEHICLES HERO — V5
+   B4CARS — VEHICLES HERO — V6
 
-   DESKTOP >= 992px
-   ------------------------------------------------
-   We do NOT use Swiper movement on desktop.
+   DESKTOP
+   ==========================================================================
+   The visual row always contains 5 states:
 
-   The five CMS cards stay physically in place.
-   Next / Previous only rotate the visual state:
+   [ ACTIVE ][ 72 ][ 52 ][ 24 ][ 12 ]
 
-   current
-   +1 = 4.5rem
-   +2 = 3.25rem
-   +3 = 1.5rem
-   +4 = 0.75rem
+   NEXT:
+   - ACTIVE moves out to the LEFT.
+   - Slide 2 becomes ACTIVE.
+   - Slide 3 becomes 72.
+   - Slide 4 becomes 52.
+   - Slide 5 becomes 24.
+   - The outgoing slide is moved to the end and becomes 12.
 
-   This makes the accordion animation stable and truly infinite.
+   PREVIOUS:
+   - The last preview is prepared on the LEFT.
+   - It becomes ACTIVE.
+   - The previous ACTIVE becomes 72.
+   - Everything shifts one position to the right.
 
-   TABLET + MOBILE <= 991px
-   ------------------------------------------------
-   A normal Swiper instance is created:
-   - loop: true
-   - 1 slide per view
-   - normal touch/swipe
+   This gives a real circular rotation and always preserves the 5-card layout.
+
+   TABLET / MOBILE
+   ==========================================================================
+   Normal Swiper with loop: true and 1 slide per view.
 ========================================================================== */
 
 (() => {
     "use strict";
   
     const DESKTOP_BREAKPOINT = 992;
-    const GAP_REM = 0.75;
     const MOBILE_SPEED = 650;
+    const GAP_REM = 0.75;
   
     const STATE_CLASSES = [
       "b4-featured-active",
@@ -37,6 +41,7 @@
       "b4-featured-next-2",
       "b4-featured-next-3",
       "b4-featured-next-4",
+      "b4-featured-outgoing",
     ];
   
   
@@ -78,7 +83,6 @@
   
   
       let mobileSwiper = null;
-      let currentIndex = 0;
       let isAnimating = false;
   
   
@@ -98,10 +102,6 @@
         );
   
   
-      const mod = (value, total) =>
-        ((value % total) + total) % total;
-  
-  
       const remToPx = (rem) => {
   
         const rootSize = parseFloat(
@@ -118,56 +118,49 @@
       };
   
   
-      const clearStates = () => {
+      const getGapPx = () =>
+        remToPx(GAP_REM);
   
-        getSlides().forEach((slide) => {
   
-          STATE_CLASSES.forEach(
-            (className) => {
-              slide.classList.remove(
-                className
-              );
-            }
-          );
+      const clearClasses = (slide) => {
   
-        });
+        STATE_CLASSES.forEach(
+          (className) => {
+            slide.classList.remove(
+              className
+            );
+          }
+        );
       };
   
   
-      /* ==========================================================================
-         DESKTOP STATE ENGINE
-      ========================================================================== */
+      const clearAllClasses = () => {
   
-      const applyDesktopState = (
-        animate = true
-      ) => {
+        getSlides().forEach(
+          (slide) => clearClasses(slide)
+        );
+      };
+  
+  
+      /*
+        The DOM order itself represents the visual order on desktop:
+        index 0 = active
+        index 1 = 72
+        index 2 = 52
+        index 3 = 24
+        index 4 = 12
+      */
+      const applyClassesFromDomOrder = () => {
   
         const slides = getSlides();
-        const total = slides.length;
   
-        if (!total) return;
-  
-  
-        currentIndex = mod(
-          currentIndex,
-          total
-        );
-  
-  
-        clearStates();
+        clearAllClasses();
   
   
         slides.forEach(
           (slide, index) => {
   
-            const relative =
-              mod(
-                index - currentIndex,
-                total
-              );
-  
-  
-            switch (relative) {
+            switch (index) {
   
               case 0:
                 slide.classList.add(
@@ -175,13 +168,11 @@
                 );
                 break;
   
-  
               case 1:
                 slide.classList.add(
                   "b4-featured-next-1"
                 );
                 break;
-  
   
               case 2:
                 slide.classList.add(
@@ -189,13 +180,11 @@
                 );
                 break;
   
-  
               case 3:
                 slide.classList.add(
                   "b4-featured-next-3"
                 );
                 break;
-  
   
               case 4:
                 slide.classList.add(
@@ -206,24 +195,36 @@
   
           }
         );
-  
-  
-        /*
-          Prevent multiple rapid clicks from breaking
-          the width transition.
-        */
-        if (animate) {
-  
-          isAnimating = true;
-  
-          window.setTimeout(() => {
-            isAnimating = false;
-          }, 1080);
-  
-        }
-  
       };
   
+  
+      const forceReflow = () =>
+        wrapper.getBoundingClientRect();
+  
+  
+      const getDurationMs = () => {
+  
+        const raw = getComputedStyle(section)
+          .getPropertyValue(
+            "--featured-duration"
+          )
+          .trim();
+  
+        if (raw.endsWith("ms")) {
+          return parseFloat(raw) || 1050;
+        }
+  
+        if (raw.endsWith("s")) {
+          return (parseFloat(raw) || 1.05) * 1000;
+        }
+  
+        return 1050;
+      };
+  
+  
+      /* ==========================================================================
+         NEXT — ACTIVE EXITS LEFT
+      ========================================================================== */
   
       const goNextDesktop = () => {
   
@@ -234,11 +235,125 @@
           return;
         }
   
-        currentIndex += 1;
   
-        applyDesktopState(true);
+        const slides = getSlides();
+  
+        if (slides.length < 2) return;
+  
+  
+        isAnimating = true;
+  
+  
+        const outgoing = slides[0];
+  
+        const outgoingWidth =
+          outgoing.getBoundingClientRect().width;
+  
+        const moveDistance =
+          outgoingWidth + getGapPx();
+  
+  
+        /*
+          Step 1:
+          assign target widths before moving.
+  
+          Old active becomes a tiny outgoing item.
+          Slide 2 becomes active, etc.
+        */
+        clearClasses(outgoing);
+  
+        outgoing.classList.add(
+          "b4-featured-next-4",
+          "b4-featured-outgoing"
+        );
+  
+  
+        clearClasses(slides[1]);
+        slides[1].classList.add(
+          "b4-featured-active"
+        );
+  
+  
+        if (slides[2]) {
+          clearClasses(slides[2]);
+          slides[2].classList.add(
+            "b4-featured-next-1"
+          );
+        }
+  
+  
+        if (slides[3]) {
+          clearClasses(slides[3]);
+          slides[3].classList.add(
+            "b4-featured-next-2"
+          );
+        }
+  
+  
+        if (slides[4]) {
+          clearClasses(slides[4]);
+          slides[4].classList.add(
+            "b4-featured-next-3"
+          );
+        }
+  
+  
+        /*
+          Move the complete row to the left by the OLD active width.
+          Visually the old active leaves the viewport.
+        */
+        requestAnimationFrame(() => {
+  
+          wrapper.style.transform =
+            `translate3d(-${moveDistance}px, 0, 0)`;
+  
+        });
+  
+  
+        window.setTimeout(() => {
+  
+          /*
+            Step 2:
+            after the movement, physically move the outgoing card
+            to the right end.
+          */
+          wrapper.classList.add(
+            "is-no-transition"
+          );
+  
+  
+          wrapper.appendChild(
+            outgoing
+          );
+  
+  
+          wrapper.style.transform =
+            "translate3d(0, 0, 0)";
+  
+  
+          applyClassesFromDomOrder();
+  
+  
+          forceReflow();
+  
+  
+          requestAnimationFrame(() => {
+  
+            wrapper.classList.remove(
+              "is-no-transition"
+            );
+  
+            isAnimating = false;
+  
+          });
+  
+        }, getDurationMs() + 30);
       };
   
+  
+      /* ==========================================================================
+         PREVIOUS — LAST CARD ENTERS FROM LEFT
+      ========================================================================== */
   
       const goPreviousDesktop = () => {
   
@@ -249,9 +364,88 @@
           return;
         }
   
-        currentIndex -= 1;
   
-        applyDesktopState(true);
+        const slides = getSlides();
+  
+        if (slides.length < 2) return;
+  
+  
+        isAnimating = true;
+  
+  
+        const incoming =
+          slides[slides.length - 1];
+  
+  
+        /*
+          We first move the last preview to the beginning with transitions off.
+          It starts just outside the viewport on the left.
+        */
+        wrapper.classList.add(
+          "is-no-transition"
+        );
+  
+  
+        wrapper.insertBefore(
+          incoming,
+          wrapper.firstElementChild
+        );
+  
+  
+        applyClassesFromDomOrder();
+  
+  
+        /*
+          New first item is ACTIVE width.
+          Offset the wrapper left by its width + gap
+          so the user still sees the old composition.
+        */
+        const incomingWidth =
+          incoming.getBoundingClientRect().width;
+  
+  
+        const moveDistance =
+          incomingWidth + getGapPx();
+  
+  
+        wrapper.style.transform =
+          `translate3d(-${moveDistance}px, 0, 0)`;
+  
+  
+        forceReflow();
+  
+  
+        requestAnimationFrame(() => {
+  
+          wrapper.classList.remove(
+            "is-no-transition"
+          );
+  
+  
+          requestAnimationFrame(() => {
+  
+            /*
+              Animate back to 0:
+              incoming card enters from the left while becoming active.
+            */
+            wrapper.style.transform =
+              "translate3d(0, 0, 0)";
+  
+          });
+  
+        });
+  
+  
+        window.setTimeout(() => {
+  
+          wrapper.style.transform =
+            "translate3d(0, 0, 0)";
+  
+          applyClassesFromDomOrder();
+  
+          isAnimating = false;
+  
+        }, getDurationMs() + 30);
       };
   
   
@@ -259,20 +453,13 @@
          DESKTOP MODE
       ========================================================================== */
   
-      const enableDesktop = () => {
+      const destroyMobileSwiper = () => {
   
-        /*
-          If the mobile Swiper exists,
-          return the original CMS DOM to its clean state.
-        */
         if (
           mobileSwiper &&
           typeof mobileSwiper.destroy ===
             "function"
         ) {
-  
-          currentIndex =
-            mobileSwiper.realIndex || 0;
   
           mobileSwiper.destroy(
             true,
@@ -281,34 +468,32 @@
   
           mobileSwiper = null;
         }
+      };
   
   
-        /*
-          Swiper may leave inline transforms / margins.
-          Remove only Swiper-generated movement properties.
-        */
-        wrapper.style.removeProperty(
-          "transform"
+      const enableDesktop = () => {
+  
+        destroyMobileSwiper();
+  
+  
+        wrapper.classList.add(
+          "is-no-transition"
         );
   
-        wrapper.style.removeProperty(
-          "transition-duration"
-        );
   
-        wrapper.style.removeProperty(
-          "transition-delay"
-        );
+        wrapper.style.transform =
+          "translate3d(0, 0, 0)";
   
   
         getSlides().forEach(
           (slide) => {
   
             slide.style.removeProperty(
-              "margin-right"
+              "width"
             );
   
             slide.style.removeProperty(
-              "width"
+              "margin-right"
             );
   
             slide.style.removeProperty(
@@ -319,20 +504,47 @@
         );
   
   
-        applyDesktopState(false);
+        applyClassesFromDomOrder();
+  
+  
+        forceReflow();
+  
+  
+        requestAnimationFrame(() => {
+  
+          wrapper.classList.remove(
+            "is-no-transition"
+          );
+  
+        });
       };
   
   
       /* ==========================================================================
-         MOBILE / TABLET SWIPER
+         TABLET / MOBILE SWIPER
       ========================================================================== */
   
       const enableMobile = () => {
   
-        clearStates();
-  
-  
         if (mobileSwiper) return;
+  
+  
+        clearAllClasses();
+  
+  
+        wrapper.classList.add(
+          "is-no-transition"
+        );
+  
+        wrapper.style.removeProperty(
+          "transform"
+        );
+  
+        forceReflow();
+  
+        wrapper.classList.remove(
+          "is-no-transition"
+        );
   
   
         if (
@@ -354,17 +566,11 @@
             {
               loop: true,
   
-              initialSlide:
-                mod(
-                  currentIndex,
-                  getSlides().length
-                ),
-  
               slidesPerView: 1,
               slidesPerGroup: 1,
   
               spaceBetween:
-                remToPx(GAP_REM),
+                getGapPx(),
   
               speed:
                 MOBILE_SPEED,
@@ -385,25 +591,13 @@
                 nextEl:
                   nextButton,
               },
-  
-              on: {
-  
-                slideChange(instance) {
-  
-                  currentIndex =
-                    instance.realIndex;
-  
-                },
-  
-              },
             }
           );
       };
   
   
       /* ==========================================================================
-         DESKTOP NAVIGATION
-         We own these clicks on desktop.
+         NAVIGATION
       ========================================================================== */
   
       if (nextButton) {
@@ -418,10 +612,10 @@
             event.stopPropagation();
   
             goNextDesktop();
+  
           },
           true
         );
-  
       }
   
   
@@ -437,15 +631,15 @@
             event.stopPropagation();
   
             goPreviousDesktop();
+  
           },
           true
         );
-  
       }
   
   
       /* ==========================================================================
-         CLICK A PREVIEW ON DESKTOP
+         CLICK A PREVIEW
       ========================================================================== */
   
       wrapper.addEventListener(
@@ -475,33 +669,57 @@
             slides.indexOf(slide);
   
   
-          if (
-            index < 0 ||
-            index === currentIndex
-          ) {
-            return;
-          }
+          if (index <= 0) return;
   
   
-          currentIndex = index;
+          /*
+            Clicking preview #1 = one next.
+            Clicking preview #2 = two nexts, etc.
+            We keep the same physical rotation logic.
+          */
+          let remaining = index;
   
-          applyDesktopState(true);
+  
+          const run = () => {
+  
+            if (remaining <= 0) return;
+  
+  
+            goNextDesktop();
+  
+            remaining -= 1;
+  
+  
+            if (remaining > 0) {
+  
+              window.setTimeout(
+                run,
+                getDurationMs() + 70
+              );
+  
+            }
+          };
+  
+  
+          run();
         }
       );
   
   
       /* ==========================================================================
-         MODE SWITCH
+         BREAKPOINT
       ========================================================================== */
   
       const updateMode = () => {
+  
+        isAnimating = false;
+  
   
         if (isDesktop()) {
           enableDesktop();
         } else {
           enableMobile();
         }
-  
       };
   
   
@@ -520,12 +738,11 @@
         desktopMedia.addListener(
           updateMode
         );
-  
       }
   
   
       /* ==========================================================================
-         START
+         INIT
       ========================================================================== */
   
       updateMode();

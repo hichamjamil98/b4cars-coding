@@ -1,22 +1,26 @@
 /* ==========================================================================
-   B4CARS — VEHICLES HERO — V5
+   B4CARS — VEHICLES HERO — V6
 
    DESKTOP >= 992px
-   - No Swiper translation on desktop
-   - 5 CMS cards always stay in the row
-   - Only widths rotate:
-       current = 71.125rem
-       +1      = 4.5rem
-       +2      = 3.25rem
-       +3      = 1.5rem
-       +4      = 0.75rem
-   - Internal styling of the ACTIVE card remains controlled by Webflow
-   - Only inactive cards are visually reduced to image + overlay
+   ------------------------------------------------
+   Visible composition is ALWAYS:
+   1. current  = 71.125rem
+   2. next 1   = 4.5rem
+   3. next 2   = 3.25rem
+   4. next 3   = 1.5rem
+   5. next 4   = 0.75rem
+
+   gap = 0.75rem
+
+   IMPORTANT:
+   - The ACTIVE slide keeps its Webflow styling.
+   - We do not redefine the active card's inner flex/layout.
+   - Only inactive slides are reduced to image + overlay.
+   - Desktop rotation is handled by JS by reordering the DOM after movement.
 
    TABLET / MOBILE <= 991px
-   - Normal Swiper
-   - loop: true
-   - 1 slide per view
+   ------------------------------------------------
+   Normal Swiper, loop infinite, 1 slide per view.
 ========================================================================== */
 
 .section.is--vehicule-hero {
@@ -26,6 +30,8 @@
     --featured-next-3: 1.5rem;
     --featured-next-4: 0.75rem;
     --featured-gap: 0.75rem;
+    --featured-duration: 1.05s;
+    --featured-ease: cubic-bezier(0.76, 0, 0.24, 1);
   }
   
   .section.is--vehicule-hero .swiper--wrapper {
@@ -59,26 +65,38 @@
   
   @media screen and (min-width: 992px) {
   
-    /*
-      IMPORTANT:
-      On desktop the wrapper itself does NOT translate.
-      We animate only slide widths.
-    */
+    .section.is--vehicule-hero .swiper.is--featured {
+      overflow: visible;
+    }
+  
+    .section.is--vehicule-hero .swiper--wrapper {
+      overflow: hidden;
+    }
+  
     .section.is--vehicule-hero .swiper-wrapper.is--featured {
       gap: var(--featured-gap);
-      transform: none !important;
+  
+      /*
+        Desktop is not driven by Swiper's translate.
+        JS animates this wrapper itself.
+      */
+      transform: translate3d(0, 0, 0);
+      transition:
+        transform var(--featured-duration) var(--featured-ease);
+  
+      will-change: transform;
+    }
+  
+    .section.is--vehicule-hero .swiper-wrapper.is--featured.is-no-transition {
       transition: none !important;
-      cursor: default !important;
     }
   
     .section.is--vehicule-hero .swiper-slide.is--featured {
       margin-right: 0 !important;
       height: 30rem;
-      width: var(--featured-next-4);
-      cursor: pointer;
   
       transition:
-        width 1.05s cubic-bezier(0.76, 0, 0.24, 1);
+        width var(--featured-duration) var(--featured-ease);
   
       will-change: width;
     }
@@ -92,46 +110,41 @@
     }
   
   
-    /* NEXT 1 — 72 / 16 */
+    /* 2nd — 72 / 16 */
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-next-1 {
       width: var(--featured-next-1) !important;
+      cursor: pointer;
     }
   
   
-    /* NEXT 2 — 52 / 16 */
+    /* 3rd — 52 / 16 */
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-next-2 {
       width: var(--featured-next-2) !important;
+      cursor: pointer;
     }
   
   
-    /* NEXT 3 — 24 / 16 */
+    /* 4th — 24 / 16 */
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-next-3 {
       width: var(--featured-next-3) !important;
+      cursor: pointer;
     }
   
   
-    /* NEXT 4 — 12 / 16 */
+    /* 5th — 12 / 16 */
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-next-4 {
       width: var(--featured-next-4) !important;
+      cursor: pointer;
     }
   
   
     /* ==========================================================================
        ACTIVE SLIDE
-  
-       We intentionally do NOT redefine:
-       - .featured--car-wrapper
-       - .featured--text width
-       - .featured--text flex
-       - .featured--image-wrapper width/flex
-       - internal spacing
-       - button layout
-  
-       These stay exactly as defined in Webflow.
+       Keep the Webflow layout.
     ========================================================================== */
   
     .section.is--vehicule-hero
@@ -151,7 +164,7 @@
   
     /* ==========================================================================
        INACTIVE SLIDES
-       Only image + overlay remain visible.
+       Image + overlay only.
     ========================================================================== */
   
     .section.is--vehicule-hero
@@ -205,8 +218,6 @@
         opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1);
     }
   
-  
-    /* Optional tag only on current card. */
     .section.is--vehicule-hero
     .swiper-slide.is--featured:not(.b4-featured-active)
     .baisse--tag {
@@ -221,6 +232,17 @@
       opacity: 1;
       visibility: visible;
     }
+  
+  
+    /* ==========================================================================
+       OUTGOING SLIDE
+       Used for the "active exits on the left" animation.
+    ========================================================================== */
+  
+    .section.is--vehicule-hero
+    .swiper-slide.is--featured.b4-featured-outgoing {
+      pointer-events: none;
+    }
   }
   
   
@@ -232,6 +254,8 @@
   
     .section.is--vehicule-hero .swiper-wrapper.is--featured {
       gap: 0;
+      transform: none;
+      transition: none;
     }
   
     .section.is--vehicule-hero .swiper-slide.is--featured,
@@ -251,30 +275,29 @@
       transition: none !important;
     }
   
-    /*
-      Remove only the desktop overrides.
-      Webflow keeps control of card internals.
-    */
     .section.is--vehicule-hero .featured--text {
-      display: initial;
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
+      display: revert !important;
+      opacity: revert;
+      visibility: revert;
+      pointer-events: revert;
     }
   
     .section.is--vehicule-hero .featured--image-wrapper {
-      position: relative;
-      inset: auto;
+      position: revert;
+      inset: revert;
+      width: revert;
+      height: revert;
+      max-width: revert;
     }
   
     .section.is--vehicule-hero
     .featured--image-wrapper .overlay--80 {
-      opacity: 0 !important;
+      opacity: revert !important;
     }
   
     .section.is--vehicule-hero .baisse--tag {
-      opacity: 1;
-      visibility: visible;
+      opacity: revert !important;
+      visibility: revert !important;
     }
   }
   
@@ -296,8 +319,8 @@
   
   @media (prefers-reduced-motion: reduce) {
   
-    .section.is--vehicule-hero
-    .swiper-slide.is--featured {
+    .section.is--vehicule-hero .swiper-wrapper.is--featured,
+    .section.is--vehicule-hero .swiper-slide.is--featured {
       transition: none !important;
     }
   }
