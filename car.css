@@ -1,0 +1,170 @@
+/* ========================================================================== 
+   B4CARS — CAR TEMPLATE PAGE
+   Navbar + FAQ + Other Cars Hover + Car Gallery Slider
+========================================================================== */
+
+/* NAVBAR */
+body:has(.section.is--vehiculetemplate-hero) .navbar.is--scrolled::before {
+    position:absolute; inset:0; z-index:0; content:""; display:block;
+    pointer-events:none; background-color:#f6f9f8 !important;
+  }
+  body:has(.section.is--vehiculetemplate-hero) .navbar.is--scrolled > * {
+    position:relative; z-index:1;
+  }
+  @media screen and (max-width:991px) {
+    body:has(.section.is--vehiculetemplate-hero) .navbar.is--menu-open::before {
+      position:absolute; inset:0; z-index:0; content:""; display:block;
+      pointer-events:none; background-color:#f6f9f8 !important;
+    }
+    body:has(.section.is--vehiculetemplate-hero) .navbar.is--menu-open > * {
+      position:relative; z-index:1;
+    }
+    body:has(.section.is--vehiculetemplate-hero) .navbar.is--menu-open .nav--menu,
+    body:has(.section.is--vehiculetemplate-hero) .nav--menu.is--open {
+      background-color:#f6f9f8 !important;
+    }
+  }
+  
+  /* FAQ */
+  .section.is--vehiculetemplate-faq .faq--item { cursor:pointer; }
+  .section.is--vehiculetemplate-faq .faq--answer {
+    height:0; overflow:hidden; opacity:0; visibility:hidden;
+    transition:height .6s cubic-bezier(.22,1,.36,1), opacity .35s ease, visibility 0s linear .6s;
+  }
+  .section.is--vehiculetemplate-faq .faq--item.is--open .faq--answer {
+    opacity:1; visibility:visible;
+    transition:height .6s cubic-bezier(.22,1,.36,1), opacity .35s ease .08s, visibility 0s linear 0s;
+  }
+  .section.is--vehiculetemplate-faq .faq--question > :last-child {
+    transform-origin:center; transition:transform .45s cubic-bezier(.22,1,.36,1);
+  }
+  .section.is--vehiculetemplate-faq .faq--item.is--open .faq--question > :last-child {
+    transform:rotate(45deg);
+  }
+  
+  /* OTHER CARS HOVER */
+  .section.is--vehicule-others .car--card { position:relative; }
+  .section.is--vehicule-others .car--card .hover--caritem,
+  .section.is--vehicule-others .car--card .fiche--btn-wrapper {
+    opacity:0; visibility:hidden; pointer-events:none;
+    transition:opacity .45s cubic-bezier(.22,1,.36,1), visibility 0s linear .45s;
+  }
+  .section.is--vehicule-others .car--card .fiche--btn-wrapper {
+    transform:translateY(.75rem);
+    transition:opacity .45s cubic-bezier(.22,1,.36,1), transform .55s cubic-bezier(.22,1,.36,1), visibility 0s linear .45s;
+  }
+  .section.is--vehicule-others .car--card .caritem--text {
+    transition:color .5s cubic-bezier(.22,1,.36,1), background-color .5s cubic-bezier(.22,1,.36,1);
+  }
+  .section.is--vehicule-others .car--card .caritem--text * {
+    color:inherit; transition:color .5s cubic-bezier(.22,1,.36,1);
+  }
+  @media (hover:hover) and (pointer:fine) {
+    .section.is--vehicule-others .car--card:hover .hover--caritem,
+    .section.is--vehicule-others .car--card:hover .fiche--btn-wrapper {
+      opacity:1; visibility:visible; pointer-events:auto; transition-delay:0s;
+    }
+    .section.is--vehicule-others .car--card:hover .fiche--btn-wrapper { transform:translateY(0); }
+    .section.is--vehicule-others .car--card:hover .caritem--text {
+      color:#f6f9f8; background-color:#031e4d;
+    }
+  }
+  
+  /* CAR GALLERY — DESKTOP ONLY */
+  @media screen and (min-width:992px) {
+    .section.is--vehiculetemplate-hero {
+      --car-gap:1.5rem;
+      --car-side-width:6.6875rem; /* 107px */
+      --car-side-h-1:33rem;      /* 528px */
+      --car-side-h-2:30rem;      /* 480px */
+      --car-side-h-3:27rem;      /* 432px */
+      --car-active-width:22.75rem;
+      --car-active-height:33rem;
+      --car-slider-duration:.72s;
+      --car-slider-ease:cubic-bezier(.22,1,.36,1);
+    }
+  
+    .section.is--vehiculetemplate-hero .container--768.is--car-slider {
+      position:relative; overflow:visible;
+    }
+    .section.is--vehiculetemplate-hero .swiper.is--car { position:relative; overflow:visible; }
+    .section.is--vehiculetemplate-hero .swiper-wrapper.is--car {
+      position:relative; display:block; height:var(--car-active-height);
+      transform:none !important; transition:none !important; overflow:visible;
+    }
+    .section.is--vehiculetemplate-hero .swiper-slide.is--car {
+      position:absolute; top:50%; left:50%;
+      width:var(--car-side-width) !important; height:var(--car-side-h-3);
+      margin:0 !important; overflow:hidden; opacity:1;
+      transform:translate3d(-50%,-50%,0);
+      transition:width var(--car-slider-duration) var(--car-slider-ease),
+                 height var(--car-slider-duration) var(--car-slider-ease),
+                 transform var(--car-slider-duration) var(--car-slider-ease),
+                 opacity .3s ease;
+      will-change:width,height,transform,opacity;
+    }
+    .section.is--vehiculetemplate-hero .swiper-wrapper.is--car.is-no-transition .swiper-slide.is--car {
+      transition:none !important;
+    }
+    .section.is--vehiculetemplate-hero .swiper-slide.is--car .slidercar--image-wrapper,
+    .section.is--vehiculetemplate-hero .swiper-slide.is--car .slidercar--image-wrapper .image--absolute-100 {
+      width:100%; height:100%;
+    }
+    .section.is--vehiculetemplate-hero .swiper-slide.is--car .slidercar--image-wrapper .image--absolute-100 {
+      object-fit:cover; object-position:center;
+    }
+  
+    .section.is--vehiculetemplate-hero .swiper-slide.is--car.b4-car-active {
+      z-index:10; width:var(--car-active-width) !important; height:var(--car-active-height);
+      transform:translate3d(-50%,-50%,0);
+    }
+    .section.is--vehiculetemplate-hero .swiper-slide.is--car.b4-car-active .overlay--40 { opacity:0 !important; }
+  
+    .section.is--vehiculetemplate-hero .swiper-slide.is--car.b4-car-prev-1 {
+      z-index:9; height:var(--car-side-h-1);
+      transform:translate3d(calc(-50% - (var(--car-active-width)/2) - var(--car-gap) - (var(--car-side-width)/2)),-50%,0);
+    }
+    .section.is--vehiculetemplate-hero .swiper-slide.is--car.b4-car-next-1 {
+      z-index:9; height:var(--car-side-h-1);
+      transform:translate3d(calc(-50% + (var(--car-active-width)/2) + var(--car-gap) + (var(--car-side-width)/2)),-50%,0);
+    }
+  
+    .section.is--vehiculetemplate-hero .swiper-slide.is--car.b4-car-prev-2 {
+      z-index:8; height:var(--car-side-h-2);
+      transform:translate3d(calc(-50% - (var(--car-active-width)/2) - (var(--car-gap)*2) - var(--car-side-width) - (var(--car-side-width)/2)),-50%,0);
+    }
+    .section.is--vehiculetemplate-hero .swiper-slide.is--car.b4-car-next-2 {
+      z-index:8; height:var(--car-side-h-2);
+      transform:translate3d(calc(-50% + (var(--car-active-width)/2) + (var(--car-gap)*2) + var(--car-side-width) + (var(--car-side-width)/2)),-50%,0);
+    }
+  
+    .section.is--vehiculetemplate-hero .swiper-slide.is--car.b4-car-prev-3 {
+      z-index:7; height:var(--car-side-h-3);
+      transform:translate3d(calc(-50% - (var(--car-active-width)/2) - (var(--car-gap)*3) - (var(--car-side-width)*2) - (var(--car-side-width)/2)),-50%,0);
+    }
+    .section.is--vehiculetemplate-hero .swiper-slide.is--car.b4-car-next-3 {
+      z-index:7; height:var(--car-side-h-3);
+      transform:translate3d(calc(-50% + (var(--car-active-width)/2) + (var(--car-gap)*3) + (var(--car-side-width)*2) + (var(--car-side-width)/2)),-50%,0);
+    }
+  
+    .section.is--vehiculetemplate-hero .swiper-slide.is--car:not(.b4-car-active) .overlay--40 {
+      opacity:.4 !important;
+    }
+    .section.is--vehiculetemplate-hero .swiper-slide.is--car.b4-car-hidden {
+      opacity:0; pointer-events:none;
+    }
+  }
+  
+  /* Tablet/mobile intentionally inherit Webflow CSS. */
+  
+  @media (prefers-reduced-motion:reduce) {
+    .section.is--vehiculetemplate-faq .faq--answer,
+    .section.is--vehiculetemplate-faq .faq--question > :last-child,
+    .section.is--vehicule-others .car--card .hover--caritem,
+    .section.is--vehicule-others .car--card .fiche--btn-wrapper,
+    .section.is--vehicule-others .car--card .caritem--text,
+    .section.is--vehicule-others .car--card .caritem--text * { transition:none !important; }
+  }
+  @media screen and (min-width:992px) and (prefers-reduced-motion:reduce) {
+    .section.is--vehiculetemplate-hero .swiper-slide.is--car { transition:none !important; }
+  }
