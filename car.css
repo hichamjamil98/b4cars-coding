@@ -313,10 +313,20 @@ body:has(.section.is--vehiculetemplate-hero)
     cursor: default;
   }
 
+  /* Overlay visible on every slide by default */
+  .section.is--vehiculetemplate-hero
+  .swiper-slide.is--car
+  .overlay--40 {
+    opacity: 0.4 !important;
+    visibility: visible !important;
+  }
+
+  /* Overlay hidden only on the active slide */
   .section.is--vehiculetemplate-hero
   .swiper-slide.is--car.b4-car-active
   .overlay--40 {
     opacity: 0 !important;
+    visibility: hidden !important;
   }
 
 
@@ -480,6 +490,7 @@ body:has(.section.is--vehiculetemplate-hero)
   .swiper-slide.is--car:not(.b4-car-active)
   .overlay--40 {
     opacity: 0.4 !important;
+    visibility: visible !important;
   }
 
 
