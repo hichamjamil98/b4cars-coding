@@ -313,11 +313,12 @@ body:has(.section.is--vehiculetemplate-hero)
     cursor: default;
   }
 
-  /* Overlay visible on every slide by default */
+  /* Overlay--40 visible on every slide by default.
+     Its own Webflow background/transparency remains untouched. */
   .section.is--vehiculetemplate-hero
   .swiper-slide.is--car
   .overlay--40 {
-    opacity: 0.4 !important;
+    opacity: 1 !important;
     visibility: visible !important;
   }
 
@@ -489,7 +490,7 @@ body:has(.section.is--vehiculetemplate-hero)
   .section.is--vehiculetemplate-hero
   .swiper-slide.is--car:not(.b4-car-active)
   .overlay--40 {
-    opacity: 0.4 !important;
+    opacity: 1 !important;
     visibility: visible !important;
   }
 
