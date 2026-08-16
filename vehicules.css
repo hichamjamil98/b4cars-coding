@@ -429,6 +429,60 @@
   }
   
   
+  
+  
+  /* ==========================================================================
+     NAVBAR — VEHICLES PAGE ONLY
+     Same behavior as the Press page:
+     - light navbar background when scrolled
+     - light navbar background when mobile menu is open
+  ========================================================================== */
+  
+  body:has(.section.is--vehicule-hero)
+  .navbar.is--scrolled::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    content: "";
+    display: block;
+    pointer-events: none;
+    background-color: #f6f9f8 !important;
+  }
+  
+  body:has(.section.is--vehicule-hero)
+  .navbar.is--scrolled > * {
+    position: relative;
+    z-index: 1;
+  }
+  
+  @media screen and (max-width: 991px) {
+    body:has(.section.is--vehicule-hero)
+    .navbar.is--menu-open::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      content: "";
+      display: block;
+      pointer-events: none;
+      background-color: #f6f9f8 !important;
+    }
+  
+    body:has(.section.is--vehicule-hero)
+    .navbar.is--menu-open > * {
+      position: relative;
+      z-index: 1;
+    }
+  
+    body:has(.section.is--vehicule-hero)
+    .navbar.is--menu-open
+    .nav--menu,
+    body:has(.section.is--vehicule-hero)
+    .nav--menu.is--open {
+      background-color: #f6f9f8 !important;
+    }
+  }
+  
+  
   /* ==========================================================================
      REDUCED MOTION — DESKTOP CUSTOM ANIMATION ONLY
   ========================================================================== */

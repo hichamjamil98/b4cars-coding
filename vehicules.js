@@ -1357,6 +1357,22 @@
         );
   
   
+  
+  
+        /* ==========================================================================
+           NAVBAR COLOR
+           --------------------------------------------------------------------------
+           No additional scroll listener is needed here.
+  
+           The site's existing navbar script already toggles:
+           - .navbar.is--scrolled
+           - .navbar.is--menu-open
+  
+           The Vehicles-page CSS in this file reacts to those classes and applies
+           the same #f6f9f8 background behavior used on the Press page.
+        ========================================================================== */
+  
+  
         /* ==========================================================================
            INIT
         ========================================================================== */
