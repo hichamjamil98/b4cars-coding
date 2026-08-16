@@ -1,24 +1,25 @@
 /* ==========================================================================
-   B4CARS — VEHICLES HERO FEATURED SWIPER — V3
+   B4CARS — VEHICLES HERO FEATURED SWIPER — V4
 
    DESKTOP >= 992px
-   - Special expanding composition
-   - Active slide + 4 preview strips
-   - Smooth width / text / overlay transitions
+   Current slide: 1138px / 16 = 71.125rem
+   Preview 1:      72px / 16 = 4.5rem
+   Preview 2:      52px / 16 = 3.25rem
+   Preview 3:      24px / 16 = 1.5rem
+   Preview 4:      12px / 16 = 0.75rem
+   Gap:            12px / 16 = 0.75rem
 
    TABLET + MOBILE <= 991px
-   - Normal Swiper
-   - 1 slide per view
-   - Infinite loop
-   - No hover / accordion behavior
+   Normal infinite Swiper, one slide at a time.
 ========================================================================== */
 
 .section.is--vehicule-hero {
+    --featured-current: 71.125rem;
+    --featured-next-1: 4.5rem;
+    --featured-next-2: 3.25rem;
+    --featured-next-3: 1.5rem;
+    --featured-next-4: 0.75rem;
     --featured-gap: 0.75rem;
-    --featured-preview-1: 4.5rem;
-    --featured-preview-2: 3.25rem;
-    --featured-preview-3: 1.5rem;
-    --featured-preview-4: 0.75rem;
   }
   
   .section.is--vehicule-hero .swiper--wrapper {
@@ -39,6 +40,7 @@
   }
   
   .section.is--vehicule-hero .swiper-slide.is--featured {
+    position: relative;
     flex-shrink: 0;
     min-width: 0;
     overflow: hidden;
@@ -46,68 +48,67 @@
   
   
   /* ==========================================================================
-     DESKTOP
+     DESKTOP — EXACT COMPOSITION
   ========================================================================== */
   
   @media screen and (min-width: 992px) {
   
-    /*
-      4 previews:
-      4.5rem + 3.25rem + 1.5rem + 0.75rem = 10rem
-  
-      4 gaps:
-      4 × 0.75rem = 3rem
-  
-      Active width:
-      100% - 13rem
-    */
-  
     .section.is--vehicule-hero .swiper-slide.is--featured {
-      width: var(--featured-preview-4) !important;
+      width: var(--featured-next-4) !important;
       height: 30rem;
       cursor: pointer;
-      opacity: 1;
   
       transition:
-        width 1.15s cubic-bezier(0.76, 0, 0.24, 1),
-        opacity 0.45s ease;
+        width 1.15s cubic-bezier(0.76, 0, 0.24, 1);
   
       will-change: width;
     }
   
+  
+    /* CURRENT — 1138px = 71.125rem */
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-active {
-      width: calc(100% - 13rem) !important;
+      width: var(--featured-current) !important;
     }
   
+  
+    /* SECOND — 72px = 4.5rem */
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-next-1 {
-      width: var(--featured-preview-1) !important;
+      width: var(--featured-next-1) !important;
     }
   
+  
+    /* THIRD — 52px = 3.25rem */
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-next-2 {
-      width: var(--featured-preview-2) !important;
+      width: var(--featured-next-2) !important;
     }
   
+  
+    /* FOURTH — 24px = 1.5rem */
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-next-3 {
-      width: var(--featured-preview-3) !important;
+      width: var(--featured-next-3) !important;
     }
   
+  
+    /* FIFTH — 12px = 0.75rem */
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-next-4 {
-      width: var(--featured-preview-4) !important;
+      width: var(--featured-next-4) !important;
     }
   
+  
+    /* Everything else stays collapsed. */
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-hidden {
-      width: var(--featured-preview-4) !important;
+      width: var(--featured-next-4) !important;
     }
   
   
     /* --------------------------------------------------------------------------
-       CARD WRAPPER
+       SLIDE CONTENT
     -------------------------------------------------------------------------- */
   
     .section.is--vehicule-hero .featured--car-wrapper {
@@ -121,76 +122,74 @@
   
   
     /* --------------------------------------------------------------------------
-       TEXT
+       NON-CURRENT SLIDES:
+       ONLY IMAGE + OVERLAY ARE VISIBLE
     -------------------------------------------------------------------------- */
   
-    .section.is--vehicule-hero .featured--text {
-      position: relative;
-      z-index: 4;
-  
-      flex: 0 0 15.75rem;
-      width: 15.75rem;
-      min-width: 15.75rem;
-      height: 100%;
-  
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-  
-      transform: translate3d(-0.75rem, 0, 0);
-  
-      transition:
-        opacity 0.45s ease,
-        transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
-        visibility 0s linear 0.45s;
-  
-      will-change: opacity, transform;
+    .section.is--vehicule-hero
+    .swiper-slide.is--featured:not(.b4-featured-active)
+    .featured--text {
+      display: none !important;
     }
+  
+    .section.is--vehicule-hero
+    .swiper-slide.is--featured:not(.b4-featured-active)
+    .featured--image-wrapper {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+  
+  
+    /* --------------------------------------------------------------------------
+       CURRENT SLIDE:
+       TEXT + COMPLETE IMAGE
+    -------------------------------------------------------------------------- */
   
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-active
     .featured--text {
+      position: relative;
+      z-index: 4;
+  
+      display: flex;
+      flex-direction: column;
+  
+      flex: 0 0 16.5rem;
+      width: 16.5rem;
+      min-width: 16.5rem;
+      height: 100%;
+  
       opacity: 1;
       visibility: visible;
-      pointer-events: auto;
   
       transform: translate3d(0, 0, 0);
   
       transition:
-        opacity 0.55s ease 0.26s,
-        transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.16s,
-        visibility 0s linear 0s;
+        opacity 0.5s ease 0.22s,
+        transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.12s;
     }
   
-    /*
-      Preview slides must not reserve text width.
-      This lets the image occupy the entire thin strip.
-    */
     .section.is--vehicule-hero
-    .swiper-slide.is--featured:not(.b4-featured-active)
-    .featured--text {
-      position: absolute;
-      inset: 0 auto 0 0;
-      width: 0;
+    .swiper-slide.is--featured.b4-featured-active
+    .featured--image-wrapper {
+      position: relative;
+  
+      flex: 1 1 auto;
+  
+      width: auto;
       min-width: 0;
-      flex-basis: 0;
+      height: 100%;
+  
+      overflow: hidden;
     }
   
   
     /* --------------------------------------------------------------------------
        IMAGE
-       Important: no transform is applied here because the project already uses
-       animation="parallax" on the image.
+       No transform here because your project already uses animation="parallax".
     -------------------------------------------------------------------------- */
-  
-    .section.is--vehicule-hero .featured--image-wrapper {
-      position: relative;
-      flex: 1 1 auto;
-      width: 100%;
-      min-width: 0;
-      height: 100%;
-      overflow: hidden;
-    }
   
     .section.is--vehicule-hero
     .featured--image-wrapper .image--absolute-100 {
@@ -212,6 +211,12 @@
   
     /* --------------------------------------------------------------------------
        OVERLAY
+  
+       Preview slides:
+       overlay stays visible.
+  
+       Current slide:
+       overlay is completely removed visually.
     -------------------------------------------------------------------------- */
   
     .section.is--vehicule-hero
@@ -220,13 +225,14 @@
       inset: 0;
       z-index: 2;
   
+      display: block;
+  
       pointer-events: none;
   
-      background-color: #031e4d;
       opacity: 0.8;
   
       transition:
-        opacity 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+        opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1);
   
       will-change: opacity;
     }
@@ -234,62 +240,43 @@
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-active
     .featured--image-wrapper .overlay--80 {
-      opacity: 0.08;
-    }
-  
-    .section.is--vehicule-hero
-    .swiper-slide.is--featured.b4-featured-next-1
-    .featured--image-wrapper .overlay--80 {
-      opacity: 0.52;
-    }
-  
-    .section.is--vehicule-hero
-    .swiper-slide.is--featured.b4-featured-next-2
-    .featured--image-wrapper .overlay--80 {
-      opacity: 0.64;
-    }
-  
-    .section.is--vehicule-hero
-    .swiper-slide.is--featured.b4-featured-next-3
-    .featured--image-wrapper .overlay--80 {
-      opacity: 0.72;
-    }
-  
-    .section.is--vehicule-hero
-    .swiper-slide.is--featured.b4-featured-next-4
-    .featured--image-wrapper .overlay--80,
-    .section.is--vehicule-hero
-    .swiper-slide.is--featured.b4-featured-hidden
-    .featured--image-wrapper .overlay--80 {
-      opacity: 0.8;
+      opacity: 0;
     }
   
   
     /* --------------------------------------------------------------------------
-       PRICE DROP TAG
+       OPTIONAL PRICE DROP TAG
+       Only visible on current slide.
     -------------------------------------------------------------------------- */
   
     .section.is--vehicule-hero .baisse--tag {
       opacity: 0;
+      visibility: hidden;
       transform: translate3d(0, 0.5rem, 0);
   
       transition:
         opacity 0.4s ease,
-        transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+        transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 0.4s;
     }
   
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-active
     .baisse--tag {
       opacity: 1;
+      visibility: visible;
       transform: translate3d(0, 0, 0);
-      transition-delay: 0.3s;
+  
+      transition:
+        opacity 0.4s ease 0.28s,
+        transform 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.2s,
+        visibility 0s linear 0s;
     }
   }
   
   
   /* ==========================================================================
-     TABLET + MOBILE — NORMAL SWIPER
+     TABLET + MOBILE — NORMAL INFINITE SWIPER
   ========================================================================== */
   
   @media screen and (max-width: 991px) {
@@ -316,8 +303,10 @@
     .section.is--vehicule-hero .featured--car-wrapper {
       position: relative;
       display: flex;
+  
       width: 100%;
       min-height: 28rem;
+  
       overflow: hidden;
       background-color: #031e4d;
     }
@@ -327,26 +316,35 @@
     .swiper-slide.is--featured:not(.b4-featured-active)
     .featured--text {
       position: relative;
-      inset: auto;
+  
+      display: flex !important;
+      flex-direction: column;
   
       flex: 0 0 15.75rem;
   
       width: 15.75rem;
       min-width: 15.75rem;
-      height: auto;
   
       opacity: 1;
       visibility: visible;
-      pointer-events: auto;
-  
       transform: none;
+  
       transition: none;
     }
   
-    .section.is--vehicule-hero .featured--image-wrapper {
+    .section.is--vehicule-hero .featured--image-wrapper,
+    .section.is--vehicule-hero
+    .swiper-slide.is--featured:not(.b4-featured-active)
+    .featured--image-wrapper {
       position: relative;
+      inset: auto;
+  
       flex: 1 1 auto;
+  
+      width: auto;
       min-width: 0;
+      height: auto;
+  
       overflow: hidden;
     }
   
@@ -369,16 +367,15 @@
       inset: 0;
       z-index: 2;
   
+      opacity: 0;
+  
       pointer-events: none;
-  
-      background-color: #031e4d;
-      opacity: 0.08;
-  
       transition: none;
     }
   
     .section.is--vehicule-hero .baisse--tag {
       opacity: 1;
+      visibility: visible;
       transform: none;
       transition: none;
     }
@@ -405,7 +402,10 @@
       min-width: 0;
     }
   
-    .section.is--vehicule-hero .featured--image-wrapper {
+    .section.is--vehicule-hero .featured--image-wrapper,
+    .section.is--vehicule-hero
+    .swiper-slide.is--featured:not(.b4-featured-active)
+    .featured--image-wrapper {
       width: 100%;
       min-height: 20rem;
     }
@@ -419,11 +419,6 @@
   .section.is--vehicule-hero .swiper--btn {
     cursor: pointer;
     user-select: none;
-  }
-  
-  .section.is--vehicule-hero .swiper--btn.swiper-button-disabled {
-    opacity: 1;
-    pointer-events: auto;
   }
   
   
