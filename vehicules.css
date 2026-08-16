@@ -1,5 +1,5 @@
 /* ==========================================================================
-   B4CARS — VEHICLES HERO — V6
+   B4CARS — VEHICLES HERO — V8 COMPLETE
 
    DESKTOP >= 992px
    ------------------------------------------------
@@ -16,7 +16,8 @@
    - The ACTIVE slide keeps its Webflow styling.
    - We do not redefine the active card's inner flex/layout.
    - Only inactive slides are reduced to image + overlay.
-   - Desktop rotation is handled by JS by reordering the DOM after movement.
+   - NEXT does NOT translate the whole wrapper.
+   - PREVIOUS keeps the smooth circular entrance from the left.
 
    TABLET / MOBILE <= 991px
    ------------------------------------------------
@@ -75,30 +76,28 @@
   
     .section.is--vehicule-hero .swiper-wrapper.is--featured {
       gap: var(--featured-gap);
-  
-      /*
-        Desktop is not driven by Swiper's translate.
-        JS animates this wrapper itself.
-      */
       transform: translate3d(0, 0, 0);
       transition:
         transform var(--featured-duration) var(--featured-ease);
-  
       will-change: transform;
     }
   
-    .section.is--vehicule-hero .swiper-wrapper.is--featured.is-no-transition {
+    .section.is--vehicule-hero .swiper-wrapper.is--featured.is-no-transition,
+    .section.is--vehicule-hero .swiper-wrapper.is--featured.is-no-transition
+    .swiper-slide.is--featured {
       transition: none !important;
     }
   
     .section.is--vehicule-hero .swiper-slide.is--featured {
       margin-right: 0 !important;
       height: 30rem;
-  
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
       transition:
-        width var(--featured-duration) var(--featured-ease);
-  
-      will-change: width;
+        width var(--featured-duration) var(--featured-ease),
+        opacity 0.45s ease,
+        transform var(--featured-duration) var(--featured-ease);
+      will-change: width, opacity, transform;
     }
   
   
@@ -139,6 +138,23 @@
     .swiper-slide.is--featured.b4-featured-next-4 {
       width: var(--featured-next-4) !important;
       cursor: pointer;
+    }
+  
+  
+    /* ==========================================================================
+       NEXT — OUTGOING ACTIVE
+  
+       Only the old ACTIVE collapses/disappears to the left.
+       The wrapper itself stays at translateX(0).
+    ========================================================================== */
+  
+    .section.is--vehicule-hero
+    .swiper-slide.is--featured.b4-featured-outgoing {
+      width: 0 !important;
+      min-width: 0 !important;
+      opacity: 0;
+      transform: translate3d(-1rem, 0, 0);
+      pointer-events: none;
     }
   
   
@@ -187,11 +203,9 @@
     .featured--image-wrapper {
       position: absolute !important;
       inset: 0 !important;
-  
       width: 100% !important;
       height: 100% !important;
       max-width: none !important;
-  
       overflow: hidden;
     }
   
@@ -200,11 +214,9 @@
     .featured--image-wrapper .image--absolute-100 {
       position: absolute;
       inset: 0;
-  
       width: 100%;
       height: 100%;
       max-width: none;
-  
       object-fit: cover;
       object-position: center;
     }
@@ -213,7 +225,6 @@
     .swiper-slide.is--featured:not(.b4-featured-active)
     .featured--image-wrapper .overlay--80 {
       opacity: 0.8 !important;
-  
       transition:
         opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1);
     }
@@ -231,17 +242,6 @@
     .baisse--tag {
       opacity: 1;
       visibility: visible;
-    }
-  
-  
-    /* ==========================================================================
-       OUTGOING SLIDE
-       Used for the "active exits on the left" animation.
-    ========================================================================== */
-  
-    .section.is--vehicule-hero
-    .swiper-slide.is--featured.b4-featured-outgoing {
-      pointer-events: none;
     }
   }
   
@@ -268,9 +268,14 @@
     .section.is--vehicule-hero
     .swiper-slide.is--featured.b4-featured-next-3,
     .section.is--vehicule-hero
-    .swiper-slide.is--featured.b4-featured-next-4 {
+    .swiper-slide.is--featured.b4-featured-next-4,
+    .section.is--vehicule-hero
+    .swiper-slide.is--featured.b4-featured-outgoing {
       width: 100% !important;
+      min-width: 0 !important;
       margin-right: 0;
+      opacity: 1;
+      transform: none !important;
       cursor: default;
       transition: none !important;
     }

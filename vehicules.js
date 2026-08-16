@@ -1,5 +1,5 @@
 /* ==========================================================================
-   B4CARS — VEHICLES HERO — V6
+   B4CARS — VEHICLES HERO — V8 COMPLETE
 
    DESKTOP
    ==========================================================================
@@ -8,20 +8,19 @@
    [ ACTIVE ][ 72 ][ 52 ][ 24 ][ 12 ]
 
    NEXT:
-   - ACTIVE moves out to the LEFT.
+   - ACTIVE collapses/disappears to the LEFT.
+   - The wrapper itself DOES NOT translate.
    - Slide 2 becomes ACTIVE.
    - Slide 3 becomes 72.
    - Slide 4 becomes 52.
    - Slide 5 becomes 24.
-   - The outgoing slide is moved to the end and becomes 12.
+   - After the animation, the outgoing slide is moved to the end and becomes 12.
 
    PREVIOUS:
    - The last preview is prepared on the LEFT.
    - It becomes ACTIVE.
    - The previous ACTIVE becomes 72.
    - Everything shifts one position to the right.
-
-   This gives a real circular rotation and always preserves the 5-card layout.
 
    TABLET / MOBILE
    ==========================================================================
@@ -223,7 +222,11 @@
   
   
       /* ==========================================================================
-         NEXT — ACTIVE EXITS LEFT
+         NEXT — FIXED
+  
+         IMPORTANT:
+         The complete wrapper no longer translates left.
+         Only the outgoing active slide collapses and exits.
       ========================================================================== */
   
       const goNextDesktop = () => {
@@ -246,32 +249,32 @@
   
         const outgoing = slides[0];
   
-        const outgoingWidth =
-          outgoing.getBoundingClientRect().width;
-  
-        const moveDistance =
-          outgoingWidth + getGapPx();
-  
   
         /*
-          Step 1:
-          assign target widths before moving.
+          Target states:
   
-          Old active becomes a tiny outgoing item.
-          Slide 2 becomes active, etc.
+          old active -> outgoing / width 0
+          old #2     -> active
+          old #3     -> 72
+          old #4     -> 52
+          old #5     -> 24
+  
+          The old active will only become the new 12 strip
+          AFTER its exit animation is complete.
         */
-        clearClasses(outgoing);
   
+        clearClasses(outgoing);
         outgoing.classList.add(
-          "b4-featured-next-4",
           "b4-featured-outgoing"
         );
   
   
-        clearClasses(slides[1]);
-        slides[1].classList.add(
-          "b4-featured-active"
-        );
+        if (slides[1]) {
+          clearClasses(slides[1]);
+          slides[1].classList.add(
+            "b4-featured-active"
+          );
+        }
   
   
         if (slides[2]) {
@@ -299,23 +302,14 @@
   
   
         /*
-          Move the complete row to the left by the OLD active width.
-          Visually the old active leaves the viewport.
+          No wrapper transform here.
+          Flex layout + width transitions do all the movement.
         */
-        requestAnimationFrame(() => {
-  
-          wrapper.style.transform =
-            `translate3d(-${moveDistance}px, 0, 0)`;
-  
-        });
-  
-  
         window.setTimeout(() => {
   
           /*
-            Step 2:
-            after the movement, physically move the outgoing card
-            to the right end.
+            Recycle the outgoing slide at the far right.
+            We disable transitions only for this invisible DOM reorder.
           */
           wrapper.classList.add(
             "is-no-transition"
@@ -327,11 +321,37 @@
           );
   
   
+          /*
+            Restore the exact canonical order:
+            active / 72 / 52 / 24 / 12
+          */
+          applyClassesFromDomOrder();
+  
+  
+          /*
+            Ensure Swiper-generated desktop inline values do not come back.
+          */
           wrapper.style.transform =
             "translate3d(0, 0, 0)";
   
   
-          applyClassesFromDomOrder();
+          getSlides().forEach(
+            (slide) => {
+  
+              slide.style.removeProperty(
+                "width"
+              );
+  
+              slide.style.removeProperty(
+                "margin-right"
+              );
+  
+              slide.style.removeProperty(
+                "transform"
+              );
+  
+            }
+          );
   
   
           forceReflow();
@@ -378,8 +398,7 @@
   
   
         /*
-          We first move the last preview to the beginning with transitions off.
-          It starts just outside the viewport on the left.
+          First put the last 12-strip at the beginning with transitions disabled.
         */
         wrapper.classList.add(
           "is-no-transition"
@@ -396,9 +415,9 @@
   
   
         /*
-          New first item is ACTIVE width.
-          Offset the wrapper left by its width + gap
-          so the user still sees the old composition.
+          Because the new first slide is already ACTIVE width,
+          offset the row by exactly that width + gap.
+          Visually the user still sees the old composition.
         */
         const incomingWidth =
           incoming.getBoundingClientRect().width;
@@ -425,8 +444,7 @@
           requestAnimationFrame(() => {
   
             /*
-              Animate back to 0:
-              incoming card enters from the left while becoming active.
+              Animate the new active from the left into its normal position.
             */
             wrapper.style.transform =
               "translate3d(0, 0, 0)";
@@ -476,6 +494,10 @@
         destroyMobileSwiper();
   
   
+        /*
+          A Swiper instance from tablet/mobile can leave inline properties.
+          Clean only Swiper movement/size properties.
+        */
         wrapper.classList.add(
           "is-no-transition"
         );
@@ -483,6 +505,14 @@
   
         wrapper.style.transform =
           "translate3d(0, 0, 0)";
+  
+        wrapper.style.removeProperty(
+          "transition-duration"
+        );
+  
+        wrapper.style.removeProperty(
+          "transition-delay"
+        );
   
   
         getSlides().forEach(
@@ -498,6 +528,10 @@
   
             slide.style.removeProperty(
               "transform"
+            );
+  
+            slide.style.removeProperty(
+              "opacity"
             );
   
           }
@@ -536,11 +570,37 @@
           "is-no-transition"
         );
   
+  
         wrapper.style.removeProperty(
           "transform"
         );
   
+  
+        getSlides().forEach(
+          (slide) => {
+  
+            slide.style.removeProperty(
+              "width"
+            );
+  
+            slide.style.removeProperty(
+              "margin-right"
+            );
+  
+            slide.style.removeProperty(
+              "transform"
+            );
+  
+            slide.style.removeProperty(
+              "opacity"
+            );
+  
+          }
+        );
+  
+  
         forceReflow();
+  
   
         wrapper.classList.remove(
           "is-no-transition"
@@ -665,6 +725,7 @@
   
           const slides = getSlides();
   
+  
           const index =
             slides.indexOf(slide);
   
@@ -673,9 +734,10 @@
   
   
           /*
-            Clicking preview #1 = one next.
-            Clicking preview #2 = two nexts, etc.
-            We keep the same physical rotation logic.
+            Preview #1 = one NEXT.
+            Preview #2 = two NEXT rotations.
+            Preview #3 = three NEXT rotations.
+            Preview #4 = four NEXT rotations.
           */
           let remaining = index;
   
@@ -686,6 +748,7 @@
   
   
             goNextDesktop();
+  
   
             remaining -= 1;
   
@@ -716,9 +779,13 @@
   
   
         if (isDesktop()) {
+  
           enableDesktop();
+  
         } else {
+  
           enableMobile();
+  
         }
       };
   
@@ -739,6 +806,50 @@
           updateMode
         );
       }
+  
+  
+      /* ==========================================================================
+         RESIZE SAFETY
+      ========================================================================== */
+  
+      let resizeTimer = null;
+  
+  
+      window.addEventListener(
+        "resize",
+        () => {
+  
+          window.clearTimeout(
+            resizeTimer
+          );
+  
+  
+          resizeTimer =
+            window.setTimeout(
+              () => {
+  
+                if (isDesktop()) {
+  
+                  wrapper.style.transform =
+                    "translate3d(0, 0, 0)";
+  
+                  applyClassesFromDomOrder();
+  
+                } else if (mobileSwiper) {
+  
+                  mobileSwiper.params.spaceBetween =
+                    getGapPx();
+  
+                  mobileSwiper.update();
+  
+                }
+  
+              },
+              120
+            );
+  
+        }
+      );
   
   
       /* ==========================================================================
