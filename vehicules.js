@@ -1,26 +1,39 @@
 /* ==========================================================================
-   B4CARS — VEHICLES HERO — V8 COMPLETE
+   B4CARS — VEHICLES HERO — V9 COMPLETE / NO JUMP
 
-   DESKTOP
+   WHY THIS VERSION IS DIFFERENT
    ==========================================================================
-   The visual row always contains 5 states:
+   Desktop no longer reorders the DOM while the user is watching it.
+   It also no longer translates the complete row.
+
+   Every visible role has a fixed absolute position:
 
    [ ACTIVE ][ 72 ][ 52 ][ 24 ][ 12 ]
 
-   NEXT:
-   - ACTIVE collapses/disappears to the LEFT.
-   - The wrapper itself DOES NOT translate.
-   - Slide 2 becomes ACTIVE.
-   - Slide 3 becomes 72.
-   - Slide 4 becomes 52.
-   - Slide 5 becomes 24.
-   - After the animation, the outgoing slide is moved to the end and becomes 12.
+   NEXT
+   --------------------------------------------------------------------------
+   - old ACTIVE exits only to the left
+   - next 1 expands directly into ACTIVE
+   - next 2 -> 72
+   - next 3 -> 52
+   - next 4 -> 24
+   - old ACTIVE is silently recycled to 12 after the animation
 
-   PREVIOUS:
-   - The last preview is prepared on the LEFT.
-   - It becomes ACTIVE.
-   - The previous ACTIVE becomes 72.
-   - Everything shifts one position to the right.
+   PREVIOUS
+   --------------------------------------------------------------------------
+   - a temporary visual clone of the last 12-strip enters from the left
+   - current ACTIVE -> 72
+   - 72 -> 52
+   - 52 -> 24
+   - 24 -> 12
+   - when the animation ends, the real last slide takes the active role
+     underneath the clone, then the clone is removed
+
+   Result:
+   - no complete block sliding left
+   - no return jump
+   - no visible DOM reorder
+   - faster animation
 
    TABLET / MOBILE
    ==========================================================================
@@ -40,7 +53,8 @@
       "b4-featured-next-2",
       "b4-featured-next-3",
       "b4-featured-next-4",
-      "b4-featured-outgoing",
+      "b4-featured-outgoing-left",
+      "b4-featured-under-ghost",
     ];
   
   
@@ -83,6 +97,8 @@
   
       let mobileSwiper = null;
       let isAnimating = false;
+      let currentIndex = 0;
+      let ghost = null;
   
   
       /* ==========================================================================
@@ -93,12 +109,16 @@
         desktopMedia.matches;
   
   
-      const getSlides = () =>
+      const getRealSlides = () =>
         Array.from(
           wrapper.querySelectorAll(
-            ":scope > .swiper-slide.is--featured"
+            ":scope > .swiper-slide.is--featured:not(.b4-featured-ghost)"
           )
         );
+  
+  
+      const mod = (value, total) =>
+        ((value % total) + total) % total;
   
   
       const remToPx = (rem) => {
@@ -121,7 +141,7 @@
         remToPx(GAP_REM);
   
   
-      const clearClasses = (slide) => {
+      const clearSlideStates = (slide) => {
   
         STATE_CLASSES.forEach(
           (className) => {
@@ -133,72 +153,12 @@
       };
   
   
-      const clearAllClasses = () => {
+      const clearAllStates = () => {
   
-        getSlides().forEach(
-          (slide) => clearClasses(slide)
+        getRealSlides().forEach(
+          clearSlideStates
         );
       };
-  
-  
-      /*
-        The DOM order itself represents the visual order on desktop:
-        index 0 = active
-        index 1 = 72
-        index 2 = 52
-        index 3 = 24
-        index 4 = 12
-      */
-      const applyClassesFromDomOrder = () => {
-  
-        const slides = getSlides();
-  
-        clearAllClasses();
-  
-  
-        slides.forEach(
-          (slide, index) => {
-  
-            switch (index) {
-  
-              case 0:
-                slide.classList.add(
-                  "b4-featured-active"
-                );
-                break;
-  
-              case 1:
-                slide.classList.add(
-                  "b4-featured-next-1"
-                );
-                break;
-  
-              case 2:
-                slide.classList.add(
-                  "b4-featured-next-2"
-                );
-                break;
-  
-              case 3:
-                slide.classList.add(
-                  "b4-featured-next-3"
-                );
-                break;
-  
-              case 4:
-                slide.classList.add(
-                  "b4-featured-next-4"
-                );
-                break;
-            }
-  
-          }
-        );
-      };
-  
-  
-      const forceReflow = () =>
-        wrapper.getBoundingClientRect();
   
   
       const getDurationMs = () => {
@@ -210,23 +170,89 @@
           .trim();
   
         if (raw.endsWith("ms")) {
-          return parseFloat(raw) || 1050;
+          return parseFloat(raw) || 720;
         }
   
         if (raw.endsWith("s")) {
-          return (parseFloat(raw) || 1.05) * 1000;
+          return (parseFloat(raw) || 0.72) * 1000;
         }
   
-        return 1050;
+        return 720;
+      };
+  
+  
+      const forceReflow = () =>
+        wrapper.getBoundingClientRect();
+  
+  
+      const removeGhost = () => {
+  
+        if (!ghost) return;
+  
+        ghost.remove();
+        ghost = null;
+      };
+  
+  
+      /*
+        Assign the canonical 5 roles from the logical currentIndex.
+        DOM order is irrelevant on desktop.
+      */
+      const applyCanonicalStates = () => {
+  
+        const slides = getRealSlides();
+        const total = slides.length;
+  
+        if (!total) return;
+  
+  
+        clearAllStates();
+  
+  
+        const activeIndex =
+          mod(currentIndex, total);
+  
+  
+        const active =
+          slides[activeIndex];
+  
+        const next1 =
+          slides[mod(activeIndex + 1, total)];
+  
+        const next2 =
+          slides[mod(activeIndex + 2, total)];
+  
+        const next3 =
+          slides[mod(activeIndex + 3, total)];
+  
+        const next4 =
+          slides[mod(activeIndex + 4, total)];
+  
+  
+        active?.classList.add(
+          "b4-featured-active"
+        );
+  
+        next1?.classList.add(
+          "b4-featured-next-1"
+        );
+  
+        next2?.classList.add(
+          "b4-featured-next-2"
+        );
+  
+        next3?.classList.add(
+          "b4-featured-next-3"
+        );
+  
+        next4?.classList.add(
+          "b4-featured-next-4"
+        );
       };
   
   
       /* ==========================================================================
-         NEXT — FIXED
-  
-         IMPORTANT:
-         The complete wrapper no longer translates left.
-         Only the outgoing active slide collapses and exits.
+         NEXT
       ========================================================================== */
   
       const goNextDesktop = () => {
@@ -239,140 +265,135 @@
         }
   
   
-        const slides = getSlides();
+        const slides = getRealSlides();
+        const total = slides.length;
   
-        if (slides.length < 2) return;
+        if (total < 2) return;
   
   
         isAnimating = true;
+        removeGhost();
   
   
-        const outgoing = slides[0];
+        const oldIndex =
+          mod(currentIndex, total);
+  
+        const newIndex =
+          mod(oldIndex + 1, total);
+  
+  
+        const outgoing =
+          slides[oldIndex];
+  
+        const newActive =
+          slides[newIndex];
+  
+        const newNext1 =
+          slides[mod(newIndex + 1, total)];
+  
+        const newNext2 =
+          slides[mod(newIndex + 2, total)];
+  
+        const newNext3 =
+          slides[mod(newIndex + 3, total)];
   
   
         /*
-          Target states:
-  
-          old active -> outgoing / width 0
-          old #2     -> active
-          old #3     -> 72
-          old #4     -> 52
-          old #5     -> 24
-  
-          The old active will only become the new 12 strip
-          AFTER its exit animation is complete.
+          Old current exits LEFT.
         */
+        clearSlideStates(outgoing);
   
-        clearClasses(outgoing);
         outgoing.classList.add(
-          "b4-featured-outgoing"
+          "b4-featured-outgoing-left"
         );
   
   
-        if (slides[1]) {
-          clearClasses(slides[1]);
-          slides[1].classList.add(
-            "b4-featured-active"
-          );
-        }
-  
-  
-        if (slides[2]) {
-          clearClasses(slides[2]);
-          slides[2].classList.add(
-            "b4-featured-next-1"
-          );
-        }
-  
-  
-        if (slides[3]) {
-          clearClasses(slides[3]);
-          slides[3].classList.add(
-            "b4-featured-next-2"
-          );
-        }
-  
-  
-        if (slides[4]) {
-          clearClasses(slides[4]);
-          slides[4].classList.add(
-            "b4-featured-next-3"
-          );
-        }
-  
-  
         /*
-          No wrapper transform here.
-          Flex layout + width transitions do all the movement.
+          Remaining visible slides animate directly
+          toward their new fixed positions.
         */
-        window.setTimeout(() => {
+        clearSlideStates(newActive);
   
-          /*
-            Recycle the outgoing slide at the far right.
-            We disable transitions only for this invisible DOM reorder.
-          */
-          wrapper.classList.add(
-            "is-no-transition"
-          );
+        newActive.classList.add(
+          "b4-featured-active"
+        );
   
   
-          wrapper.appendChild(
-            outgoing
-          );
+        clearSlideStates(newNext1);
+  
+        newNext1.classList.add(
+          "b4-featured-next-1"
+        );
   
   
-          /*
-            Restore the exact canonical order:
-            active / 72 / 52 / 24 / 12
-          */
-          applyClassesFromDomOrder();
+        clearSlideStates(newNext2);
+  
+        newNext2.classList.add(
+          "b4-featured-next-2"
+        );
   
   
-          /*
-            Ensure Swiper-generated desktop inline values do not come back.
-          */
-          wrapper.style.transform =
-            "translate3d(0, 0, 0)";
+        clearSlideStates(newNext3);
+  
+        newNext3.classList.add(
+          "b4-featured-next-3"
+        );
   
   
-          getSlides().forEach(
-            (slide) => {
+        window.setTimeout(
+          () => {
   
-              slide.style.removeProperty(
-                "width"
-              );
-  
-              slide.style.removeProperty(
-                "margin-right"
-              );
-  
-              slide.style.removeProperty(
-                "transform"
-              );
-  
-            }
-          );
-  
-  
-          forceReflow();
-  
-  
-          requestAnimationFrame(() => {
-  
-            wrapper.classList.remove(
+            /*
+              The outgoing slide is already invisible off-left.
+              Move it instantly to the new 12-strip role.
+            */
+            outgoing.classList.add(
               "is-no-transition"
             );
   
-            isAnimating = false;
   
-          });
+            clearSlideStates(
+              outgoing
+            );
   
-        }, getDurationMs() + 30);
+  
+            outgoing.classList.add(
+              "b4-featured-next-4"
+            );
+  
+  
+            forceReflow();
+  
+  
+            requestAnimationFrame(
+              () => {
+  
+                outgoing.classList.remove(
+                  "is-no-transition"
+                );
+  
+  
+                currentIndex =
+                  newIndex;
+  
+  
+                applyCanonicalStates();
+  
+  
+                isAnimating =
+                  false;
+  
+              }
+            );
+  
+          },
+          getDurationMs() + 20
+        );
       };
   
   
       /* ==========================================================================
-         PREVIOUS — LAST CARD ENTERS FROM LEFT
+         PREVIOUS
       ========================================================================== */
   
       const goPreviousDesktop = () => {
@@ -385,85 +406,200 @@
         }
   
   
-        const slides = getSlides();
+        const slides = getRealSlides();
+        const total = slides.length;
   
-        if (slides.length < 2) return;
+        if (total < 2) return;
   
   
         isAnimating = true;
+        removeGhost();
   
   
-        const incoming =
-          slides[slides.length - 1];
+        const oldIndex =
+          mod(currentIndex, total);
+  
+        const newIndex =
+          mod(oldIndex - 1, total);
+  
+  
+        const incomingReal =
+          slides[newIndex];
+  
+        const oldActive =
+          slides[oldIndex];
+  
+        const oldNext1 =
+          slides[mod(oldIndex + 1, total)];
+  
+        const oldNext2 =
+          slides[mod(oldIndex + 2, total)];
+  
+        const oldNext3 =
+          slides[mod(oldIndex + 3, total)];
   
   
         /*
-          First put the last 12-strip at the beginning with transitions disabled.
+          Clone incoming slide.
+          Clone is only a visual transition layer.
         */
-        wrapper.classList.add(
-          "is-no-transition"
+        ghost =
+          incomingReal.cloneNode(true);
+  
+  
+        ghost.classList.remove(
+          "b4-featured-next-4"
         );
   
   
-        wrapper.insertBefore(
-          incoming,
-          wrapper.firstElementChild
+        STATE_CLASSES.forEach(
+          (className) => {
+            ghost.classList.remove(
+              className
+            );
+          }
         );
   
   
-        applyClassesFromDomOrder();
+        ghost.classList.add(
+          "b4-featured-ghost",
+          "is-from-left"
+        );
+  
+  
+        ghost.removeAttribute(
+          "id"
+        );
+  
+  
+        wrapper.appendChild(
+          ghost
+        );
   
   
         /*
-          Because the new first slide is already ACTIVE width,
-          offset the row by exactly that width + gap.
-          Visually the user still sees the old composition.
+          Hide the real incoming slide underneath the ghost.
         */
-        const incomingWidth =
-          incoming.getBoundingClientRect().width;
+        clearSlideStates(
+          incomingReal
+        );
+  
+        incomingReal.classList.add(
+          "b4-featured-under-ghost"
+        );
   
   
-        const moveDistance =
-          incomingWidth + getGapPx();
+        /*
+          Shift all existing roles one position to the right.
+        */
+        clearSlideStates(
+          oldActive
+        );
+  
+        oldActive.classList.add(
+          "b4-featured-next-1"
+        );
   
   
-        wrapper.style.transform =
-          `translate3d(-${moveDistance}px, 0, 0)`;
+        clearSlideStates(
+          oldNext1
+        );
+  
+        oldNext1.classList.add(
+          "b4-featured-next-2"
+        );
+  
+  
+        clearSlideStates(
+          oldNext2
+        );
+  
+        oldNext2.classList.add(
+          "b4-featured-next-3"
+        );
+  
+  
+        clearSlideStates(
+          oldNext3
+        );
+  
+        oldNext3.classList.add(
+          "b4-featured-next-4"
+        );
   
   
         forceReflow();
   
   
-        requestAnimationFrame(() => {
+        requestAnimationFrame(
+          () => {
   
-          wrapper.classList.remove(
-            "is-no-transition"
-          );
+            requestAnimationFrame(
+              () => {
+  
+                ghost?.classList.add(
+                  "is-entering"
+                );
+  
+              }
+            );
+  
+          }
+        );
   
   
-          requestAnimationFrame(() => {
+        window.setTimeout(
+          () => {
   
             /*
-              Animate the new active from the left into its normal position.
+              Put the real incoming slide exactly underneath the ghost,
+              without transition.
             */
-            wrapper.style.transform =
-              "translate3d(0, 0, 0)";
-  
-          });
-  
-        });
+            incomingReal.classList.add(
+              "is-no-transition"
+            );
   
   
-        window.setTimeout(() => {
+            clearSlideStates(
+              incomingReal
+            );
   
-          wrapper.style.transform =
-            "translate3d(0, 0, 0)";
   
-          applyClassesFromDomOrder();
+            incomingReal.classList.add(
+              "b4-featured-active"
+            );
   
-          isAnimating = false;
   
-        }, getDurationMs() + 30);
+            forceReflow();
+  
+  
+            requestAnimationFrame(
+              () => {
+  
+                removeGhost();
+  
+  
+                incomingReal.classList.remove(
+                  "is-no-transition"
+                );
+  
+  
+                currentIndex =
+                  newIndex;
+  
+  
+                applyCanonicalStates();
+  
+  
+                isAnimating =
+                  false;
+  
+              }
+            );
+  
+          },
+          getDurationMs() + 20
+        );
       };
   
   
@@ -479,32 +615,36 @@
             "function"
         ) {
   
+          /*
+            Capture current logical slide before destroying.
+          */
+          if (
+            Number.isFinite(
+              mobileSwiper.realIndex
+            )
+          ) {
+            currentIndex =
+              mobileSwiper.realIndex;
+          }
+  
+  
           mobileSwiper.destroy(
             true,
             true
           );
   
-          mobileSwiper = null;
+  
+          mobileSwiper =
+            null;
         }
       };
   
   
-      const enableDesktop = () => {
+      const cleanDesktopInlineStyles = () => {
   
-        destroyMobileSwiper();
-  
-  
-        /*
-          A Swiper instance from tablet/mobile can leave inline properties.
-          Clean only Swiper movement/size properties.
-        */
-        wrapper.classList.add(
-          "is-no-transition"
+        wrapper.style.removeProperty(
+          "transform"
         );
-  
-  
-        wrapper.style.transform =
-          "translate3d(0, 0, 0)";
   
         wrapper.style.removeProperty(
           "transition-duration"
@@ -515,7 +655,7 @@
         );
   
   
-        getSlides().forEach(
+        getRealSlides().forEach(
           (slide) => {
   
             slide.style.removeProperty(
@@ -536,34 +676,54 @@
   
           }
         );
+      };
   
   
-        applyClassesFromDomOrder();
+      const enableDesktop = () => {
+  
+        destroyMobileSwiper();
+        removeGhost();
+  
+  
+        wrapper.classList.add(
+          "is-no-transition"
+        );
+  
+  
+        cleanDesktopInlineStyles();
+  
+  
+        applyCanonicalStates();
   
   
         forceReflow();
   
   
-        requestAnimationFrame(() => {
+        requestAnimationFrame(
+          () => {
   
-          wrapper.classList.remove(
-            "is-no-transition"
-          );
+            wrapper.classList.remove(
+              "is-no-transition"
+            );
   
-        });
+          }
+        );
       };
   
   
       /* ==========================================================================
-         TABLET / MOBILE SWIPER
+         TABLET / MOBILE
       ========================================================================== */
   
       const enableMobile = () => {
   
+        removeGhost();
+  
+  
         if (mobileSwiper) return;
   
   
-        clearAllClasses();
+        clearAllStates();
   
   
         wrapper.classList.add(
@@ -576,7 +736,7 @@
         );
   
   
-        getSlides().forEach(
+        getRealSlides().forEach(
           (slide) => {
   
             slide.style.removeProperty(
@@ -626,6 +786,9 @@
             {
               loop: true,
   
+              initialSlide:
+                currentIndex,
+  
               slidesPerView: 1,
               slidesPerGroup: 1,
   
@@ -650,6 +813,19 @@
                   previousButton,
                 nextEl:
                   nextButton,
+              },
+  
+              on: {
+  
+                slideChange(
+                  instance
+                ) {
+  
+                  currentIndex =
+                    instance.realIndex;
+  
+                },
+  
               },
             }
           );
@@ -714,37 +890,64 @@
           }
   
   
-          const slide =
+          const clickedSlide =
             event.target.closest(
-              ".swiper-slide.is--featured"
+              ".swiper-slide.is--featured:not(.b4-featured-ghost)"
             );
   
   
-          if (!slide) return;
+          if (!clickedSlide) return;
   
   
-          const slides = getSlides();
+          const slides =
+            getRealSlides();
   
   
-          const index =
-            slides.indexOf(slide);
+          const clickedIndex =
+            slides.indexOf(
+              clickedSlide
+            );
   
   
-          if (index <= 0) return;
+          if (
+            clickedIndex < 0
+          ) {
+            return;
+          }
+  
+  
+          const total =
+            slides.length;
+  
+  
+          const distance =
+            mod(
+              clickedIndex -
+              currentIndex,
+              total
+            );
+  
+  
+          if (distance === 0) {
+            return;
+          }
   
   
           /*
-            Preview #1 = one NEXT.
-            Preview #2 = two NEXT rotations.
-            Preview #3 = three NEXT rotations.
-            Preview #4 = four NEXT rotations.
+            Preview positions are always forward,
+            therefore rotate NEXT the requested amount.
           */
-          let remaining = index;
+          let remaining =
+            distance;
   
   
-          const run = () => {
+          const rotate = () => {
   
-            if (remaining <= 0) return;
+            if (
+              remaining <= 0
+            ) {
+              return;
+            }
   
   
             goNextDesktop();
@@ -753,18 +956,20 @@
             remaining -= 1;
   
   
-            if (remaining > 0) {
+            if (
+              remaining > 0
+            ) {
   
               window.setTimeout(
-                run,
-                getDurationMs() + 70
+                rotate,
+                getDurationMs() + 55
               );
   
             }
           };
   
   
-          run();
+          rotate();
         }
       );
   
@@ -775,7 +980,8 @@
   
       const updateMode = () => {
   
-        isAnimating = false;
+        isAnimating =
+          false;
   
   
         if (isDesktop()) {
@@ -812,7 +1018,8 @@
          RESIZE SAFETY
       ========================================================================== */
   
-      let resizeTimer = null;
+      let resizeTimer =
+        null;
   
   
       window.addEventListener(
@@ -828,14 +1035,17 @@
             window.setTimeout(
               () => {
   
-                if (isDesktop()) {
+                if (
+                  isDesktop()
+                ) {
   
-                  wrapper.style.transform =
-                    "translate3d(0, 0, 0)";
+                  cleanDesktopInlineStyles();
   
-                  applyClassesFromDomOrder();
+                  applyCanonicalStates();
   
-                } else if (mobileSwiper) {
+                } else if (
+                  mobileSwiper
+                ) {
   
                   mobileSwiper.params.spaceBetween =
                     getGapPx();
