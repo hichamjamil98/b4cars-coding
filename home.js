@@ -574,16 +574,22 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     };
 
-    const hideAllItems = () => {
-      collectionItems.forEach((item) => {
-        item.classList.remove("is--visible", "is--active", ...SLOT_CLASSES);
-        item.setAttribute("aria-hidden", "true");
-        item.style.display = "none";
-        item.style.removeProperty("--card-grow");
-        item.style.removeProperty("order");
+    const resetItem = (item) => {
+      item.classList.remove("is--visible", "is--active", ...STATE_CLASSES);
+      item.setAttribute("aria-hidden", "true");
+      item.style.display = "none";
+      item.style.removeProperty("--card-grow");
+      item.style.removeProperty("order");
+      item.querySelector(".card--item")?.classList.remove("is--active");
+    };
 
-        item.querySelector(".card--item")?.classList.remove("is--active");
-      });
+    const hideAllItems = () => {
+      clearAnimationTimer();
+      isAnimating = false;
+      removeClones();
+      collectionItems.forEach(resetItem);
+      visibleItems = [];
+      visibleWindow = [];
     };
 
     const captureFrozenImageSize = (referenceItem) => {
@@ -607,58 +613,256 @@ document.addEventListener("DOMContentLoaded", () => {
       return "";
     };
 
-    const rotateVisibleItems = (target) => {
-      const length = visibleItems.length;
-      if (length < 2) return;
+    const getWindowForIndex = (index) => {
+      const total = matchingItems.length;
+      if (!total) return [];
 
-      const centerIndex = Math.floor((length - 1) / 2);
-      const fromIndex = visibleItems.indexOf(target);
-      if (fromIndex < 0 || fromIndex === centerIndex) return;
+      const visible = Math.min(MAX_VISIBLE, total);
+      const centerOffset = Math.floor((visible - 1) / 2);
 
-      const shift = fromIndex - centerIndex;
+      return Array.from({ length: visible }, (_, slotIndex) => {
+        const itemIndex = mod(index - centerOffset + slotIndex, total);
 
-      visibleItems = visibleItems.map(
-        (_, index) => visibleItems[(index + shift + length) % length],
-      );
-    };
-
-    const applySlotLayout = () => {
-      const desktop = isDesktop();
-      const centerIndex = Math.floor((visibleItems.length - 1) / 2);
-
-      visibleItems.forEach((item, index) => {
-        const offset = index - centerIndex;
-        const isActive = offset === 0;
-        const slotClass = slotClassForOffset(offset);
-
-        item.classList.remove("is--active", ...SLOT_CLASSES);
-        item.classList.toggle("is--active", isActive);
-        if (slotClass) item.classList.add(slotClass);
-
-        if (desktop) {
-          item.style.order = String(index);
-        } else {
-          item.style.removeProperty("order");
-        }
-
-        item
-          .querySelector(".card--item")
-          ?.classList.toggle("is--active", isActive);
+        return {
+          item: matchingItems[itemIndex],
+          itemIndex,
+          offset: slotIndex - centerOffset,
+        };
       });
     };
 
-    const setActiveCard = (item, immediate = false) => {
-      if (!item || !visibleItems.includes(item)) return;
-      if (!immediate && item === activeItem) return;
+    const getInitialIndex = (items) => {
+      const visible = Math.min(MAX_VISIBLE, items.length);
+      if (!visible) return 0;
+      const start = Math.max(0, items.length - visible);
+      return start + Math.floor((visible - 1) / 2);
+    };
 
-      if (isDesktop()) {
-        rotateVisibleItems(item);
+    const applySlotToItem = (item, offset, order, desktop) => {
+      const slotClass = slotClassForOffset(offset);
+      const isActive = offset === 0;
+
+      item.classList.remove("is--active", ...SLOT_CLASSES);
+      item.classList.add("is--visible");
+      item.classList.toggle("is--active", isActive);
+      if (slotClass) item.classList.add(slotClass);
+
+      item.style.display = "";
+      item.setAttribute("aria-hidden", "false");
+
+      if (desktop) {
+        item.style.order = String(order);
+      } else {
+        item.style.removeProperty("order");
       }
 
-      activeItem = item;
-      applySlotLayout();
+      item
+        .querySelector(".card--item")
+        ?.classList.toggle("is--active", isActive);
+    };
 
-      if (!immediate && typeof window.gsap !== "undefined") {
+    const createIncomingClone = (slot) => {
+      const clone = slot.item.cloneNode(true);
+      const slotClass = slotClassForOffset(slot.offset);
+
+      clone.classList.add(
+        "is--clone",
+        "is--visible",
+        "is-no-transition",
+        "is--entering",
+      );
+      clone.classList.remove("is--active", "is--exiting", ...SLOT_CLASSES);
+      if (slotClass) clone.classList.add(slotClass);
+
+      clone.dataset.b4Clone = "true";
+      clone.setAttribute("aria-hidden", "true");
+      clone.style.display = "";
+      clone.querySelector(".card--item")?.classList.remove("is--active");
+      clone.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+
+      grid.appendChild(clone);
+      return clone;
+    };
+
+    const layoutImmediate = (nextIndex) => {
+      removeClones();
+
+      collectionItems.forEach((item) => {
+        if (!matchingItems.includes(item)) resetItem(item);
+      });
+
+      if (!isDesktop()) {
+        matchingItems.forEach((item, itemIndex) => {
+          item.classList.remove("is--active", ...STATE_CLASSES);
+          item.classList.add("is--visible");
+          item.style.display = "";
+          item.style.removeProperty("order");
+          item.setAttribute("aria-hidden", "false");
+          item
+            .querySelector(".card--item")
+            ?.classList.toggle("is--active", itemIndex === nextIndex);
+          item.classList.toggle("is--active", itemIndex === nextIndex);
+        });
+
+        collectionItems.forEach((item) => {
+          if (!matchingItems.includes(item)) resetItem(item);
+        });
+
+        visibleWindow = matchingItems.map((item, itemIndex) => ({
+          item,
+          itemIndex,
+          offset: itemIndex - nextIndex,
+        }));
+        visibleItems = matchingItems.slice();
+        activeIndex = nextIndex;
+        activeItem = matchingItems[nextIndex] || null;
+        return;
+      }
+
+      matchingItems.forEach(resetItem);
+
+      const nextWindow = getWindowForIndex(nextIndex);
+
+      nextWindow.forEach((slot, order) => {
+        slot.item.classList.remove(
+          "is--entering",
+          "is--exiting",
+          "is-no-transition",
+        );
+        applySlotToItem(slot.item, slot.offset, order, true);
+      });
+
+      visibleWindow = nextWindow;
+      visibleItems = nextWindow.map((slot) => slot.item);
+      activeIndex = nextIndex;
+      activeItem = matchingItems[nextIndex] || null;
+    };
+
+    const setActiveIndex = (nextIndex, immediate = false) => {
+      const total = matchingItems.length;
+      if (!total) return;
+
+      nextIndex = mod(nextIndex, total);
+
+      if (immediate || !isDesktop() || !visibleWindow.length) {
+        layoutImmediate(nextIndex);
+        return;
+      }
+
+      if (isAnimating || nextIndex === activeIndex) return;
+
+      const prevWindow = visibleWindow.slice();
+      const nextWindow = getWindowForIndex(nextIndex);
+      const direction = shortestDelta(activeIndex, nextIndex, total);
+      const forward = direction > 0;
+      const prevByItem = new Map(prevWindow.map((slot) => [slot.item, slot]));
+      const wrapping = [];
+      const incoming = [];
+      const outgoing = [];
+
+      nextWindow.forEach((slot) => {
+        const prevSlot = prevByItem.get(slot.item);
+
+        if (!prevSlot) {
+          incoming.push(slot);
+          return;
+        }
+
+        const wrapped = forward
+          ? prevSlot.offset < 0 && slot.offset > 0
+          : prevSlot.offset > 0 && slot.offset < 0;
+
+        if (wrapped) wrapping.push(slot);
+      });
+
+      prevWindow.forEach((slot) => {
+        const stays = nextWindow.some(
+          (nextSlot) => nextSlot.item === slot.item,
+        );
+        const wraps = wrapping.some((nextSlot) => nextSlot.item === slot.item);
+
+        if (!stays || wraps) outgoing.push(slot.item);
+      });
+
+      isAnimating = true;
+
+      const incomingNodes = [
+        ...wrapping.map((slot) => ({
+          node: createIncomingClone(slot),
+          slot,
+        })),
+        ...incoming.map((slot) => {
+          slot.item.classList.add(
+            "is--visible",
+            "is-no-transition",
+            "is--entering",
+          );
+          slot.item.classList.remove("is--exiting");
+          slot.item.style.display = "";
+          slot.item.setAttribute("aria-hidden", "false");
+
+          return { node: slot.item, slot };
+        }),
+      ];
+
+      outgoing.forEach((item) => {
+        item.classList.add("is--exiting");
+        item.classList.remove("is--active", ...SLOT_CLASSES);
+        item.querySelector(".card--item")?.classList.remove("is--active");
+      });
+
+      const leftNodes = forward
+        ? outgoing.slice()
+        : incomingNodes.map(({ node }) => node);
+      const rightNodes = forward
+        ? incomingNodes.map(({ node }) => node)
+        : outgoing.slice();
+      const middleNodes = [];
+
+      nextWindow.forEach((slot) => {
+        if (wrapping.some((wrapSlot) => wrapSlot.item === slot.item)) return;
+        middleNodes.push(slot.item);
+        applySlotToItem(slot.item, slot.offset, 0, true);
+      });
+
+      incomingNodes.forEach(({ node, slot }) => {
+        applySlotToItem(node, slot.offset, 0, true);
+        node.classList.add("is--entering", "is-no-transition");
+        node.classList.remove("is--active");
+        node.querySelector(".card--item")?.classList.remove("is--active");
+      });
+
+      let order = 0;
+      [...leftNodes, ...middleNodes, ...rightNodes].forEach((node) => {
+        node.style.order = String(order);
+        order += 1;
+      });
+
+      incomingNodes.forEach(({ node }) => {
+        void node.offsetWidth;
+      });
+
+      requestAnimationFrame(() => {
+        incomingNodes.forEach(({ node }) => {
+          node.classList.remove("is-no-transition");
+        });
+
+        requestAnimationFrame(() => {
+          incomingNodes.forEach(({ node }) => {
+            node.classList.remove("is--entering");
+          });
+        });
+      });
+
+      visibleWindow = nextWindow;
+      visibleItems = nextWindow.map((slot) => slot.item);
+      activeIndex = nextIndex;
+      activeItem = matchingItems[nextIndex] || null;
+
+      if (typeof window.gsap !== "undefined" && activeItem) {
         window.gsap.fromTo(
           activeItem,
           { opacity: 0.96 },
@@ -670,72 +874,58 @@ document.addEventListener("DOMContentLoaded", () => {
           },
         );
       }
+
+      animationTimer = window.setTimeout(() => {
+        outgoing.forEach((item) => {
+          const slot = nextWindow.find((entry) => entry.item === item);
+          item.classList.remove("is--exiting");
+
+          if (slot) {
+            item.classList.add("is-no-transition");
+            applySlotToItem(item, slot.offset, 0, true);
+            void item.offsetWidth;
+            item.classList.remove("is-no-transition");
+          } else {
+            resetItem(item);
+          }
+        });
+
+        removeClones();
+
+        nextWindow.forEach((slot, orderIndex) => {
+          slot.item.classList.remove(
+            "is--entering",
+            "is--exiting",
+            "is-no-transition",
+          );
+          applySlotToItem(slot.item, slot.offset, orderIndex, true);
+        });
+
+        isAnimating = false;
+        animationTimer = 0;
+      }, durationMs());
     };
 
     const goToNeighbor = (direction) => {
-      if (!visibleItems.length) return;
-
-      const centerIndex = Math.floor((visibleItems.length - 1) / 2);
-      const target = visibleItems[centerIndex + direction];
-      if (target) setActiveCard(target);
-    };
-
-    const bindCardEvents = () => {
-      visibleItems.forEach((item) => {
-        const card = item.querySelector(".card--item");
-        if (!card || card.dataset.expandReady === "true") return;
-
-        card.dataset.expandReady = "true";
-
-        card.addEventListener("click", (event) => {
-          if (!visibleItems.includes(item)) return;
-
-          if (didSwipe) {
-            didSwipe = false;
-            event.preventDefault();
-            return;
-          }
-
-          if (item === activeItem) return;
-
-          event.preventDefault();
-          event.stopPropagation();
-          setActiveCard(item);
-        });
-      });
+      if (!matchingItems.length || isAnimating) return;
+      setActiveIndex(activeIndex + direction);
     };
 
     const showItems = (items) => {
-      visibleItems = items;
+      matchingItems = items;
+      setActiveIndex(getInitialIndex(items), true);
 
-      items.forEach((item) => {
-        item.style.display = "";
-        item.setAttribute("aria-hidden", "false");
-        item.classList.add("is--visible");
-      });
-
-      const centerIndex = Math.floor((items.length - 1) / 2);
-      const centerItem = items[centerIndex] || null;
-
-      if (centerItem) {
-        setActiveCard(centerItem, true);
-
+      requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            captureFrozenImageSize(centerItem);
-          });
+          if (activeItem) captureFrozenImageSize(activeItem);
         });
-      } else {
-        activeItem = null;
-      }
-
-      bindCardEvents();
+      });
     };
 
     const getMatchingItems = (filterValue) => {
-      const matches = collectionItems
-        .filter((item) => getItemCategory(item) === filterValue)
-        .slice(-MAX_VISIBLE);
+      const matches = collectionItems.filter(
+        (item) => getItemCategory(item) === filterValue,
+      );
 
       if (!matches.length) {
         const availableCategories = [
@@ -772,7 +962,7 @@ document.addEventListener("DOMContentLoaded", () => {
           typeof window.gsap !== "undefined"
         ) {
           window.gsap.fromTo(
-            matches,
+            visibleItems,
             {
               opacity: 0,
               y: "0.75rem",
@@ -886,3 +1076,255 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 })();
+
+/* ==========================================================================
+     CASCADING SLIDER
+  ========================================================================== */
+
+function initCascadingSlider() {
+  const duration = 0.65;
+  const ease = "power3.inOut";
+
+  const breakpoints = [
+    { maxWidth: 479, activeWidth: 0.78, siblingWidth: 0.08 },
+    { maxWidth: 767, activeWidth: 0.7, siblingWidth: 0.1 },
+    { maxWidth: 991, activeWidth: 0.6, siblingWidth: 0.1 },
+    { maxWidth: Infinity, activeWidth: 0.6, siblingWidth: 0.13 },
+  ];
+
+  const wrappers = document.querySelectorAll("[data-cascading-slider-wrap]");
+  wrappers.forEach(setupInstance);
+
+  function setupInstance(wrapper) {
+    const viewport = wrapper.querySelector("[data-cascading-viewport]");
+    const prevButton = wrapper.querySelector("[data-cascading-slider-prev]");
+    const nextButton = wrapper.querySelector("[data-cascading-slider-next]");
+    const slides = Array.from(
+      viewport.querySelectorAll("[data-cascading-slide]"),
+    );
+    let totalSlides = slides.length;
+
+    if (totalSlides === 0) return;
+
+    if (totalSlides < 9) {
+      const originalSlides = slides.slice();
+      while (slides.length < 9) {
+        originalSlides.forEach(function (original) {
+          const clone = original.cloneNode(true);
+          clone.setAttribute("data-clone", "");
+          viewport.appendChild(clone);
+          slides.push(clone);
+        });
+      }
+      totalSlides = slides.length;
+    }
+
+    let activeIndex = 0;
+    let isAnimating = false;
+    let slideWidth = 0;
+    let slotCenters = {};
+    let slotWidths = {};
+
+    function readGap() {
+      const raw = getComputedStyle(viewport).getPropertyValue("--gap").trim();
+      if (!raw) return 0;
+      const temp = document.createElement("div");
+      temp.style.width = raw;
+      temp.style.position = "absolute";
+      temp.style.visibility = "hidden";
+      viewport.appendChild(temp);
+      const px = temp.offsetWidth;
+      viewport.removeChild(temp);
+      return px;
+    }
+
+    function getSettings() {
+      const windowWidth = window.innerWidth;
+      for (let i = 0; i < breakpoints.length; i++) {
+        if (windowWidth <= breakpoints[i].maxWidth) return breakpoints[i];
+      }
+      return breakpoints[breakpoints.length - 1];
+    }
+
+    function getOffset(slideIndex, fromIndex) {
+      if (fromIndex === undefined) fromIndex = activeIndex;
+      let distance = slideIndex - fromIndex;
+      const half = totalSlides / 2;
+      if (distance > half) distance -= totalSlides;
+      if (distance < -half) distance += totalSlides;
+      return distance;
+    }
+
+    function measure() {
+      const settings = getSettings();
+      const viewportWidth = viewport.offsetWidth;
+      const gap = readGap();
+
+      const activeSlideWidth = viewportWidth * settings.activeWidth;
+      const siblingSlideWidth = viewportWidth * settings.siblingWidth;
+      const farSlideWidth = Math.max(
+        0,
+        (viewportWidth - activeSlideWidth - 2 * siblingSlideWidth - 4 * gap) /
+          2,
+      );
+
+      slideWidth = activeSlideWidth;
+
+      const visibleSlots = [
+        { slot: -2, width: farSlideWidth },
+        { slot: -1, width: siblingSlideWidth },
+        { slot: 0, width: activeSlideWidth },
+        { slot: 1, width: siblingSlideWidth },
+        { slot: 2, width: farSlideWidth },
+      ];
+
+      let x = 0;
+      visibleSlots.forEach(function (def, i) {
+        slotCenters[String(def.slot)] = x + def.width / 2;
+        slotWidths[String(def.slot)] = def.width;
+        if (i < visibleSlots.length - 1) x += def.width + gap;
+      });
+
+      slotCenters["-3"] =
+        slotCenters["-2"] - farSlideWidth / 2 - gap - farSlideWidth / 2;
+      slotWidths["-3"] = farSlideWidth;
+      slotCenters["3"] =
+        slotCenters["2"] + farSlideWidth / 2 + gap + farSlideWidth / 2;
+      slotWidths["3"] = farSlideWidth;
+
+      slides.forEach(function (slide) {
+        slide.style.width = slideWidth + "px";
+      });
+    }
+
+    function getSlideProps(offset) {
+      const clamped = Math.max(-3, Math.min(3, offset));
+      const slotWidth = slotWidths[String(clamped)];
+      const clipAmount = Math.max(0, (slideWidth - slotWidth) / 2);
+      const translateX = slotCenters[String(clamped)] - slideWidth / 2;
+
+      return {
+        x: translateX,
+        "--clip": clipAmount,
+        zIndex: 10 - Math.abs(clamped),
+      };
+    }
+
+    function layout(animate, previousIndex) {
+      slides.forEach(function (slide, index) {
+        const offset = getOffset(index);
+
+        if (offset < -3 || offset > 3) {
+          if (animate && previousIndex !== undefined) {
+            const previousOffset = getOffset(index, previousIndex);
+            if (previousOffset >= -2 && previousOffset <= 2) {
+              const exitSlot = previousOffset < 0 ? -3 : 3;
+              gsap.to(
+                slide,
+                Object.assign({}, getSlideProps(exitSlot), {
+                  duration: duration,
+                  ease: ease,
+                  overwrite: true,
+                }),
+              );
+              return;
+            }
+          }
+
+          const parkSlot = offset < 0 ? -3 : 3;
+          gsap.set(slide, getSlideProps(parkSlot));
+          return;
+        }
+
+        const props = getSlideProps(offset);
+        slide.setAttribute("data-status", offset === 0 ? "active" : "inactive");
+
+        if (animate) {
+          gsap.to(
+            slide,
+            Object.assign({}, props, {
+              duration: duration,
+              ease: ease,
+              overwrite: true,
+            }),
+          );
+        } else {
+          gsap.set(slide, props);
+        }
+      });
+    }
+
+    function goTo(targetIndex) {
+      const normalizedTarget =
+        ((targetIndex % totalSlides) + totalSlides) % totalSlides;
+      if (isAnimating || normalizedTarget === activeIndex) return;
+      isAnimating = true;
+
+      const previousIndex = activeIndex;
+      const travelDirection =
+        getOffset(normalizedTarget, previousIndex) > 0 ? 1 : -1;
+
+      slides.forEach(function (slide, index) {
+        const currentOffset = getOffset(index, previousIndex);
+        const nextOffset = getOffset(index, normalizedTarget);
+        const wasInRange = currentOffset >= -3 && currentOffset <= 3;
+        const willBeVisible = nextOffset >= -2 && nextOffset <= 2;
+
+        if (!wasInRange && willBeVisible) {
+          const entrySlot = travelDirection > 0 ? 3 : -3;
+          gsap.set(slide, getSlideProps(entrySlot));
+        }
+
+        const wasInvisible = Math.abs(currentOffset) >= 3;
+        const willBeStaging = Math.abs(nextOffset) === 3;
+        const crossesSides = currentOffset * nextOffset < 0;
+        if (wasInvisible && willBeStaging && crossesSides) {
+          gsap.set(slide, getSlideProps(nextOffset > 0 ? 3 : -3));
+        }
+      });
+
+      activeIndex = normalizedTarget;
+      layout(true, previousIndex);
+      gsap.delayedCall(duration + 0.05, function () {
+        isAnimating = false;
+      });
+    }
+
+    if (prevButton)
+      prevButton.addEventListener("click", function () {
+        goTo(activeIndex - 1);
+      });
+    if (nextButton)
+      nextButton.addEventListener("click", function () {
+        goTo(activeIndex + 1);
+      });
+
+    slides.forEach(function (slide, index) {
+      slide.addEventListener("click", function () {
+        if (index !== activeIndex) goTo(index);
+      });
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "ArrowLeft") goTo(activeIndex - 1);
+      if (event.key === "ArrowRight") goTo(activeIndex + 1);
+    });
+
+    let resizeTimer;
+    window.addEventListener("resize", function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        measure();
+        layout(false);
+      }, 100);
+    });
+
+    measure();
+    layout(false);
+  }
+}
+
+// Initialize Cascading Slider
+document.addEventListener("DOMContentLoaded", function () {
+  initCascadingSlider();
+});
