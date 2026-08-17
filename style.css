@@ -290,16 +290,132 @@ body.is--locked {
 }
 
 /* ==========================================================================
-   HOME CARS - OVERLAY HOVER
+   CARS FILTER + CASCADING SLIDER
 ========================================================================== */
 
-.section.is--home-slider .overlay-orange70 {
+.filter--cars-wrapper .filter--item[filter],
+.home--cars-filter .filter--item[filter] {
+  cursor: pointer;
+}
+
+.filter--cars-wrapper .filter--item[filter] .btn,
+.filter--cars-wrapper .filter--item[filter] .button,
+.home--cars-filter .filter--item[filter] .btn,
+.home--cars-filter .filter--item[filter] .button {
+  transition: color 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.filter--cars-wrapper .filter--item[filter].is--active .btn,
+.filter--cars-wrapper .filter--item[filter].is--active .button,
+.home--cars-filter .filter--item[filter].is--active .btn,
+.home--cars-filter .filter--item[filter].is--active .button {
+  color: #031e4d !important;
+}
+
+.filter--cars-wrapper .filter--item[filter].is--active .btn *,
+.filter--cars-wrapper .filter--item[filter].is--active .button *,
+.home--cars-filter .filter--item[filter].is--active .btn *,
+.home--cars-filter .filter--item[filter].is--active .button * {
+  color: inherit !important;
+}
+
+[data-cascading-slider-wrap] {
+  position: relative;
+  width: 100%;
+}
+
+[data-cascading-viewport],
+.cascading-slider__list {
+  --gap: 1.125rem;
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 32.5rem;
+  overflow: hidden;
+}
+
+[data-cascading-slide] {
+  --clip: 0px;
+  --radius: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  overflow: hidden;
+  cursor: pointer;
+  clip-path: inset(0 var(--clip) 0 var(--clip) round var(--radius));
+  will-change: transform, clip-path;
+}
+
+[data-cascading-slide] [filter="category"] {
+  display: none !important;
+}
+
+.cascading-slider__item-inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.cascading-slider__item-bg {
+  position: absolute;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.cascading-slider__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cascading-slider__item-content {
+  flex: 0 0 auto;
+}
+
+[data-cascading-slide] .cascading-slider__h {
+  opacity: 0;
+  transform: translateY(0.5em);
+  transition: opacity 0.35s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: 0ms;
+}
+
+[data-cascading-slide][data-status="active"] .cascading-slider__h {
+  transition-delay: 400ms;
+  opacity: 1;
+  transform: translate(0px, 0em);
+}
+
+[data-cascading-slide] .overlay-orange70 {
   opacity: 1;
   transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.section.is--home-slider .card--item.is--active .overlay-orange70 {
-  opacity: 0.08;
+[data-cascading-slide][data-status="active"] .overlay-orange70 {
+  opacity: 0;
+}
+
+.wf-design-mode [data-cascading-viewport] {
+  display: flex;
+  flex-direction: row;
+  gap: 1em;
+  overflow: auto;
+}
+
+.wf-design-mode [data-cascading-slide] {
+  position: relative;
+  width: 60%;
+  flex: 0 0 auto;
+}
+
+.wf-design-mode .cascading-slider__h {
+  opacity: 1;
+  transform: translate(0px, 0em);
 }
 
 /* ==========================================================================
