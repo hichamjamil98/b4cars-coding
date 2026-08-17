@@ -112,10 +112,21 @@ body.is--locked {
   bottom: 0;
 }
 
+[animation="parallax-fade"],
+[parallax-fade] {
+  overflow: hidden;
+  will-change: width;
+}
+
 @media (prefers-reduced-motion: reduce) {
   [image="parallax"] {
     height: 100%;
     transform: none !important;
+  }
+
+  [animation="parallax-fade"],
+  [parallax-fade] {
+    width: auto !important;
   }
 }
 
