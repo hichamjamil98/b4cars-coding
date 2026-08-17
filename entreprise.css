@@ -41,6 +41,9 @@
   
   .section.is--entreprise-slider
   .cars--slide-wrapper .grid--cars {
+    --cars-coverflow-duration: 0.8s;
+    --cars-coverflow-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
     display: flex;
     align-items: stretch;
     gap: 0.3125rem;
@@ -57,7 +60,7 @@
     min-width: 0;
     overflow: hidden;
     transition:
-      flex-grow 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+      flex-grow var(--cars-coverflow-duration) var(--cars-coverflow-ease),
       opacity 0.35s ease;
     will-change: flex-grow;
   }
@@ -90,6 +93,22 @@
   .cars--slide-wrapper
   .grid--cars > .collection--item.is--visible {
     display: block;
+  }
+
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars > .collection--item.is--entering,
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars > .collection--item.is--exiting {
+    --card-grow: 0;
+    pointer-events: none;
+  }
+
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars > .collection--item.is-no-transition {
+    transition: none !important;
   }
   
   .section.is--entreprise-slider
