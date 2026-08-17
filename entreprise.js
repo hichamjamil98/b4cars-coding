@@ -1,6 +1,10 @@
 /* ==========================================================================
-   B4CARS — ENTREPRISE VEHICLES FILTER + EXPANDING FIVE-CARD GRID
+   B4CARS — ENTREPRISE VEHICLES FILTER + FIVE-CARD COVERFLOW
    Scoped only to .section.is--entreprise-slider
+
+   Desktop:
+   [far] [near] [CENTER] [near] [far]
+   Click or swipe a side card to rotate it into the center.
 ========================================================================== */
 
 (() => {
@@ -27,9 +31,21 @@
   
       const DEFAULT_FILTER = "En Stock";
       const MAX_VISIBLE = 5;
+      const DESKTOP_QUERY = "(min-width: 992px)";
+      const SWIPE_THRESHOLD = 48;
+      const SLOT_CLASSES = [
+        "is--slot-prev-2",
+        "is--slot-prev-1",
+        "is--slot-next-1",
+        "is--slot-next-2",
+      ];
   
       let visibleItems = [];
       let activeItem = null;
+      let pointerStartX = 0;
+      let didSwipe = false;
+  
+      const isDesktop = () => window.matchMedia(DESKTOP_QUERY).matches;
   
       const normalizeValue = (value = "") =>
         value
@@ -61,10 +77,11 @@
   
       const hideAllItems = () => {
         collectionItems.forEach((item) => {
-          item.classList.remove("is--visible", "is--active");
+          item.classList.remove("is--visible", "is--active", ...SLOT_CLASSES);
           item.setAttribute("aria-hidden", "true");
           item.style.display = "none";
           item.style.removeProperty("--card-grow");
+          item.style.removeProperty("order");
   
           item
             .querySelector(".card--item")
@@ -85,24 +102,64 @@
         grid.style.setProperty("--frozen-image-height", `${rect.height}px`);
       };
   
-      const setActiveCard = (item, immediate = false) => {
-        if (!item || !visibleItems.includes(item)) return;
+      const slotClassForOffset = (offset) => {
+        if (offset === -2) return "is--slot-prev-2";
+        if (offset === -1) return "is--slot-prev-1";
+        if (offset === 1) return "is--slot-next-1";
+        if (offset === 2) return "is--slot-next-2";
+        return "";
+      };
   
-        activeItem = item;
+      const rotateVisibleItems = (target) => {
+        const length = visibleItems.length;
+        if (length < 2) return;
   
-        visibleItems.forEach((visibleItem) => {
-          const isActive = visibleItem === activeItem;
+        const centerIndex = Math.floor((length - 1) / 2);
+        const fromIndex = visibleItems.indexOf(target);
+        if (fromIndex < 0 || fromIndex === centerIndex) return;
   
-          visibleItem.classList.toggle("is--active", isActive);
-          visibleItem.style.setProperty(
-            "--card-grow",
-            isActive ? "5" : "1"
-          );
+        const shift = fromIndex - centerIndex;
   
-          visibleItem
+        visibleItems = visibleItems.map(
+          (_, index) => visibleItems[(index + shift + length) % length]
+        );
+      };
+  
+      const applySlotLayout = () => {
+        const desktop = isDesktop();
+        const centerIndex = Math.floor((visibleItems.length - 1) / 2);
+  
+        visibleItems.forEach((item, index) => {
+          const offset = index - centerIndex;
+          const isActive = offset === 0;
+          const slotClass = slotClassForOffset(offset);
+  
+          item.classList.remove("is--active", ...SLOT_CLASSES);
+          item.classList.toggle("is--active", isActive);
+          if (slotClass) item.classList.add(slotClass);
+  
+          if (desktop) {
+            item.style.order = String(index);
+          } else {
+            item.style.removeProperty("order");
+          }
+  
+          item
             .querySelector(".card--item")
             ?.classList.toggle("is--active", isActive);
         });
+      };
+  
+      const setActiveCard = (item, immediate = false) => {
+        if (!item || !visibleItems.includes(item)) return;
+        if (!immediate && item === activeItem) return;
+  
+        if (isDesktop()) {
+          rotateVisibleItems(item);
+        }
+  
+        activeItem = item;
+        applySlotLayout();
   
         if (
           !immediate &&
@@ -121,6 +178,14 @@
         }
       };
   
+      const goToNeighbor = (direction) => {
+        if (!visibleItems.length) return;
+  
+        const centerIndex = Math.floor((visibleItems.length - 1) / 2);
+        const target = visibleItems[centerIndex + direction];
+        if (target) setActiveCard(target);
+      };
+  
       const bindCardEvents = () => {
         visibleItems.forEach((item) => {
           const card = item.querySelector(".card--item");
@@ -128,22 +193,20 @@
   
           card.dataset.entrepriseExpandReady = "true";
   
-          card.addEventListener("mouseenter", () => {
-            if (visibleItems.includes(item)) {
-              setActiveCard(item);
-            }
-          });
+          card.addEventListener("click", (event) => {
+            if (!visibleItems.includes(item)) return;
   
-          card.addEventListener("focusin", () => {
-            if (visibleItems.includes(item)) {
-              setActiveCard(item);
+            if (didSwipe) {
+              didSwipe = false;
+              event.preventDefault();
+              return;
             }
-          });
   
-          card.addEventListener("click", () => {
-            if (visibleItems.includes(item)) {
-              setActiveCard(item);
-            }
+            if (item === activeItem) return;
+  
+            event.preventDefault();
+            event.stopPropagation();
+            setActiveCard(item);
           });
         });
       };
@@ -272,8 +335,43 @@
         });
       });
   
+      grid.addEventListener("pointerdown", (event) => {
+        if (event.pointerType === "mouse" && event.button !== 0) return;
+        pointerStartX = event.clientX;
+        didSwipe = false;
+      });
+  
+      grid.addEventListener("pointerup", (event) => {
+        if (!pointerStartX) return;
+  
+        const deltaX = event.clientX - pointerStartX;
+        pointerStartX = 0;
+  
+        if (!isDesktop() || Math.abs(deltaX) < SWIPE_THRESHOLD) return;
+  
+        didSwipe = true;
+        goToNeighbor(deltaX < 0 ? 1 : -1);
+      });
+  
+      grid.addEventListener("keydown", (event) => {
+        if (!isDesktop()) return;
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          goToNeighbor(1);
+        } else if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          goToNeighbor(-1);
+        }
+      });
+  
+      if (!grid.hasAttribute("tabindex")) {
+        grid.setAttribute("tabindex", "0");
+      }
+  
       window.addEventListener("resize", () => {
         if (!activeItem) return;
+  
+        applySlotLayout();
   
         requestAnimationFrame(() => {
           captureFrozenImageSize(activeItem);

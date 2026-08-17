@@ -43,6 +43,7 @@
   .cars--slide-wrapper .grid--cars {
     display: flex;
     align-items: stretch;
+    gap: 0.3125rem;
     width: 100%;
     overflow: hidden;
   }
@@ -59,6 +60,30 @@
       flex-grow 0.8s cubic-bezier(0.16, 1, 0.3, 1),
       opacity 0.35s ease;
     will-change: flex-grow;
+  }
+  
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars > .collection--item.is--slot-prev-2,
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars > .collection--item.is--slot-next-2 {
+    --card-grow: 1;
+  }
+  
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars > .collection--item.is--slot-prev-1,
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars > .collection--item.is--slot-next-1 {
+    --card-grow: 1.45;
+  }
+  
+  .section.is--entreprise-slider
+  .cars--slide-wrapper
+  .grid--cars > .collection--item.is--active {
+    --card-grow: 5.4;
   }
   
   .section.is--entreprise-slider
@@ -166,6 +191,7 @@
     .grid--cars {
       display: grid;
       grid-template-columns: 1fr;
+      gap: 1.5rem;
       overflow: visible;
     }
   
@@ -173,6 +199,25 @@
     .cars--slide-wrapper
     .grid--cars > .collection--item {
       flex: none;
+      order: 0 !important;
+    }
+  
+    .section.is--entreprise-slider
+    .cars--slide-wrapper
+    .grid--cars > .collection--item.is--slot-prev-2,
+    .section.is--entreprise-slider
+    .cars--slide-wrapper
+    .grid--cars > .collection--item.is--slot-prev-1,
+    .section.is--entreprise-slider
+    .cars--slide-wrapper
+    .grid--cars > .collection--item.is--slot-next-1,
+    .section.is--entreprise-slider
+    .cars--slide-wrapper
+    .grid--cars > .collection--item.is--slot-next-2,
+    .section.is--entreprise-slider
+    .cars--slide-wrapper
+    .grid--cars > .collection--item.is--active {
+      --card-grow: 1;
     }
   
     .section.is--entreprise-slider
@@ -225,10 +270,7 @@
   .grid--cars .collection--item.is--active .overlay-orange70,
   .section.is--entreprise-slider
   .cars--slide-wrapper
-  .grid--cars .card--item.is--active .overlay-orange70,
-  .section.is--entreprise-slider
-  .cars--slide-wrapper
-  .grid--cars .card--item:hover .overlay-orange70 {
+  .grid--cars .card--item.is--active .overlay-orange70 {
     display: none !important;
     opacity: 0 !important;
     visibility: hidden !important;

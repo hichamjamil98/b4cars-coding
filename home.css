@@ -202,7 +202,7 @@ body.is-loading {
 }
 
 /* ==========================================================================
-   VEHICLES FILTER + EXPANDING FIVE-CARD GRID
+   VEHICLES FILTER + FIVE-CARD COVERFLOW
    Scoped only to .section.is--home-slider
 ========================================================================== */
 
@@ -230,6 +230,7 @@ body.is-loading {
 .section.is--home-slider .grid--cars {
   display: flex;
   align-items: stretch;
+  gap: 0.3125rem;
   width: 100%;
   overflow: hidden;
 }
@@ -242,6 +243,20 @@ body.is-loading {
   overflow: hidden;
   transition: flex-grow 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
   will-change: flex-grow;
+}
+
+.section.is--home-slider .grid--cars > .collection--item.is--slot-prev-2,
+.section.is--home-slider .grid--cars > .collection--item.is--slot-next-2 {
+  --card-grow: 1;
+}
+
+.section.is--home-slider .grid--cars > .collection--item.is--slot-prev-1,
+.section.is--home-slider .grid--cars > .collection--item.is--slot-next-1 {
+  --card-grow: 1.45;
+}
+
+.section.is--home-slider .grid--cars > .collection--item.is--active {
+  --card-grow: 5.4;
 }
 
 .section.is--home-slider .grid--cars > .collection--item.is--visible {
@@ -325,11 +340,21 @@ body.is-loading {
   .section.is--home-slider .grid--cars {
     display: grid;
     grid-template-columns: 1fr;
+    gap: 1.5rem;
     overflow: visible;
   }
 
   .section.is--home-slider .grid--cars > .collection--item {
     flex: none;
+    order: 0 !important;
+  }
+
+  .section.is--home-slider .grid--cars > .collection--item.is--slot-prev-2,
+  .section.is--home-slider .grid--cars > .collection--item.is--slot-prev-1,
+  .section.is--home-slider .grid--cars > .collection--item.is--slot-next-1,
+  .section.is--home-slider .grid--cars > .collection--item.is--slot-next-2,
+  .section.is--home-slider .grid--cars > .collection--item.is--active {
+    --card-grow: 1;
   }
 
   .section.is--home-slider
