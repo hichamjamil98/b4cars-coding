@@ -421,7 +421,7 @@ body.is-loading {
 
 [data-cascading-viewport],
 .cascading-slider__list {
-  --gap: 0.5em;
+  --gap: 1.125rem;
   position: relative;
   display: block;
   width: 100%;
