@@ -47,43 +47,65 @@
       delay: 0.08,
     });
 
-    addLoadTween(timeline, animSelector("load"), {
-      opacity: 0,
-      y: "1rem",
-    }, 0);
+    addLoadTween(
+      timeline,
+      animSelector("load"),
+      {
+        opacity: 0,
+        y: "1rem",
+      },
+      0,
+    );
 
-    addLoadTween(timeline, animSelector("load-up"), {
-      opacity: 0,
-      y: "2rem",
-    }, 0.04);
+    addLoadTween(
+      timeline,
+      animSelector("load-up"),
+      {
+        opacity: 0,
+        y: "2rem",
+      },
+      0.04,
+    );
 
-    addLoadTween(timeline, animSelector("load-left"), {
-      opacity: 0,
-      x: "2rem",
-    }, 0.04);
+    addLoadTween(
+      timeline,
+      animSelector("load-left"),
+      {
+        opacity: 0,
+        x: "2rem",
+      },
+      0.04,
+    );
 
-    addLoadTween(timeline, animSelector("load-right"), {
-      opacity: 0,
-      x: "-2rem",
-    }, 0.04);
+    addLoadTween(
+      timeline,
+      animSelector("load-right"),
+      {
+        opacity: 0,
+        x: "-2rem",
+      },
+      0.04,
+    );
 
-    document.querySelectorAll(animSelector("load-stagger")).forEach((parent) => {
-      const children = [...parent.children];
-      if (!children.length) return;
+    document
+      .querySelectorAll(animSelector("load-stagger"))
+      .forEach((parent) => {
+        const children = [...parent.children];
+        if (!children.length) return;
 
-      timeline.fromTo(
-        children,
-        { opacity: 0, y: "1.5rem" },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          stagger: 0.08,
-          clearProps: "transform,opacity",
-        },
-        0.12,
-      );
-    });
+        timeline.fromTo(
+          children,
+          { opacity: 0, y: "1.5rem" },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            stagger: 0.08,
+            clearProps: "transform,opacity",
+          },
+          0.12,
+        );
+      });
 
     document.querySelectorAll(animSelector("load-split")).forEach((element) => {
       const line = prepareSplitLine(element, "load-split");
@@ -146,49 +168,47 @@
 
   function initFade(selector, fromVars, ease) {
     document.querySelectorAll(selector).forEach((element) => {
-      gsap.fromTo(
-        element,
-        fromVars,
-        {
-          opacity: 1,
-          x: 0,
-          y: 0,
-          duration: 0.85,
-          ease,
-          clearProps: "transform,opacity",
-          scrollTrigger: {
-            trigger: element,
-            start: "top 86%",
-            once: true,
-          },
+      gsap.fromTo(element, fromVars, {
+        opacity: 1,
+        x: 0,
+        y: 0,
+        duration: 0.85,
+        ease,
+        clearProps: "transform,opacity",
+        scrollTrigger: {
+          trigger: element,
+          start: "top 86%",
+          once: true,
         },
-      );
+      });
     });
   }
 
   function initFadeStagger(ease) {
-    document.querySelectorAll(animSelector("fade-stagger")).forEach((parent) => {
-      const children = [...parent.children];
-      if (!children.length) return;
+    document
+      .querySelectorAll(animSelector("fade-stagger"))
+      .forEach((parent) => {
+        const children = [...parent.children];
+        if (!children.length) return;
 
-      gsap.fromTo(
-        children,
-        { opacity: 0, y: "1.5rem" },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.78,
-          stagger: 0.08,
-          ease,
-          clearProps: "transform,opacity",
-          scrollTrigger: {
-            trigger: parent,
-            start: "top 86%",
-            once: true,
+        gsap.fromTo(
+          children,
+          { opacity: 0, y: "1.5rem" },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.78,
+            stagger: 0.08,
+            ease,
+            clearProps: "transform,opacity",
+            scrollTrigger: {
+              trigger: parent,
+              start: "top 86%",
+              once: true,
+            },
           },
-        },
-      );
-    });
+        );
+      });
   }
 
   function initFadeSplit(ease) {
@@ -296,10 +316,7 @@
         return;
       }
 
-      if (
-        computedValue &&
-        computedValue !== "rgba(0, 0, 0, 0)"
-      ) {
+      if (computedValue && computedValue !== "rgba(0, 0, 0, 0)") {
         navbar.style.setProperty(property, computedValue);
         return;
       }
@@ -615,7 +632,8 @@
         const changeImage = () => {
           const nextSource = thumbnailImage.currentSrc || thumbnailImage.src;
 
-          if (!nextSource || thumbnail === activeThumbnail || isAnimating) return;
+          if (!nextSource || thumbnail === activeThumbnail || isAnimating)
+            return;
 
           isAnimating = true;
           setActiveThumbnail(thumbnail);
@@ -631,11 +649,12 @@
             return;
           }
 
-          gsap.timeline({
-            onComplete: () => {
-              isAnimating = false;
-            },
-          })
+          gsap
+            .timeline({
+              onComplete: () => {
+                isAnimating = false;
+              },
+            })
             .to(mainImage, {
               opacity: 0,
               scale: 1.025,
@@ -666,5 +685,4 @@
       });
     });
   }
-
 })();
