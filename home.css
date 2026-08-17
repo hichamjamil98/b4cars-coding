@@ -202,14 +202,17 @@ body.is-loading {
 }
 
 /* ==========================================================================
-   VEHICLES FILTER + FIVE-CARD COVERFLOW
-   Scoped only to .section.is--home-slider
+   HOME VEHICLES FILTER
+   Works with .home--cars-filter + the cascading slider
 ========================================================================== */
 
+.home--cars-filter .filter--item[filter],
 .section.is--home-slider .filter--item[filter] {
   cursor: pointer;
 }
 
+.home--cars-filter .filter--item[filter] .btn,
+.home--cars-filter .filter--item[filter] .button,
 .section.is--home-slider .filter--item[filter] .btn,
 .section.is--home-slider .filter--item[filter] .button {
   transition: color 0.4s cubic-bezier(0.22, 1, 0.36, 1),
@@ -217,197 +220,27 @@ body.is-loading {
     background-color 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.home--cars-filter .filter--item[filter].is--active .btn,
+.home--cars-filter .filter--item[filter].is--active .button,
 .section.is--home-slider .filter--item[filter].is--active .btn,
 .section.is--home-slider .filter--item[filter].is--active .button {
   color: #031e4d !important;
 }
 
+.home--cars-filter .filter--item[filter].is--active .btn *,
+.home--cars-filter .filter--item[filter].is--active .button *,
 .section.is--home-slider .filter--item[filter].is--active .btn *,
 .section.is--home-slider .filter--item[filter].is--active .button * {
   color: inherit !important;
 }
 
-.section.is--home-slider .grid--cars {
-  --cars-coverflow-duration: 0.8s;
-  --cars-coverflow-ease: cubic-bezier(0.16, 1, 0.3, 1);
-
-  display: flex;
-  align-items: stretch;
-  gap: 0.3125rem;
-  width: 100%;
-  overflow: hidden;
-}
-
-.section.is--home-slider .grid--cars > .collection--item {
-  position: relative;
-  display: none;
-  flex: var(--card-grow, 1) 1 0%;
-  min-width: 0;
-  overflow: hidden;
-  transition: flex-grow var(--cars-coverflow-duration)
-      var(--cars-coverflow-ease),
-    opacity 0.35s ease;
-  will-change: flex-grow;
-}
-
-.section.is--home-slider .grid--cars > .collection--item.is--slot-prev-2,
-.section.is--home-slider .grid--cars > .collection--item.is--slot-next-2 {
-  --card-grow: 1;
-}
-
-.section.is--home-slider .grid--cars > .collection--item.is--slot-prev-1,
-.section.is--home-slider .grid--cars > .collection--item.is--slot-next-1 {
-  --card-grow: 1.45;
-}
-
-.section.is--home-slider .grid--cars > .collection--item.is--active {
-  --card-grow: 5.4;
-}
-
-.section.is--home-slider .grid--cars > .collection--item.is--visible {
-  display: block;
-}
-
-.section.is--home-slider .grid--cars > .collection--item.is--entering,
-.section.is--home-slider .grid--cars > .collection--item.is--exiting {
-  --card-grow: 0;
-  pointer-events: none;
-}
-
-.section.is--home-slider .grid--cars > .collection--item.is-no-transition {
-  transition: none !important;
-}
-
-.section.is--home-slider .grid--cars .card--item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-width: 0;
-  cursor: pointer;
-  overflow: hidden;
-}
-
-.section.is--home-slider .grid--cars .car--image-wrapper {
-  position: relative;
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-}
-
-/*
-  Webflow still controls the wrapper height and ratio.
-  The image itself is frozen at the dimensions of the expanded card
-  and remains centered while the card opens to the left and right.
-*/
-.section.is--home-slider .grid--cars .car--slide-image {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  display: block;
-  width: var(--frozen-image-width, 100%);
-  max-width: none;
-  height: var(--frozen-image-height, 100%);
-  max-height: none;
-  pointer-events: none;
-  transform: translate(-50%, -50%) !important;
-  scale: 1 !important;
-  transition: none !important;
-  animation: none !important;
-  will-change: auto;
-}
-
-/*
-  The text space is permanently reserved on desktop.
-  Only opacity and translation are animated, so the section height
-  does not change when another card becomes active.
-*/
-.section.is--home-slider .grid--cars .card--item > p:not([filter="category"]) {
-  min-height: 4rem;
-  margin-top: 0.75rem;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(0.5rem);
-  transition: opacity 0.35s ease, visibility 0s linear 0.35s,
-    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.section.is--home-slider
-  .grid--cars
-  .card--item.is--active
-  > p:not([filter="category"]) {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-  transition: opacity 0.35s ease, visibility 0s linear 0s,
-    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.section.is--home-slider .grid--cars [filter="category"] {
-  display: none !important;
-}
-
-/* ==========================================================================
-   RESPONSIVE — VEHICLE GRID
-========================================================================== */
-
-@media screen and (max-width: 991px) {
-  .section.is--home-slider .grid--cars {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-    overflow: visible;
-  }
-
-  .section.is--home-slider .grid--cars > .collection--item {
-    flex: none;
-    order: 0 !important;
-  }
-
-  .section.is--home-slider .grid--cars > .collection--item.is--slot-prev-2,
-  .section.is--home-slider .grid--cars > .collection--item.is--slot-prev-1,
-  .section.is--home-slider .grid--cars > .collection--item.is--slot-next-1,
-  .section.is--home-slider .grid--cars > .collection--item.is--slot-next-2,
-  .section.is--home-slider .grid--cars > .collection--item.is--active {
-    --card-grow: 1;
-  }
-
-  .section.is--home-slider
-    .grid--cars
-    .card--item
-    > p:not([filter="category"]) {
-    min-height: 0;
-    margin-top: 0.75rem;
-    opacity: 1;
-    visibility: visible;
-    transform: none;
-  }
-}
-
-/* ==========================================================================
-   REDUCED MOTION — VEHICLE GRID
-========================================================================== */
-
 @media (prefers-reduced-motion: reduce) {
-  .section.is--home-slider .grid--cars > .collection--item,
-  .section.is--home-slider .grid--cars .card--item > p:not([filter="category"]),
+  .home--cars-filter .filter--item[filter] .btn,
+  .home--cars-filter .filter--item[filter] .button,
   .section.is--home-slider .filter--item[filter] .btn,
   .section.is--home-slider .filter--item[filter] .button {
     transition: none !important;
   }
-}
-
-/* No matching CMS items: the collection stays empty by design. */
-.section.is--home-slider .grid--cars:empty {
-  display: none;
-}
-
-/*
-  The image dimensions are captured once after each filter change.
-  Hovering another card only changes the mask width; the image does not move.
-*/
-.section.is--home-slider .grid--cars .car--slide-image {
-  transform-origin: center center !important;
 }
 
 /* ==========================================================================
@@ -442,8 +275,8 @@ body.is-loading {
   will-change: transform, clip-path;
 }
 
-[data-cascading-slide][data-status="active"] {
-  cursor: default;
+[data-cascading-slide] [filter="category"] {
+  display: none !important;
 }
 
 .cascading-slider__item-inner {
