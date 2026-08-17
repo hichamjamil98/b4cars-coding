@@ -308,15 +308,21 @@
 
       element.dataset.parallaxFadeReady = "true";
 
-      gsap.from(element, {
-        width: 0,
-        duration: 0.85,
-        ease,
-        clearProps: "width",
-        scrollTrigger: {
-          trigger: element,
-          start: "top 86%",
-          once: true,
+      const targetWidth = element.getBoundingClientRect().width;
+      gsap.set(element, { width: 0 });
+
+      ScrollTrigger.create({
+        trigger: element,
+        start: "top 86%",
+        once: true,
+        onEnter: () => {
+          gsap.to(element, {
+            width: targetWidth,
+            duration: 0.85,
+            ease,
+            overwrite: true,
+            clearProps: "width",
+          });
         },
       });
     });
