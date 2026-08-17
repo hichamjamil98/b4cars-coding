@@ -903,6 +903,12 @@ window.B4CARS_EASE =
           setActiveThumbnail(thumbnail);
         }
 
+        const switchSource = (source) => {
+          mainImage.removeAttribute("srcset");
+          mainImage.removeAttribute("sizes");
+          mainImage.src = source;
+        };
+
         const changeImage = () => {
           const nextSource = thumbnailImage.currentSrc || thumbnailImage.src;
 
@@ -912,41 +918,50 @@ window.B4CARS_EASE =
           isAnimating = true;
           setActiveThumbnail(thumbnail);
 
-          const switchSource = () => {
-            mainImage.src = nextSource;
-            mainImage.removeAttribute("srcset");
-          };
+          const reducedMotion = window.matchMedia(
+            "(prefers-reduced-motion: reduce)",
+          ).matches;
 
-          if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-            switchSource();
+          if (reducedMotion) {
+            switchSource(nextSource);
             isAnimating = false;
             return;
           }
 
-          gsap
-            .timeline({
+          const reveal = () => {
+            gsap.to(mainImage, {
+              opacity: 1,
+              duration: 0.42,
+              ease,
+              overwrite: "auto",
               onComplete: () => {
+                gsap.set(mainImage, { clearProps: "opacity" });
                 isAnimating = false;
               },
-            })
-            .to(mainImage, {
-              opacity: 0,
-              scale: 1.025,
-              duration: 0.28,
-              ease,
-            })
-            .add(switchSource)
-            .fromTo(
-              mainImage,
-              { opacity: 0, scale: 1.025 },
-              {
-                opacity: 1,
-                scale: 1,
-                duration: 0.42,
-                ease,
-                clearProps: "opacity,scale",
-              },
-            );
+            });
+          };
+
+          gsap.to(mainImage, {
+            opacity: 0,
+            duration: 0.22,
+            ease,
+            overwrite: "auto",
+            onComplete: () => {
+              let revealed = false;
+
+              const onLoad = () => {
+                if (revealed) return;
+                revealed = true;
+                reveal();
+              };
+
+              mainImage.addEventListener("load", onLoad, { once: true });
+              mainImage.addEventListener("error", onLoad, { once: true });
+              switchSource(nextSource);
+
+              if (mainImage.complete) onLoad();
+            },
+          });
         };
 
         thumbnail.addEventListener("click", changeImage);
