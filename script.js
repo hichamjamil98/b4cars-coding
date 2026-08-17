@@ -120,7 +120,7 @@ window.B4CARS_EASE =
     document
       .querySelectorAll(animSelector("load-stagger"))
       .forEach((parent) => {
-        const children = [...parent.children];
+        const children = getStaggerChildren(parent);
         if (!children.length) return;
 
         timeline.fromTo(
@@ -218,7 +218,7 @@ window.B4CARS_EASE =
     document
       .querySelectorAll(animSelector("fade-stagger"))
       .forEach((parent) => {
-        const children = [...parent.children];
+        const children = getStaggerChildren(parent);
         if (!children.length) return;
 
         gsap.fromTo(
@@ -282,6 +282,18 @@ window.B4CARS_EASE =
 
     element.dataset[readyAttribute] = "true";
     return element.querySelector(`.${prefix}__line`);
+  }
+
+  function getStaggerChildren(parent) {
+    return [...parent.children].filter((child) => !hasOwnReveal(child));
+  }
+
+  function hasOwnReveal(element) {
+    const animation = element.getAttribute("animation") || "";
+
+    return (
+      element.hasAttribute("parallax-fade") || animation === "parallax-fade"
+    );
   }
 
   /* ========================================================================
@@ -357,10 +369,12 @@ window.B4CARS_EASE =
         onEnter: () => {
           gsap.to(element, {
             width: targetWidth,
+            opacity: 1,
+            y: 0,
             duration: 0.85,
             ease,
-            overwrite: true,
-            clearProps: "width",
+            overwrite: "auto",
+            clearProps: "width,opacity,transform",
           });
         },
       });
