@@ -1043,7 +1043,7 @@ window.B4CARS_EASE =
         ? swiperRoot.querySelector(".swiper--navigation .swiper--btn.is--next")
         : null;
 
-      const isLeading =
+      const isVenteLeading =
         Boolean(
           wrapper.closest(
             '[data-wf--slot-item-vehicules-slider--variant="vente"]',
@@ -1053,19 +1053,41 @@ window.B4CARS_EASE =
           "data-wf--slot-item-vehicules-slider--variant",
         ) === "vente";
 
-      const layoutConfig = isLeading
-        ? {
+      let isLeading = false;
+      let layoutConfig = {
+        visibleMin: -2,
+        visibleMax: 2,
+        parkMin: -3,
+        parkMax: 3,
+      };
+
+      function updateLayoutMode() {
+        const compactLeading = window.innerWidth <= 991;
+        isLeading = isVenteLeading || compactLeading;
+
+        if (compactLeading) {
+          layoutConfig = {
+            visibleMin: 0,
+            visibleMax: 2,
+            parkMin: -1,
+            parkMax: 3,
+          };
+        } else if (isVenteLeading) {
+          layoutConfig = {
             visibleMin: 0,
             visibleMax: 4,
             parkMin: -1,
             parkMax: 5,
-          }
-        : {
+          };
+        } else {
+          layoutConfig = {
             visibleMin: -2,
             visibleMax: 2,
             parkMin: -3,
             parkMax: 3,
           };
+        }
+      }
 
       let slides = [];
       let totalSlides = 0;
@@ -1234,37 +1256,43 @@ window.B4CARS_EASE =
       }
 
       function measure() {
+        updateLayoutMode();
+
         const settings = getSettings();
         const viewportWidth = viewport.offsetWidth;
         const gap = readGap();
+        const compactLeading = window.innerWidth <= 991;
 
         const activeSlideWidth = viewportWidth * settings.activeWidth;
         const siblingSlideWidth = viewportWidth * settings.siblingWidth;
         let visibleSlots;
 
         if (isLeading) {
-          const nextWidths = [
-            siblingSlideWidth,
-            siblingSlideWidth * 0.72,
-            siblingSlideWidth * 0.42,
-            siblingSlideWidth * 0.22,
-          ];
+          const nextWidths = compactLeading
+            ? [
+                Math.max(siblingSlideWidth * 2, viewportWidth * 0.18),
+                Math.max(siblingSlideWidth * 1.2, viewportWidth * 0.1),
+              ]
+            : [
+                siblingSlideWidth,
+                siblingSlideWidth * 0.72,
+                siblingSlideWidth * 0.42,
+                siblingSlideWidth * 0.22,
+              ];
           const sidesWidth = nextWidths.reduce(function (sum, width) {
             return sum + width;
           }, 0);
           const leadingActiveWidth = Math.max(
-            viewportWidth * 0.52,
-            viewportWidth - sidesWidth - 4 * gap,
+            compactLeading ? viewportWidth * 0.55 : viewportWidth * 0.52,
+            viewportWidth - sidesWidth - nextWidths.length * gap,
           );
 
           slideWidth = leadingActiveWidth;
-          visibleSlots = [
-            { slot: 0, width: leadingActiveWidth },
-            { slot: 1, width: nextWidths[0] },
-            { slot: 2, width: nextWidths[1] },
-            { slot: 3, width: nextWidths[2] },
-            { slot: 4, width: nextWidths[3] },
-          ];
+          visibleSlots = [{ slot: 0, width: leadingActiveWidth }].concat(
+            nextWidths.map(function (width, index) {
+              return { slot: index + 1, width: width };
+            }),
+          );
         } else {
           const farSlideWidth = Math.max(
             0,
