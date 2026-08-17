@@ -1005,8 +1005,18 @@ window.B4CARS_EASE =
         wrapper.querySelector("[data-cascading-viewport]") ||
         wrapper.querySelector(".cascading-slider__list") ||
         wrapper.querySelector(".w-dyn-items");
-      const prevButton = wrapper.querySelector("[data-cascading-slider-prev]");
-      const nextButton = wrapper.querySelector("[data-cascading-slider-next]");
+      const prevButton =
+        wrapper.querySelector("[data-cascading-slider-prev]") ||
+        wrapper.querySelector(
+          ".cascading-slider__nav .swiper--btn.is--previous",
+        ) ||
+        wrapper.querySelector(".swiper--btn.is--previous");
+      const nextButton =
+        wrapper.querySelector("[data-cascading-slider-next]") ||
+        wrapper.querySelector(
+          ".cascading-slider__nav .swiper--btn.is--next",
+        ) ||
+        wrapper.querySelector(".swiper--btn.is--next");
 
       if (!viewport) return;
 
@@ -1105,6 +1115,7 @@ window.B4CARS_EASE =
 
       function rebuildSlides(filterValue) {
         const matching = originalSlides.filter(function (slide) {
+          if (!filterValue) return true;
           return getSlideCategory(slide) === filterValue;
         });
 
@@ -1603,7 +1614,8 @@ window.B4CARS_EASE =
           true,
         );
       } else {
-        applyCategoryFilter(DEFAULT_FILTER, true);
+        rebuildSlides("");
+        gsap.set(viewport, { opacity: 1 });
       }
     }
   }
