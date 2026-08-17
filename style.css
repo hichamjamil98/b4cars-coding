@@ -29,6 +29,8 @@ body.is--locked {
 [load-stagger] > *,
 [animation="load-split"],
 [load-split],
+[animation="loading-split"],
+[loading-split],
 [animation="fade"],
 [fade],
 [animation="fade-up"],
@@ -46,6 +48,8 @@ body.is--locked {
 
 [animation="load-split"],
 [load-split],
+[animation="loading-split"],
+[loading-split],
 [animation="fade-split"],
 [fade-split] {
   opacity: 1 !important;
@@ -319,6 +323,10 @@ body.is--locked {
 .home--cars-filter .filter--item[filter].is--active .btn *,
 .home--cars-filter .filter--item[filter].is--active .button * {
   color: inherit !important;
+}
+
+.swiper--wrapper .swiper--navigation .swiper--btn {
+  cursor: pointer;
 }
 
 [data-cascading-slider-wrap] {

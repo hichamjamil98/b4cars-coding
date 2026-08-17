@@ -69,7 +69,7 @@ window.B4CARS_EASE =
      load-left      OR  animation="load-left"
      load-right     OR  animation="load-right"
      load-stagger   OR  animation="load-stagger"
-     load-split     OR  animation="load-split"
+     load-split     OR  loading-split  OR  animation="load-split"
   ======================================================================== */
 
   function initLoadAnimations(ease) {
@@ -142,7 +142,11 @@ window.B4CARS_EASE =
   }
 
   function initLoadSplit(ease) {
-    document.querySelectorAll(animSelector("load-split")).forEach((element) => {
+    document
+      .querySelectorAll(
+        `${animSelector("load-split")}, ${animSelector("loading-split")}`,
+      )
+      .forEach((element) => {
       bindSplitAnimation(element, "load-split", ease, {
         duration: 0.95,
         delay: 0.22,
@@ -1001,6 +1005,19 @@ window.B4CARS_EASE =
 
       if (!originalSlides.length) return;
 
+      const swiperRoot = wrapper.closest(".swiper--wrapper");
+      const featuredText = swiperRoot
+        ? swiperRoot.querySelector(".featured--text")
+        : null;
+      const extraPrevButton = swiperRoot
+        ? swiperRoot.querySelector(
+            ".swiper--navigation .swiper--btn.is--previous",
+          )
+        : null;
+      const extraNextButton = swiperRoot
+        ? swiperRoot.querySelector(".swiper--navigation .swiper--btn.is--next")
+        : null;
+
       const isLeading =
         Boolean(
           wrapper.closest(
@@ -1034,6 +1051,8 @@ window.B4CARS_EASE =
       let slideWidth = 0;
       let slotCenters = {};
       let slotWidths = {};
+      let featuredReady = false;
+      let lastFeaturedKey = "";
 
       const DEFAULT_FILTER = "en stock";
 
@@ -1300,11 +1319,96 @@ window.B4CARS_EASE =
         );
       }
 
+      function formatYearValue(value) {
+        const match = String(value || "").match(/\b(19|20)\d{2}\b/);
+        return match ? match[0] : String(value || "").trim();
+      }
+
+      function getSlideInfos(slide) {
+        const info = {};
+        slide
+          .querySelectorAll(".infos--text .featured--text-row")
+          .forEach(function (row) {
+            const cells = row.querySelectorAll("p");
+            if (cells.length < 2) return;
+            const key = normalizeValue(cells[0].textContent);
+            if (!key) return;
+            info[key] = {
+              text: cells[1].textContent.trim(),
+              raw: cells[1].getAttribute("data-b4-raw-value") || "",
+            };
+          });
+        return info;
+      }
+
+      function setFeaturedField(attr, payload, asYear) {
+        if (!featuredText || !payload || !payload.text) return;
+        const el = featuredText.querySelector("[" + attr + "]");
+        if (!el) return;
+        el.textContent = asYear ? formatYearValue(payload.text) : payload.text;
+        if (payload.raw) el.setAttribute("data-b4-raw-value", payload.raw);
+      }
+
+      function updateFeaturedPanel(immediate) {
+        if (!featuredText) return;
+        const slide = slides[activeIndex];
+        if (!slide) return;
+
+        const info = getSlideInfos(slide);
+        const nextKey = [
+          info.marque && info.marque.text,
+          info.modele && info.modele.text,
+          info.annee && info.annee.text,
+          info.kilometrage && info.kilometrage.text,
+          info.prix && info.prix.text,
+        ].join("|");
+
+        if (nextKey === lastFeaturedKey) return;
+        lastFeaturedKey = nextKey;
+
+        setFeaturedField("marque", info.marque);
+        setFeaturedField("modele", info.modele);
+        setFeaturedField("annee", info.annee, true);
+        setFeaturedField("kilometrage", info.kilometrage);
+        setFeaturedField("prix", info.prix);
+
+        const productLink = featuredText.querySelector(
+          ".featured--btn-wrapper a",
+        );
+        const slideLink = slide.querySelector('a[href]:not([href="#"])');
+        if (productLink && slideLink) {
+          const href = slideLink.getAttribute("href");
+          if (href) productLink.setAttribute("href", href);
+        }
+
+        if (!immediate && featuredReady) {
+          const rows = featuredText.querySelectorAll(".featured--text-row");
+          if (rows.length) {
+            gsap.fromTo(
+              rows,
+              { opacity: 0, y: 12 },
+              {
+                opacity: 1,
+                y: 0,
+                duration: 0.45,
+                stagger: 0.04,
+                ease: window.B4CARS_EASE || "expo.out",
+                overwrite: true,
+              },
+            );
+          }
+        }
+
+        featuredReady = true;
+      }
+
       function layout(animate, previousIndex) {
         slides.forEach(function (slide, index) {
           const offset = getOffset(index);
 
           if (!isVisibleOffset(offset)) {
+            slide.setAttribute("data-status", "inactive");
+
             if (animate && previousIndex !== undefined) {
               const previousOffset = getOffset(index, previousIndex);
               if (isVisibleOffset(previousOffset)) {
@@ -1351,6 +1455,8 @@ window.B4CARS_EASE =
             gsap.set(slide, props);
           }
         });
+
+        updateFeaturedPanel(!animate);
       }
 
       function goTo(targetIndex) {
@@ -1405,14 +1511,18 @@ window.B4CARS_EASE =
         });
       }
 
-      if (prevButton)
-        prevButton.addEventListener("click", function () {
-          goTo(activeIndex - 1);
+      function bindNavButton(button, direction) {
+        if (!button) return;
+        button.addEventListener("click", function (event) {
+          event.preventDefault();
+          goTo(activeIndex + direction);
         });
-      if (nextButton)
-        nextButton.addEventListener("click", function () {
-          goTo(activeIndex + 1);
-        });
+      }
+
+      bindNavButton(prevButton, -1);
+      bindNavButton(nextButton, 1);
+      bindNavButton(extraPrevButton, -1);
+      bindNavButton(extraNextButton, 1);
 
       document.addEventListener("keydown", function (event) {
         if (event.key === "ArrowLeft") goTo(activeIndex - 1);
