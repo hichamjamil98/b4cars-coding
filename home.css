@@ -454,7 +454,7 @@ body.is-loading {
 }
 
 .cascading-slider__item-bg {
-  position: relative;
+  position: absolute;
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
