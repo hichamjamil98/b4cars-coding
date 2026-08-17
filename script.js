@@ -21,7 +21,7 @@
     initLoadAnimations(EASE);
     initScrollAnimations(EASE);
     initImageParallax();
-    initParallaxFade();
+    initParallaxFade(EASE);
     initNavbarScroll();
     initMobileNavbar(EASE);
     initCtaGallery();
@@ -297,12 +297,11 @@
      3b. PARALLAX FADE
 
      parallax-fade  OR  animation="parallax-fade"
-     Grows from width: 0px as the element scrolls into view.
+     Grows from width: 0px when the element enters the viewport.
   ======================================================================== */
 
-  function initParallaxFade() {
+  function initParallaxFade(ease) {
     if (typeof ScrollTrigger === "undefined") return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     document.querySelectorAll(animSelector("parallax-fade")).forEach((element) => {
       if (element.dataset.parallaxFadeReady === "true") return;
@@ -311,13 +310,13 @@
 
       gsap.from(element, {
         width: 0,
-        ease: "power2.out",
+        duration: 0.85,
+        ease,
+        clearProps: "width",
         scrollTrigger: {
           trigger: element,
-          start: "top 90%",
-          end: "top 45%",
-          scrub: 1.25,
-          invalidateOnRefresh: true,
+          start: "top 86%",
+          once: true,
         },
       });
     });
