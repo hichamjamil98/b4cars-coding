@@ -255,10 +255,10 @@
       gsap.fromTo(
         image,
         {
-          yPercent: -5,
+          yPercent: 0,
         },
         {
-          yPercent: 5,
+          yPercent: -10,
           ease: "power2.inOut",
           scrollTrigger: {
             trigger: image.parentElement || image,
