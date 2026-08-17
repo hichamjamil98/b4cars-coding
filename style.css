@@ -109,6 +109,7 @@ body.is--locked {
   max-width: none;
   object-fit: cover;
   will-change: transform;
+  bottom: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -159,9 +160,7 @@ body.is--locked {
 ========================================================================== */
 
 .navbar {
-  transition:
-    background-color 0.35s ease,
-    color 0.35s ease;
+  transition: background-color 0.35s ease, color 0.35s ease;
 }
 
 /*
@@ -185,9 +184,7 @@ body.is--locked {
   The open menu therefore keeps the colors configured in Webflow.
 */
 .navbar.is--menu-open {
-  transition:
-    background-color 0.35s ease,
-    color 0.35s ease;
+  transition: background-color 0.35s ease, color 0.35s ease;
 }
 
 /* ========================================================================== 
@@ -276,10 +273,9 @@ body.is--locked {
 
 .section.is--home-slider .overlay-orange70 {
   opacity: 1;
-  transition:
-    opacity .9s cubic-bezier(.22,1,.36,1);
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .section.is--home-slider .card--item.is--active .overlay-orange70 {
-  opacity: .08;
+  opacity: 0.08;
 }
