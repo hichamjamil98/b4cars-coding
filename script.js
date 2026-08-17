@@ -18,7 +18,6 @@
 
     const EASE = "power4.out";
 
-    initButtonCharacterHover();
     initLoadAnimations(EASE);
     initScrollAnimations(EASE);
     initImageParallax();
@@ -27,43 +26,19 @@
     initCtaGallery();
   });
 
-  /* ========================================================================
-     1. BUTTON TEXT CHARACTER HOVER
-     Add data-button-animate-chars to the text element inside a button.
-  ======================================================================== */
-
-  function initButtonCharacterHover() {
-    const textElements = document.querySelectorAll("[data-button-animate-chars]");
-    const delayStep = 0.012;
-
-    textElements.forEach((element) => {
-      if (element.dataset.charsReady === "true") return;
-
-      const text = element.textContent || "";
-      element.textContent = "";
-      element.setAttribute("aria-label", text.trim());
-
-      [...text].forEach((character, index) => {
-        const span = document.createElement("span");
-        span.setAttribute("aria-hidden", "true");
-        span.textContent = character === " " ? "\u00A0" : character;
-        span.style.transitionDelay = `${index * delayStep}s`;
-        element.appendChild(span);
-      });
-
-      element.dataset.charsReady = "true";
-    });
+  function animSelector(name) {
+    return `[animation="${name}"], [${name}]`;
   }
 
   /* ========================================================================
-     2. PAGE LOAD ANIMATIONS
+     1. PAGE LOAD ANIMATIONS
 
-     animation="load"
-     animation="load-up"
-     animation="load-left"
-     animation="load-right"
-     animation="load-stagger"
-     animation="load-split"
+     load           OR  animation="load"
+     load-up        OR  animation="load-up"
+     load-left      OR  animation="load-left"
+     load-right     OR  animation="load-right"
+     load-stagger   OR  animation="load-stagger"
+     load-split     OR  animation="load-split"
   ======================================================================== */
 
   function initLoadAnimations(ease) {
@@ -72,27 +47,27 @@
       delay: 0.08,
     });
 
-    addLoadTween(timeline, '[animation="load"]', {
+    addLoadTween(timeline, animSelector("load"), {
       opacity: 0,
       y: "1rem",
     }, 0);
 
-    addLoadTween(timeline, '[animation="load-up"]', {
+    addLoadTween(timeline, animSelector("load-up"), {
       opacity: 0,
       y: "2rem",
     }, 0.04);
 
-    addLoadTween(timeline, '[animation="load-left"]', {
+    addLoadTween(timeline, animSelector("load-left"), {
       opacity: 0,
       x: "2rem",
     }, 0.04);
 
-    addLoadTween(timeline, '[animation="load-right"]', {
+    addLoadTween(timeline, animSelector("load-right"), {
       opacity: 0,
       x: "-2rem",
     }, 0.04);
 
-    document.querySelectorAll('[animation="load-stagger"]').forEach((parent) => {
+    document.querySelectorAll(animSelector("load-stagger")).forEach((parent) => {
       const children = [...parent.children];
       if (!children.length) return;
 
@@ -110,7 +85,7 @@
       );
     });
 
-    document.querySelectorAll('[animation="load-split"]').forEach((element) => {
+    document.querySelectorAll(animSelector("load-split")).forEach((element) => {
       const line = prepareSplitLine(element, "load-split");
       if (!line) return;
 
@@ -148,23 +123,23 @@
   }
 
   /* ========================================================================
-     3. SCROLL ANIMATIONS
+     2. SCROLL ANIMATIONS
 
-     animation="fade"
-     animation="fade-up"
-     animation="fade-left"
-     animation="fade-right"
-     animation="fade-stagger"
-     animation="fade-split"
+     fade           OR  animation="fade"
+     fade-up        OR  animation="fade-up"
+     fade-left      OR  animation="fade-left"
+     fade-right     OR  animation="fade-right"
+     fade-stagger   OR  animation="fade-stagger"
+     fade-split     OR  animation="fade-split"
   ======================================================================== */
 
   function initScrollAnimations(ease) {
     if (typeof ScrollTrigger === "undefined") return;
 
-    initFade('[animation="fade"]', { opacity: 0, y: "1rem" }, ease);
-    initFade('[animation="fade-up"]', { opacity: 0, y: "2rem" }, ease);
-    initFade('[animation="fade-left"]', { opacity: 0, x: "2rem" }, ease);
-    initFade('[animation="fade-right"]', { opacity: 0, x: "-2rem" }, ease);
+    initFade(animSelector("fade"), { opacity: 0, y: "1rem" }, ease);
+    initFade(animSelector("fade-up"), { opacity: 0, y: "2rem" }, ease);
+    initFade(animSelector("fade-left"), { opacity: 0, x: "2rem" }, ease);
+    initFade(animSelector("fade-right"), { opacity: 0, x: "-2rem" }, ease);
     initFadeStagger(ease);
     initFadeSplit(ease);
   }
@@ -192,7 +167,7 @@
   }
 
   function initFadeStagger(ease) {
-    document.querySelectorAll('[animation="fade-stagger"]').forEach((parent) => {
+    document.querySelectorAll(animSelector("fade-stagger")).forEach((parent) => {
       const children = [...parent.children];
       if (!children.length) return;
 
@@ -217,7 +192,7 @@
   }
 
   function initFadeSplit(ease) {
-    document.querySelectorAll('[animation="fade-split"]').forEach((element) => {
+    document.querySelectorAll(animSelector("fade-split")).forEach((element) => {
       const line = prepareSplitLine(element, "fade-split");
       if (!line) return;
 
@@ -260,7 +235,7 @@
   }
 
   /* ========================================================================
-     4. IMAGE PARALLAX
+     3. IMAGE PARALLAX
 
      Add image="parallax" directly to an image.
      The parent wrapper should have overflow: hidden.
@@ -280,16 +255,16 @@
       gsap.fromTo(
         image,
         {
-          yPercent: -8,
+          yPercent: -14,
         },
         {
-          yPercent: 8,
-          ease: "none",
+          yPercent: 14,
+          ease: "power2.inOut",
           scrollTrigger: {
             trigger: image.parentElement || image,
             start: "top bottom",
             end: "bottom top",
-            scrub: true,
+            scrub: 1.25,
             invalidateOnRefresh: true,
           },
         },
@@ -298,11 +273,11 @@
   }
 
   /* ========================================================================
-     5. NAVBAR BACKGROUND ON SCROLL
+     4. NAVBAR BACKGROUND ON SCROLL
 
-     - At the top: restores the background defined in Webflow.
-     - While scrolling: applies #01070b.
-     - While the mobile menu is open: restores Webflow's original background.
+     - At the top: restores the background and text color defined in Webflow.
+     - While scrolling: white background, #01070b text.
+     - While the mobile menu is open: restores Webflow's original styles.
   ======================================================================== */
 
   function initNavbarScroll() {
@@ -310,20 +285,35 @@
     if (!navbar) return;
 
     const originalInlineBackground = navbar.style.backgroundColor;
+    const originalInlineColor = navbar.style.color;
     const originalComputedBackground =
       window.getComputedStyle(navbar).backgroundColor;
+    const originalComputedColor = window.getComputedStyle(navbar).color;
 
-    const restoreWebflowBackground = () => {
-      if (originalInlineBackground) {
-        navbar.style.backgroundColor = originalInlineBackground;
-      } else if (
-        originalComputedBackground &&
-        originalComputedBackground !== "rgba(0, 0, 0, 0)"
-      ) {
-        navbar.style.backgroundColor = originalComputedBackground;
-      } else {
-        navbar.style.removeProperty("background-color");
+    const restoreProperty = (property, inlineValue, computedValue) => {
+      if (inlineValue) {
+        navbar.style.setProperty(property, inlineValue);
+        return;
       }
+
+      if (
+        computedValue &&
+        computedValue !== "rgba(0, 0, 0, 0)"
+      ) {
+        navbar.style.setProperty(property, computedValue);
+        return;
+      }
+
+      navbar.style.removeProperty(property);
+    };
+
+    const restoreWebflowStyles = () => {
+      restoreProperty(
+        "background-color",
+        originalInlineBackground,
+        originalComputedBackground,
+      );
+      restoreProperty("color", originalInlineColor, originalComputedColor);
     };
 
     const updateNavbar = () => {
@@ -333,14 +323,15 @@
       navbar.classList.toggle("is--scrolled", pageIsScrolled);
 
       if (menuIsOpen) {
-        restoreWebflowBackground();
+        restoreWebflowStyles();
         return;
       }
 
       if (pageIsScrolled) {
-        navbar.style.setProperty("background-color", "#01070b", "important");
+        navbar.style.setProperty("background-color", "#ffffff", "important");
+        navbar.style.setProperty("color", "#01070b", "important");
       } else {
-        restoreWebflowBackground();
+        restoreWebflowStyles();
       }
     };
 
@@ -354,7 +345,7 @@
   }
 
   /* ========================================================================
-     6. TABLET / MOBILE NAVBAR
+     5. TABLET / MOBILE NAVBAR
 
      Existing B4Cars classes:
      .navbar
@@ -568,7 +559,7 @@
   }
 
   /* ========================================================================
-     7. CTA IMAGE GALLERY
+     6. CTA IMAGE GALLERY
   ======================================================================== */
 
   function initCtaGallery() {

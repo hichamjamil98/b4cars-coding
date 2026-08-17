@@ -14,53 +14,40 @@ body.is--locked {
 }
 
 /* ========================================================================== 
-   BUTTON CHARACTER HOVER
-========================================================================== */
-
-[data-button-animate-chars] {
-  display: inline-block;
-  overflow: hidden;
-  vertical-align: bottom;
-}
-
-[data-button-animate-chars] span {
-  position: relative;
-  display: inline-block;
-  transform: translateY(0);
-  text-shadow: 0 1.25em currentColor;
-  transition: transform 0.55s cubic-bezier(0.625, 0.05, 0, 1);
-  will-change: transform;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .btn:hover [data-button-animate-chars] span,
-  .button:hover [data-button-animate-chars] span,
-  .nav--menu a:hover [data-button-animate-chars] span {
-    transform: translateY(-1.25em);
-  }
-}
-
-/* ========================================================================== 
    LOAD / SCROLL ANIMATIONS
 ========================================================================== */
 
 [animation="load"],
+[load],
 [animation="load-up"],
+[load-up],
 [animation="load-left"],
+[load-left],
 [animation="load-right"],
+[load-right],
 [animation="load-stagger"] > *,
+[load-stagger] > *,
 [animation="load-split"],
+[load-split],
 [animation="fade"],
+[fade],
 [animation="fade-up"],
+[fade-up],
 [animation="fade-left"],
+[fade-left],
 [animation="fade-right"],
+[fade-right],
 [animation="fade-stagger"] > *,
-[animation="fade-split"] {
+[fade-stagger] > *,
+[animation="fade-split"],
+[fade-split] {
   will-change: transform, opacity;
 }
 
 [animation="load-split"],
-[animation="fade-split"] {
+[load-split],
+[animation="fade-split"],
+[fade-split] {
   opacity: 1 !important;
   visibility: visible !important;
 }
@@ -118,7 +105,7 @@ body.is--locked {
 [image="parallax"] {
   display: block;
   width: 100%;
-  height: 116%;
+  height: 128%;
   max-width: none;
   object-fit: cover;
   will-change: transform;
@@ -172,15 +159,24 @@ body.is--locked {
 ========================================================================== */
 
 .navbar {
-  transition: background-color 0.35s ease;
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease;
 }
 
 /*
   Webflow keeps control of all colors when the mobile/tablet menu is open.
-  The dark background applies only after scrolling while the menu is closed.
+  After scrolling (menu closed): white bar, dark text.
 */
 .navbar.is--scrolled:not(.is--menu-open) {
-  background-color: #01070b !important;
+  background-color: #ffffff !important;
+  color: #01070b !important;
+}
+
+.navbar.is--scrolled:not(.is--menu-open) a,
+.navbar.is--scrolled:not(.is--menu-open) .nav--brand,
+.navbar.is--scrolled:not(.is--menu-open) .menu--trigger {
+  color: #01070b !important;
 }
 
 /*
@@ -189,7 +185,9 @@ body.is--locked {
   The open menu therefore keeps the colors configured in Webflow.
 */
 .navbar.is--menu-open {
-  transition: background-color 0.35s ease;
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease;
 }
 
 /* ========================================================================== 
