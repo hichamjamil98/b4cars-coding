@@ -502,6 +502,8 @@ function initCascadingSlider() {
     let totalSlides = 0;
     let activeIndex = 0;
     let isAnimating = false;
+    let isFiltering = false;
+    let currentFilterValue = "";
     let slideWidth = 0;
     let slotCenters = {};
     let slotWidths = {};
@@ -543,7 +545,7 @@ function initCascadingSlider() {
       });
     }
 
-    function applyCategoryFilter(filterValue) {
+    function rebuildSlides(filterValue) {
       const matching = originalSlides.filter(function (slide) {
         return getSlideCategory(slide) === filterValue;
       });
@@ -585,6 +587,55 @@ function initCascadingSlider() {
 
       measure();
       layout(false);
+    }
+
+    function applyCategoryFilter(filterValue, immediate) {
+      if (!filterValue) return;
+      if (!immediate && filterValue === currentFilterValue) return;
+
+      const fadeEase = window.B4CARS_EASE || "expo.out";
+
+      const reveal = function () {
+        rebuildSlides(filterValue);
+        currentFilterValue = filterValue;
+
+        if (immediate || typeof gsap === "undefined" || !totalSlides) {
+          if (typeof gsap !== "undefined") {
+            gsap.set(viewport, { opacity: 1 });
+          }
+          isFiltering = false;
+          return;
+        }
+
+        gsap.fromTo(
+          viewport,
+          { opacity: 0 },
+          {
+            opacity: 1,
+            duration: 0.5,
+            ease: fadeEase,
+            overwrite: true,
+            onComplete: function () {
+              isFiltering = false;
+            },
+          },
+        );
+      };
+
+      if (immediate || typeof gsap === "undefined" || !slides.length) {
+        reveal();
+        return;
+      }
+
+      isFiltering = true;
+
+      gsap.to(viewport, {
+        opacity: 0,
+        duration: 0.28,
+        ease: fadeEase,
+        overwrite: true,
+        onComplete: reveal,
+      });
     }
 
     function readGap() {
@@ -806,9 +857,9 @@ function initCascadingSlider() {
       trigger.addEventListener("click", function (event) {
         event.preventDefault();
         const value = normalizeValue(filterItem.getAttribute("filter") || "");
-        if (!value) return;
+        if (!value || isFiltering) return;
         updateFilterButtons(filterItem);
-        applyCategoryFilter(value);
+        applyCategoryFilter(value, false);
       });
     });
 
@@ -823,9 +874,10 @@ function initCascadingSlider() {
       updateFilterButtons(defaultFilterItem);
       applyCategoryFilter(
         normalizeValue(defaultFilterItem.getAttribute("filter") || ""),
+        true,
       );
     } else {
-      applyCategoryFilter(DEFAULT_FILTER);
+      applyCategoryFilter(DEFAULT_FILTER, true);
     }
   }
 }
