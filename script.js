@@ -1,7 +1,35 @@
 /* ========================================================================== 
    B4CARS — INTERACTIONS & ANIMATIONS
    Requires GSAP + ScrollTrigger
+   Main ease: cubic-bezier(0.16, 1, 0.3, 1)
 ========================================================================== */
+
+window.B4CARS_EASE =
+  window.B4CARS_EASE ||
+  ((x1, y1, x2, y2) => {
+    const cx = 3 * x1;
+    const bx = 3 * (x2 - x1) - cx;
+    const ax = 1 - cx - bx;
+    const cy = 3 * y1;
+    const by = 3 * (y2 - y1) - cy;
+    const ay = 1 - cy - by;
+    const sample = (a, b, c, t) => ((a * t + b) * t + c) * t;
+
+    return (progress) => {
+      if (progress <= 0) return 0;
+      if (progress >= 1) return 1;
+
+      let t = progress;
+
+      for (let i = 0; i < 8; i += 1) {
+        const slope = (3 * ax * t + 2 * bx) * t + cx;
+        if (Math.abs(slope) < 1e-6) break;
+        t -= (sample(ax, bx, cx, t) - progress) / slope;
+      }
+
+      return sample(ay, by, cy, t);
+    };
+  })(0.16, 1, 0.3, 1);
 
 (() => {
   "use strict";
@@ -16,7 +44,8 @@
       gsap.registerPlugin(ScrollTrigger);
     }
 
-    const EASE = "power4.out";
+    const EASE = window.B4CARS_EASE;
+    gsap.defaults({ ease: EASE });
 
     initLoadAnimations(EASE);
     initScrollAnimations(EASE);
@@ -24,7 +53,7 @@
     initParallaxFade(EASE);
     initNavbarScroll();
     initMobileNavbar(EASE);
-    initCtaGallery();
+    initCtaGallery(EASE);
   });
 
   function animSelector(name) {
@@ -486,7 +515,7 @@
 
       timeline
         .set(menu, { display: "flex", pointerEvents: "auto" })
-        .to(menu, { opacity: 1, duration: 0.45, ease: "power2.out" }, 0)
+        .to(menu, { opacity: 1, duration: 0.45, ease }, 0)
         .to(
           links,
           {
@@ -553,11 +582,11 @@
             filter: "blur(6px)",
             duration: 0.28,
             stagger: { each: 0.025, from: "end" },
-            ease: "power2.inOut",
+            ease,
           },
           0,
         )
-        .to(menu, { opacity: 0, duration: 0.42, ease: "power2.inOut" }, 0.1)
+        .to(menu, { opacity: 0, duration: 0.42, ease }, 0.1)
         .set(menu, { display: "none", pointerEvents: "none" });
 
       if (iconClose) {
@@ -625,7 +654,7 @@
      6. CTA IMAGE GALLERY
   ======================================================================== */
 
-  function initCtaGallery() {
+  function initCtaGallery(ease) {
     const galleries = document.querySelectorAll(".cta--image-wrapper");
 
     galleries.forEach((gallery) => {
@@ -705,7 +734,7 @@
               opacity: 0,
               scale: 1.025,
               duration: 0.28,
-              ease: "power2.inOut",
+              ease,
             })
             .add(switchSource)
             .fromTo(
@@ -715,7 +744,7 @@
                 opacity: 1,
                 scale: 1,
                 duration: 0.42,
-                ease: "power2.out",
+                ease,
                 clearProps: "opacity,scale",
               },
             );

@@ -3,6 +3,33 @@
    Requires GSAP
 ========================================================================== */
 
+window.B4CARS_EASE =
+  window.B4CARS_EASE ||
+  ((x1, y1, x2, y2) => {
+    const cx = 3 * x1;
+    const bx = 3 * (x2 - x1) - cx;
+    const ax = 1 - cx - bx;
+    const cy = 3 * y1;
+    const by = 3 * (y2 - y1) - cy;
+    const ay = 1 - cy - by;
+    const sample = (a, b, c, t) => ((a * t + b) * t + c) * t;
+
+    return (progress) => {
+      if (progress <= 0) return 0;
+      if (progress >= 1) return 1;
+
+      let t = progress;
+
+      for (let i = 0; i < 8; i += 1) {
+        const slope = (3 * ax * t + 2 * bx) * t + cx;
+        if (Math.abs(slope) < 1e-6) break;
+        t -= (sample(ax, bx, cx, t) - progress) / slope;
+      }
+
+      return sample(ay, by, cy, t);
+    };
+  })(0.16, 1, 0.3, 1);
+
 (() => {
   "use strict";
 
@@ -39,6 +66,8 @@
     }
 
     const gsap = window.gsap;
+    gsap.defaults({ ease: window.B4CARS_EASE });
+
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
@@ -139,7 +168,7 @@
 
     const timeline = gsap.timeline({
       defaults: {
-        ease: "power3.out",
+        ease: window.B4CARS_EASE,
       },
       onComplete: () => {
         window.clearTimeout(safetyTimeout);
@@ -189,7 +218,7 @@
           opacity: 0.72,
           scale: 1.025,
           duration: 1.7,
-          ease: "power2.out",
+          ease: window.B4CARS_EASE,
         },
         "start",
       );
@@ -225,7 +254,7 @@
           strokeDashoffset: 0,
           duration: 1.45,
           stagger: 0.09,
-          ease: "power2.inOut",
+          ease: window.B4CARS_EASE,
         },
         "start+=0.2",
       );
@@ -239,7 +268,7 @@
           strokeOpacity: 0,
           duration: 0.6,
           stagger: 0.045,
-          ease: "power2.out",
+          ease: window.B4CARS_EASE,
         },
         "start+=1.35",
       );
@@ -259,7 +288,7 @@
       {
         scale: 1.04,
         duration: 0.55,
-        ease: "power2.inOut",
+        ease: window.B4CARS_EASE,
       },
       "start+=1.45",
     );
@@ -269,7 +298,7 @@
       {
         scale: 1,
         duration: 0.5,
-        ease: "power2.out",
+        ease: window.B4CARS_EASE,
       },
       "start+=1.9",
     );
@@ -295,7 +324,7 @@
           opacity: 0,
           scale: 0.96,
           duration: 0.55,
-          ease: "power2.inOut",
+          ease: window.B4CARS_EASE,
         },
         "ready",
       );
@@ -308,7 +337,7 @@
           opacity: 0,
           duration: 0.45,
           stagger: 0.04,
-          ease: "power2.inOut",
+          ease: window.B4CARS_EASE,
         },
         "ready",
       );
@@ -321,7 +350,7 @@
           opacity: 0.9,
           scale: 1,
           duration: 0.7,
-          ease: "power2.inOut",
+          ease: window.B4CARS_EASE,
         },
         "ready",
       );
@@ -334,7 +363,7 @@
         visibility: "visible",
         duration: 0.75,
         stagger: 0.08,
-        ease: "power2.out",
+        ease: window.B4CARS_EASE,
       },
       "ready+=0.28",
     );
@@ -344,7 +373,7 @@
       {
         clipPath: "inset(0% 0% 100% 0%)",
         duration: 1.25,
-        ease: "expo.inOut",
+        ease: window.B4CARS_EASE,
         pointerEvents: "none",
       },
       "ready+=0.2",
@@ -536,7 +565,7 @@ document.addEventListener("DOMContentLoaded", () => {
           {
             opacity: 1,
             duration: 0.28,
-            ease: "power2.out",
+            ease: window.B4CARS_EASE,
             overwrite: true,
           },
         );
@@ -647,7 +676,7 @@ document.addEventListener("DOMContentLoaded", () => {
               y: 0,
               duration: 0.5,
               stagger: 0.05,
-              ease: "power3.out",
+              ease: window.B4CARS_EASE,
               clearProps: "opacity,transform",
             },
           );
@@ -666,7 +695,7 @@ document.addEventListener("DOMContentLoaded", () => {
           each: 0.025,
           from: "center",
         },
-        ease: "power2.in",
+        ease: window.B4CARS_EASE,
         overwrite: true,
         onComplete: render,
       });

@@ -114,7 +114,7 @@
             {
               opacity: 1,
               duration: 0.28,
-              ease: "power2.out",
+              ease: window.B4CARS_EASE || "expo.out",
               overwrite: true,
             }
           );
@@ -224,7 +224,7 @@
                 y: 0,
                 duration: 0.5,
                 stagger: 0.05,
-                ease: "power3.out",
+                ease: window.B4CARS_EASE || "expo.out",
                 clearProps: "opacity,transform",
               }
             );
@@ -247,7 +247,7 @@
             each: 0.025,
             from: "center",
           },
-          ease: "power2.in",
+          ease: window.B4CARS_EASE || "expo.out",
           overwrite: true,
           onComplete: render,
         });
