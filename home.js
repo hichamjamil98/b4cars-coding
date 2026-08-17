@@ -466,7 +466,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
      Desktop:
      [far] [near] [CENTER] [near] [far]
-     Click or swipe a side card to rotate it into the center.
+     Looping. Cards outside the visible 5 enter from width 0.
+     Speed: --cars-coverflow-duration (0.8s).
   ========================================================================== */
 
 (() => {
@@ -1015,6 +1016,35 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    collectionItems.forEach((item) => {
+      const card = item.querySelector(".card--item");
+      if (!card || card.dataset.expandReady === "true") return;
+
+      card.dataset.expandReady = "true";
+
+      card.addEventListener("click", (event) => {
+        if (!matchingItems.includes(item)) return;
+
+        if (didSwipe) {
+          didSwipe = false;
+          event.preventDefault();
+          return;
+        }
+
+        if (isAnimating) {
+          event.preventDefault();
+          return;
+        }
+
+        const slot = visibleWindow.find((entry) => entry.item === item);
+        if (!slot || slot.offset === 0) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        setActiveIndex(activeIndex + slot.offset);
+      });
+    });
+
     grid.addEventListener("pointerdown", (event) => {
       if (event.pointerType === "mouse" && event.button !== 0) return;
       pointerStartX = event.clientX;
@@ -1027,7 +1057,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const deltaX = event.clientX - pointerStartX;
       pointerStartX = 0;
 
-      if (!isDesktop() || Math.abs(deltaX) < SWIPE_THRESHOLD) return;
+      if (!isDesktop() || isAnimating || Math.abs(deltaX) < SWIPE_THRESHOLD) {
+        return;
+      }
 
       didSwipe = true;
       goToNeighbor(deltaX < 0 ? 1 : -1);
@@ -1049,12 +1081,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     window.addEventListener("resize", () => {
-      if (!activeItem) return;
+      if (!matchingItems.length) return;
 
-      applySlotLayout();
+      setActiveIndex(activeIndex, true);
 
       requestAnimationFrame(() => {
-        captureFrozenImageSize(activeItem);
+        if (activeItem) captureFrozenImageSize(activeItem);
       });
     });
 
