@@ -383,6 +383,8 @@ function initDirectionalListHover() {
         const tile = item.querySelector("[data-directional-hover-tile]");
         if (!tile) return;
 
+        const searchItem = item.querySelector(".car--search-item");
+
         item.addEventListener("mouseenter", (e) => {
           const dir = getDirection(e, item, type);
           tile.style.transition = "none";
@@ -391,12 +393,14 @@ function initDirectionalListHover() {
           tile.style.transition = "";
           tile.style.transform = "translate(0%, 0%)";
           item.setAttribute("data-status", `enter-${dir}`);
+          searchItem?.classList.add("is--hovered");
         });
 
         item.addEventListener("mouseleave", (e) => {
           const dir = getDirection(e, item, type);
           item.setAttribute("data-status", `leave-${dir}`);
           tile.style.transform = directionMap[dir] || "translate(0, 0)";
+          searchItem?.classList.remove("is--hovered");
         });
       });
 

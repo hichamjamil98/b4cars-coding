@@ -110,57 +110,57 @@ body.is-loading {
 }
 
 /* ==========================================================================
-   SEARCH ITEMS — MOVING HOVER HIGHLIGHT
+   SEARCH ITEMS — DIRECTIONAL HOVER HIGHLIGHT
 ========================================================================== */
 
-.search--collection {
+[data-directional-hover-item] {
   position: relative;
   isolation: isolate;
+  overflow: hidden;
 }
 
-.search--collection > .w-dyn-item {
-  position: relative;
-  z-index: 2;
-}
-
-.search--hover-highlight {
+[data-directional-hover-tile] {
   position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
-  width: 0;
-  height: 0;
-  opacity: 0;
+  inset: 0;
+  z-index: 0;
   pointer-events: none;
   background-color: #f6f9f8;
-  transform: translate3d(0, 0, 0);
-  will-change: transform, width, height, opacity;
+  transform: translateY(-100%);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+[data-directional-hover-item] > *:not([data-directional-hover-tile]) {
+  position: relative;
+  z-index: 1;
 }
 
 .car--search-item {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   background-color: transparent;
   color: inherit;
-  transition: color 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .car--search-item,
 .car--search-item * {
-  transition-property: color, border-color, background-color, opacity, transform;
+  transition-property: color, border-color, background-color;
   transition-duration: 0.42s;
   transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+[data-directional-hover-item][data-status^="enter"] .car--search-item,
 .car--search-item.is--hovered {
   color: #031e4d;
 }
 
+[data-directional-hover-item][data-status^="enter"] .rod--100,
 .car--search-item.is--hovered .rod--100 {
   background-color: #031e4d;
 }
 
+[data-directional-hover-item][data-status^="enter"] .btn,
+[data-directional-hover-item][data-status^="enter"] .button,
 .car--search-item.is--hovered .btn,
 .car--search-item.is--hovered .button {
   color: #031e4d !important;
@@ -168,13 +168,15 @@ body.is-loading {
   background-color: #f6f9f8 !important;
 }
 
+[data-directional-hover-item][data-status^="enter"] .btn *,
+[data-directional-hover-item][data-status^="enter"] .button *,
 .car--search-item.is--hovered .btn *,
 .car--search-item.is--hovered .button * {
   color: inherit !important;
 }
 
 @media (hover: none), (pointer: coarse) {
-  .search--hover-highlight {
+  [data-directional-hover-tile] {
     display: none;
   }
 
@@ -192,21 +194,11 @@ body.is-loading {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .search--hover-highlight,
+  [data-directional-hover-tile],
   .car--search-item,
   .car--search-item * {
     transition: none !important;
   }
-}
-
-/* ==========================================================================
-   SEARCH IMAGE LOCK — NO HOVER SCALE
-========================================================================== */
-
-[data-directional-hover-tile] {
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  transform: translateY(-100%);
-  will-change: transform;
 }
 
 /* ==========================================================================
