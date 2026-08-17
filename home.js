@@ -491,20 +491,60 @@ document.addEventListener("DOMContentLoaded", () => {
     const MAX_VISIBLE = 5;
     const DESKTOP_QUERY = "(min-width: 992px)";
     const SWIPE_THRESHOLD = 48;
+    const COVERFLOW_DURATION_MS = 800;
     const SLOT_CLASSES = [
       "is--slot-prev-2",
       "is--slot-prev-1",
       "is--slot-next-1",
       "is--slot-next-2",
     ];
+    const STATE_CLASSES = [
+      ...SLOT_CLASSES,
+      "is--entering",
+      "is--exiting",
+      "is-no-transition",
+    ];
 
+    let matchingItems = [];
     let visibleItems = [];
+    let visibleWindow = [];
     let activeItem = null;
+    let activeIndex = 0;
     let activeFilterValue = "";
     let pointerStartX = 0;
     let didSwipe = false;
+    let isAnimating = false;
+    let animationTimer = 0;
 
     const isDesktop = () => window.matchMedia(DESKTOP_QUERY).matches;
+
+    const durationMs = () =>
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? 0
+        : COVERFLOW_DURATION_MS;
+
+    const mod = (value, total) => {
+      if (total <= 0) return 0;
+      return ((value % total) + total) % total;
+    };
+
+    const shortestDelta = (from, to, total) => {
+      if (!total) return 0;
+      const delta = mod(to - from, total);
+      return delta > total / 2 ? delta - total : delta;
+    };
+
+    const clearAnimationTimer = () => {
+      if (!animationTimer) return;
+      window.clearTimeout(animationTimer);
+      animationTimer = 0;
+    };
+
+    const removeClones = () => {
+      grid
+        .querySelectorAll(":scope > .collection--item.is--clone")
+        .forEach((clone) => clone.remove());
+    };
 
     const normalizeValue = (value = "") =>
       value
