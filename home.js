@@ -33,6 +33,28 @@ window.B4CARS_EASE =
 (() => {
   "use strict";
 
+  const LOADER_SESSION_KEY = "b4cars-home-loader";
+
+  const hasSeenLoader = () => {
+    try {
+      return sessionStorage.getItem(LOADER_SESSION_KEY) === "1";
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const markLoaderSeen = () => {
+    try {
+      sessionStorage.setItem(LOADER_SESSION_KEY, "1");
+    } catch (error) {
+      // Private mode / blocked storage — play the loader this visit only.
+    }
+  };
+
+  if (hasSeenLoader()) {
+    document.documentElement.classList.add("has-seen-loader");
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     const html = document.documentElement;
     const body = document.body;
@@ -72,11 +94,12 @@ window.B4CARS_EASE =
       "(prefers-reduced-motion: reduce)",
     ).matches;
 
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion || hasSeenLoader()) {
       revealPageWithoutAnimation();
       return;
     }
 
+    markLoaderSeen();
     html.classList.add("is-loading");
     body.classList.add("is-loading");
 

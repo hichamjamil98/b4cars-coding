@@ -79,6 +79,11 @@ body.is-loading {
   opacity: 1;
 }
 
+/* Skip the loader after it has already played in this session. */
+html.has-seen-loader .loading--screen {
+  display: none !important;
+}
+
 /* Never hide the Webflow Designer canvas. */
 .w-editor .loading--screen {
   display: none !important;
