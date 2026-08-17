@@ -137,21 +137,15 @@ window.B4CARS_EASE =
         );
       });
 
-    document.querySelectorAll(animSelector("load-split")).forEach((element) => {
-      const line = prepareSplitLine(element, "load-split");
-      if (!line) return;
+    initLoadSplit(ease);
+  }
 
-      timeline.fromTo(
-        line,
-        { yPercent: 110, opacity: 0 },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 0.95,
-          clearProps: "transform,opacity",
-        },
-        0.14,
-      );
+  function initLoadSplit(ease) {
+    document.querySelectorAll(animSelector("load-split")).forEach((element) => {
+      bindSplitAnimation(element, "load-split", ease, {
+        duration: 0.95,
+        delay: 0.22,
+      });
     });
   }
 
@@ -243,45 +237,231 @@ window.B4CARS_EASE =
 
   function initFadeSplit(ease) {
     document.querySelectorAll(animSelector("fade-split")).forEach((element) => {
-      const line = prepareSplitLine(element, "fade-split");
-      if (!line) return;
-
-      gsap.fromTo(
-        line,
-        { yPercent: 110, opacity: 0 },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 0.9,
-          ease,
-          clearProps: "transform,opacity",
-          scrollTrigger: {
-            trigger: element,
-            start: "top 86%",
-            once: true,
-          },
-        },
-      );
+      bindSplitAnimation(element, "fade-split", ease, {
+        duration: 0.9,
+        scroll: true,
+      });
     });
   }
 
-  function prepareSplitLine(element, prefix) {
-    const readyAttribute = `${prefix.replace(/-/g, "")}Ready`;
-    if (element.dataset[readyAttribute] === "true") {
-      return element.querySelector(`.${prefix}__line`);
+  const SPLIT_LINE_STAGGER = 0.1;
+  const splitOriginalHtml = new WeakMap();
+
+  function bindSplitAnimation(element, prefix, ease, options) {
+    let tween;
+
+    const setup = (showImmediately) => {
+      if (tween) {
+        tween.scrollTrigger?.kill();
+        tween.kill();
+      }
+
+      const lines = prepareSplitLines(element, prefix);
+      if (!lines.length) return;
+
+      if (showImmediately) {
+        gsap.set(lines, {
+          yPercent: 0,
+          opacity: 1,
+          clearProps: "transform,opacity",
+        });
+        return;
+      }
+
+      const vars = {
+        yPercent: 0,
+        opacity: 1,
+        duration: options.duration,
+        stagger: SPLIT_LINE_STAGGER,
+        ease,
+        clearProps: "transform,opacity",
+        onComplete: () => {
+          element.dataset.splitPlayed = "true";
+        },
+      };
+
+      if (options.delay) vars.delay = options.delay;
+
+      if (options.scroll) {
+        vars.scrollTrigger = {
+          trigger: element,
+          start: "top 86%",
+          once: true,
+        };
+      }
+
+      tween = gsap.fromTo(
+        lines,
+        { yPercent: 110, opacity: 0 },
+        vars,
+      );
+    };
+
+    afterFonts(() => setup(false));
+
+    let lastWindowWidth = window.innerWidth;
+    window.addEventListener(
+      "resize",
+      debounce(() => {
+        if (window.innerWidth === lastWindowWidth) return;
+        lastWindowWidth = window.innerWidth;
+        setup(element.dataset.splitPlayed === "true");
+      }, 200),
+    );
+  }
+
+  function prepareSplitLines(element, prefix) {
+    if (!splitOriginalHtml.has(element)) {
+      splitOriginalHtml.set(element, element.innerHTML);
     }
 
-    const content = element.innerHTML.trim();
-    if (!content) return null;
+    element.innerHTML = splitOriginalHtml.get(element);
 
+    if (!element.innerHTML.trim()) return [];
+
+    wrapWords(element, `${prefix}__word`);
+    const words = [...element.querySelectorAll(`.${prefix}__word`)];
+
+    if (!words.length) {
+      wrapElementAsSingleLine(element, prefix);
+      return [...element.querySelectorAll(`.${prefix}__line`)];
+    }
+
+    const groups = groupWordsIntoLines(words);
+
+    for (let i = groups.length - 1; i >= 0; i -= 1) {
+      wrapLine(groups[i], prefix);
+    }
+
+    [...element.childNodes].forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE && !node.textContent.trim()) {
+        node.remove();
+        return;
+      }
+
+      if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+      if (
+        node.tagName === "BR" ||
+        (!node.classList.contains(`${prefix}__line-mask`) &&
+          !node.textContent.trim())
+      ) {
+        node.remove();
+      }
+    });
+
+    return [...element.querySelectorAll(`.${prefix}__line`)];
+  }
+
+  function wrapWords(root, wordClass) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        if (!node.nodeValue || !node.nodeValue.trim()) {
+          return NodeFilter.FILTER_REJECT;
+        }
+
+        const parent = node.parentElement;
+        if (!parent || parent.classList.contains(wordClass)) {
+          return NodeFilter.FILTER_REJECT;
+        }
+
+        const tag = parent.tagName;
+        if (tag === "SCRIPT" || tag === "STYLE") {
+          return NodeFilter.FILTER_REJECT;
+        }
+
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+    textNodes.forEach((node) => {
+      const fragment = document.createDocumentFragment();
+
+      node.nodeValue.split(/(\s+)/).forEach((part) => {
+        if (!part) return;
+
+        if (/^\s+$/.test(part)) {
+          fragment.appendChild(document.createTextNode(part));
+          return;
+        }
+
+        const word = document.createElement("span");
+        word.className = wordClass;
+        word.textContent = part;
+        fragment.appendChild(word);
+      });
+
+      node.parentNode.replaceChild(fragment, node);
+    });
+  }
+
+  function groupWordsIntoLines(words) {
+    const groups = [];
+    let current = [];
+    let currentTop = null;
+
+    words.forEach((word) => {
+      const top = Math.round(word.getBoundingClientRect().top);
+
+      if (currentTop === null || Math.abs(top - currentTop) <= 2) {
+        current.push(word);
+        if (currentTop === null) currentTop = top;
+        return;
+      }
+
+      groups.push(current);
+      current = [word];
+      currentTop = top;
+    });
+
+    if (current.length) groups.push(current);
+    return groups;
+  }
+
+  function wrapLine(words, prefix) {
+    if (!words.length) return;
+
+    const range = document.createRange();
+    range.setStartBefore(words[0]);
+    range.setEndAfter(words[words.length - 1]);
+
+    const line = document.createElement("span");
+    line.className = `${prefix}__line`;
+    line.appendChild(range.extractContents());
+
+    const mask = document.createElement("span");
+    mask.className = `${prefix}__line-mask`;
+    mask.appendChild(line);
+    range.insertNode(mask);
+  }
+
+  function wrapElementAsSingleLine(element, prefix) {
+    const content = element.innerHTML.trim();
     element.innerHTML = `
       <span class="${prefix}__line-mask">
         <span class="${prefix}__line">${content}</span>
       </span>
     `;
+  }
 
-    element.dataset[readyAttribute] = "true";
-    return element.querySelector(`.${prefix}__line`);
+  function afterFonts(callback) {
+    if (document.fonts && document.fonts.status !== "loaded") {
+      document.fonts.ready.then(callback);
+      return;
+    }
+
+    callback();
+  }
+
+  function debounce(fn, wait) {
+    let timer;
+    return (...args) => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => fn(...args), wait);
+    };
   }
 
   function getStaggerChildren(parent) {

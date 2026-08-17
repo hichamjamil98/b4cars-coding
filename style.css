@@ -64,6 +64,11 @@ body.is--locked {
   will-change: transform, opacity;
 }
 
+.load-split__word,
+.fade-split__word {
+  display: inline-block;
+}
+
 /* ========================================================================== 
    MOBILE NAVBAR ICONS
 ========================================================================== */
