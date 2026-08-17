@@ -1001,6 +1001,30 @@ window.B4CARS_EASE =
 
       if (!originalSlides.length) return;
 
+      const isLeading =
+        Boolean(
+          wrapper.closest(
+            '[data-wf--slot-item-vehicules-slider--variant="vente"]',
+          ),
+        ) ||
+        wrapper.getAttribute(
+          "data-wf--slot-item-vehicules-slider--variant",
+        ) === "vente";
+
+      const layoutConfig = isLeading
+        ? {
+            visibleMin: 0,
+            visibleMax: 4,
+            parkMin: -1,
+            parkMax: 5,
+          }
+        : {
+            visibleMin: -2,
+            visibleMax: 2,
+            parkMin: -3,
+            parkMax: 3,
+          };
+
       let slides = [];
       let totalSlides = 0;
       let activeIndex = 0;
@@ -1171,24 +1195,53 @@ window.B4CARS_EASE =
 
         const activeSlideWidth = viewportWidth * settings.activeWidth;
         const siblingSlideWidth = viewportWidth * settings.siblingWidth;
-        const farSlideWidth = Math.max(
-          0,
-          (viewportWidth -
-            activeSlideWidth -
-            2 * siblingSlideWidth -
-            4 * gap) /
-            2,
-        );
+        let visibleSlots;
 
-        slideWidth = activeSlideWidth;
+        if (isLeading) {
+          const nextWidths = [
+            siblingSlideWidth,
+            siblingSlideWidth * 0.72,
+            siblingSlideWidth * 0.42,
+            siblingSlideWidth * 0.22,
+          ];
+          const sidesWidth = nextWidths.reduce(function (sum, width) {
+            return sum + width;
+          }, 0);
+          const leadingActiveWidth = Math.max(
+            viewportWidth * 0.52,
+            viewportWidth - sidesWidth - 4 * gap,
+          );
 
-        const visibleSlots = [
-          { slot: -2, width: farSlideWidth },
-          { slot: -1, width: siblingSlideWidth },
-          { slot: 0, width: activeSlideWidth },
-          { slot: 1, width: siblingSlideWidth },
-          { slot: 2, width: farSlideWidth },
-        ];
+          slideWidth = leadingActiveWidth;
+          visibleSlots = [
+            { slot: 0, width: leadingActiveWidth },
+            { slot: 1, width: nextWidths[0] },
+            { slot: 2, width: nextWidths[1] },
+            { slot: 3, width: nextWidths[2] },
+            { slot: 4, width: nextWidths[3] },
+          ];
+        } else {
+          const farSlideWidth = Math.max(
+            0,
+            (viewportWidth -
+              activeSlideWidth -
+              2 * siblingSlideWidth -
+              4 * gap) /
+              2,
+          );
+
+          slideWidth = activeSlideWidth;
+          visibleSlots = [
+            { slot: -2, width: farSlideWidth },
+            { slot: -1, width: siblingSlideWidth },
+            { slot: 0, width: activeSlideWidth },
+            { slot: 1, width: siblingSlideWidth },
+            { slot: 2, width: farSlideWidth },
+          ];
+        }
+
+        slotCenters = {};
+        slotWidths = {};
 
         let x = 0;
         visibleSlots.forEach(function (def, i) {
@@ -1197,12 +1250,24 @@ window.B4CARS_EASE =
           if (i < visibleSlots.length - 1) x += def.width + gap;
         });
 
-        slotCenters["-3"] =
-          slotCenters["-2"] - farSlideWidth / 2 - gap - farSlideWidth / 2;
-        slotWidths["-3"] = farSlideWidth;
-        slotCenters["3"] =
-          slotCenters["2"] + farSlideWidth / 2 + gap + farSlideWidth / 2;
-        slotWidths["3"] = farSlideWidth;
+        const first = visibleSlots[0];
+        const last = visibleSlots[visibleSlots.length - 1];
+        const parkLeftWidth = slotWidths[String(first.slot)];
+        const parkRightWidth = slotWidths[String(last.slot)];
+
+        slotCenters[String(layoutConfig.parkMin)] =
+          slotCenters[String(first.slot)] -
+          parkLeftWidth / 2 -
+          gap -
+          parkLeftWidth / 2;
+        slotWidths[String(layoutConfig.parkMin)] = parkLeftWidth;
+
+        slotCenters[String(layoutConfig.parkMax)] =
+          slotCenters[String(last.slot)] +
+          parkRightWidth / 2 +
+          gap +
+          parkRightWidth / 2;
+        slotWidths[String(layoutConfig.parkMax)] = parkRightWidth;
 
         slides.forEach(function (slide) {
           slide.style.width = slideWidth + "px";
@@ -1210,7 +1275,10 @@ window.B4CARS_EASE =
       }
 
       function getSlideProps(offset) {
-        const clamped = Math.max(-3, Math.min(3, offset));
+        const clamped = Math.max(
+          layoutConfig.parkMin,
+          Math.min(layoutConfig.parkMax, offset),
+        );
         const slotWidth = slotWidths[String(clamped)];
         const clipAmount = Math.max(0, (slideWidth - slotWidth) / 2);
         const translateX = slotCenters[String(clamped)] - slideWidth / 2;
@@ -1218,19 +1286,32 @@ window.B4CARS_EASE =
         return {
           x: translateX,
           "--clip": clipAmount,
-          zIndex: 10 - Math.abs(clamped),
+          zIndex: isVisibleOffset(clamped)
+            ? isLeading
+              ? 10 - clamped
+              : 10 - Math.abs(clamped)
+            : 1,
         };
+      }
+
+      function isVisibleOffset(offset) {
+        return (
+          offset >= layoutConfig.visibleMin && offset <= layoutConfig.visibleMax
+        );
       }
 
       function layout(animate, previousIndex) {
         slides.forEach(function (slide, index) {
           const offset = getOffset(index);
 
-          if (offset < -3 || offset > 3) {
+          if (!isVisibleOffset(offset)) {
             if (animate && previousIndex !== undefined) {
               const previousOffset = getOffset(index, previousIndex);
-              if (previousOffset >= -2 && previousOffset <= 2) {
-                const exitSlot = previousOffset < 0 ? -3 : 3;
+              if (isVisibleOffset(previousOffset)) {
+                const exitSlot =
+                  previousOffset <= layoutConfig.visibleMin
+                    ? layoutConfig.parkMin
+                    : layoutConfig.parkMax;
                 gsap.to(
                   slide,
                   Object.assign({}, getSlideProps(exitSlot), {
@@ -1243,7 +1324,10 @@ window.B4CARS_EASE =
               }
             }
 
-            const parkSlot = offset < 0 ? -3 : 3;
+            const parkSlot =
+              offset < layoutConfig.visibleMin
+                ? layoutConfig.parkMin
+                : layoutConfig.parkMax;
             gsap.set(slide, getSlideProps(parkSlot));
             return;
           }
@@ -1284,19 +1368,33 @@ window.B4CARS_EASE =
         slides.forEach(function (slide, index) {
           const currentOffset = getOffset(index, previousIndex);
           const nextOffset = getOffset(index, normalizedTarget);
-          const wasInRange = currentOffset >= -3 && currentOffset <= 3;
-          const willBeVisible = nextOffset >= -2 && nextOffset <= 2;
+          const wasInRange =
+            currentOffset >= layoutConfig.parkMin &&
+            currentOffset <= layoutConfig.parkMax;
+          const willBeVisible = isVisibleOffset(nextOffset);
 
           if (!wasInRange && willBeVisible) {
-            const entrySlot = travelDirection > 0 ? 3 : -3;
+            const entrySlot =
+              travelDirection > 0
+                ? layoutConfig.parkMax
+                : layoutConfig.parkMin;
             gsap.set(slide, getSlideProps(entrySlot));
           }
 
-          const wasInvisible = Math.abs(currentOffset) >= 3;
-          const willBeStaging = Math.abs(nextOffset) === 3;
+          const wasInvisible =
+            currentOffset <= layoutConfig.parkMin ||
+            currentOffset >= layoutConfig.parkMax;
+          const willBeStaging =
+            nextOffset === layoutConfig.parkMin ||
+            nextOffset === layoutConfig.parkMax;
           const crossesSides = currentOffset * nextOffset < 0;
           if (wasInvisible && willBeStaging && crossesSides) {
-            gsap.set(slide, getSlideProps(nextOffset > 0 ? 3 : -3));
+            gsap.set(
+              slide,
+              getSlideProps(
+                nextOffset > 0 ? layoutConfig.parkMax : layoutConfig.parkMin,
+              ),
+            );
           }
         });
 
