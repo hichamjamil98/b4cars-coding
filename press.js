@@ -6,7 +6,9 @@
     "use strict";
   
     document.addEventListener("DOMContentLoaded", () => {
-      const pressPage = document.querySelector(".section.is--press-hero");
+      const pressPage = document.querySelector(
+        ".section.is--press-list, .section.is--press-hero"
+      );
       if (!pressPage) return;
   
       document.querySelectorAll(".press--card").forEach((card) => {

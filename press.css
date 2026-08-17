@@ -7,8 +7,8 @@
    NAVBAR — PRESS PAGE ONLY
 ========================================================================== */
 
-body:has(.section.is--press-hero)
-.navbar.is--scrolled::before {
+body:has(.section.is--press-hero) .navbar.is--scrolled::before,
+body:has(.section.is--press-list) .navbar.is--scrolled::before {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -18,15 +18,15 @@ body:has(.section.is--press-hero)
   background-color: #f6f9f8 !important;
 }
 
-body:has(.section.is--press-hero)
-.navbar.is--scrolled > * {
+body:has(.section.is--press-hero) .navbar.is--scrolled > *,
+body:has(.section.is--press-list) .navbar.is--scrolled > * {
   position: relative;
   z-index: 1;
 }
 
 @media screen and (max-width: 991px) {
-  body:has(.section.is--press-hero)
-  .navbar.is--menu-open::before {
+  body:has(.section.is--press-hero) .navbar.is--menu-open::before,
+  body:has(.section.is--press-list) .navbar.is--menu-open::before {
     position: absolute;
     inset: 0;
     z-index: 0;
@@ -36,17 +36,16 @@ body:has(.section.is--press-hero)
     background-color: #f6f9f8 !important;
   }
 
-  body:has(.section.is--press-hero)
-  .navbar.is--menu-open > * {
+  body:has(.section.is--press-hero) .navbar.is--menu-open > *,
+  body:has(.section.is--press-list) .navbar.is--menu-open > * {
     position: relative;
     z-index: 1;
   }
 
-  body:has(.section.is--press-hero)
-  .navbar.is--menu-open
-  .nav--menu,
-  body:has(.section.is--press-hero)
-  .nav--menu.is--open {
+  body:has(.section.is--press-hero) .navbar.is--menu-open .nav--menu,
+  body:has(.section.is--press-hero) .nav--menu.is--open,
+  body:has(.section.is--press-list) .navbar.is--menu-open .nav--menu,
+  body:has(.section.is--press-list) .nav--menu.is--open {
     background-color: #f6f9f8 !important;
   }
 }
@@ -72,12 +71,8 @@ body:has(.section.is--press-hero)
   overflow: hidden;
 }
 
-.section.is--press-list .press--image-wrapper img,
-.section.is--press-list .press--card .image--absolute-100 {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.section.is--press-list .press--image-wrapper .image--absolute-100 {
+  z-index: 0;
   transform: scale(1);
   transform-origin: center;
   transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
@@ -90,9 +85,10 @@ body:has(.section.is--press-hero)
 ========================================================================== */
 
 .section.is--press-list .press--btn {
+  z-index: 1;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(1em);
+  transform: translateY(1rem);
   pointer-events: none;
   transition:
     opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
