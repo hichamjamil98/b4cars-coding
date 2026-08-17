@@ -258,7 +258,10 @@
   /* ========================================================================
      3. IMAGE PARALLAX
 
-     Add image="parallax" directly to an image.
+     image="parallax"          →  0 to -10
+     parallax-reverse          →  5 to 0
+     image="parallax-reverse"  →  5 to 0
+
      The parent wrapper should have overflow: hidden.
   ======================================================================== */
 
@@ -266,9 +269,16 @@
     if (typeof ScrollTrigger === "undefined") return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const images = document.querySelectorAll('[image="parallax"]');
+    setupImageParallax('[image="parallax"]', 0, -10);
+    setupImageParallax(
+      `${animSelector("parallax-reverse")}, [image="parallax-reverse"]`,
+      5,
+      0,
+    );
+  }
 
-    images.forEach((image) => {
+  function setupImageParallax(selector, fromY, toY) {
+    document.querySelectorAll(selector).forEach((image) => {
       if (image.dataset.parallaxReady === "true") return;
 
       image.dataset.parallaxReady = "true";
@@ -276,10 +286,10 @@
       gsap.fromTo(
         image,
         {
-          yPercent: 0,
+          yPercent: fromY,
         },
         {
-          yPercent: -10,
+          yPercent: toY,
           ease: "power2.inOut",
           scrollTrigger: {
             trigger: image.parentElement || image,
