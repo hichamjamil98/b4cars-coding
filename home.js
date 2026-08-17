@@ -1128,9 +1128,19 @@ function initCascadingSlider() {
   wrappers.forEach(setupInstance);
 
   function setupInstance(wrapper) {
-    const viewport = wrapper.querySelector("[data-cascading-viewport]");
+    const viewport =
+      wrapper.querySelector("[data-cascading-viewport]") ||
+      wrapper.querySelector(".cascading-slider__list") ||
+      wrapper.querySelector(".w-dyn-items");
     const prevButton = wrapper.querySelector("[data-cascading-slider-prev]");
     const nextButton = wrapper.querySelector("[data-cascading-slider-next]");
+
+    if (!viewport) return;
+
+    if (!viewport.hasAttribute("data-cascading-viewport")) {
+      viewport.setAttribute("data-cascading-viewport", "");
+    }
+
     const slides = Array.from(
       viewport.querySelectorAll("[data-cascading-slide]"),
     );
