@@ -1418,13 +1418,29 @@
   
       const form = section.querySelector("form.filter--wrapper");
   
+      const filtersTitle =
+        section.querySelector(
+          ".filter--card.is--title"
+        );
+  
+      const filtersDropdown =
+        section.querySelector(
+          ".filter--dropdown"
+        );
+  
       const resetButton =
         section.querySelector(
-          'a[data-wf--slot-item-button--variant="reset"]'
+          '[data-wf--slot-item-button--variant="reset"]'
         ) ||
-        section.querySelector(
-          'a .btn-animate-chars__text[aria-label="Réinitialiser"]'
-        )?.closest("a") ||
+        Array.from(
+          section.querySelectorAll(
+            ".filter--wrapper a, .filter--wrapper .button"
+          )
+        ).find((element) =>
+          /r[eé]initialiser/i.test(
+            element.textContent || ""
+          )
+        ) ||
         null;
   
   
@@ -1592,6 +1608,7 @@
           filterSelector: '[filter="price"]',
           dataKey: "price",
           format: formatPrice,
+          step: 10000,
         },
   
         km: {
@@ -2076,6 +2093,12 @@
             config.dataKey
           );
   
+        const step =
+          Number.isFinite(config.step) &&
+          config.step > 1
+            ? config.step
+            : 1;
+  
   
         const range = {
           absoluteMin:
@@ -2102,6 +2125,29 @@
   
         state.ranges[key] =
           range;
+  
+  
+        const snapValue = (
+          value
+        ) => {
+          const rounded =
+            Math.round(value);
+  
+          if (step <= 1) {
+            return rounded;
+          }
+  
+          const snapped =
+            Math.round(
+              rounded / step
+            ) * step;
+  
+          return clamp(
+            snapped,
+            range.absoluteMin,
+            range.absoluteMax
+          );
+        };
   
   
         const valueToPercent = (
@@ -2152,13 +2198,7 @@
               range.absoluteMin
             );
   
-          /*
-            Critical requirement:
-            values are ALWAYS integers.
-          */
-          return Math.round(
-            raw
-          );
+          return snapValue(raw);
         };
   
   
@@ -2204,7 +2244,7 @@
         ) => {
           range.min =
             clamp(
-              Math.round(nextValue),
+              snapValue(nextValue),
               range.absoluteMin,
               range.max
             );
@@ -2219,7 +2259,7 @@
         ) => {
           range.max =
             clamp(
-              Math.round(nextValue),
+              snapValue(nextValue),
               range.min,
               range.absoluteMax
             );
@@ -2339,36 +2379,42 @@
                   ? range.min
                   : range.max;
   
-              let delta = 0;
+              let direction = 0;
   
               if (
                 event.key === "ArrowRight" ||
                 event.key === "ArrowUp"
               ) {
-                delta = 1;
+                direction = 1;
               }
   
               if (
                 event.key === "ArrowLeft" ||
                 event.key === "ArrowDown"
               ) {
-                delta = -1;
+                direction = -1;
               }
   
-              if (!delta) return;
+              if (!direction) return;
   
               event.preventDefault();
   
+              const nextValue =
+                step > 1
+                  ? direction > 0
+                    ? Math.floor(
+                        currentValue / step
+                      ) * step + step
+                    : Math.ceil(
+                        currentValue / step
+                      ) * step - step
+                  : currentValue +
+                    direction;
+  
               if (type === "min") {
-                setMin(
-                  currentValue +
-                  delta
-                );
+                setMin(nextValue);
               } else {
-                setMax(
-                  currentValue +
-                  delta
-                );
+                setMax(nextValue);
               }
             }
           );
@@ -2512,9 +2558,234 @@
           "click",
           (event) => {
             event.preventDefault();
+            event.stopPropagation();
             resetAll();
           }
         );
+  
+        resetButton
+          .querySelectorAll("a")
+          .forEach((link) => {
+            link.addEventListener(
+              "click",
+              (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                resetAll();
+              }
+            );
+          });
+      }
+  
+  
+      /* ==========================================================================
+         MOBILE FILTER DROPDOWN  <= 991px
+      ========================================================================== */
+  
+      const MOBILE_FILTERS_MQ =
+        window.matchMedia(
+          "(max-width: 991px)"
+        );
+  
+      let mobileFiltersOpen = false;
+      let mobileFiltersCloseTimer = 0;
+  
+      const isMobileFilters = () =>
+        MOBILE_FILTERS_MQ.matches;
+  
+      const clearMobileFilterStyles = () => {
+        if (!filtersDropdown) return;
+  
+        filtersDropdown.classList.remove(
+          "is--open"
+        );
+  
+        filtersDropdown.style.display = "";
+        filtersDropdown.style.opacity = "";
+  
+        filtersTitle?.classList.remove(
+          "is--open"
+        );
+      };
+  
+      const syncFiltersTitleAria = () => {
+        if (!filtersTitle) return;
+  
+        if (!isMobileFilters()) {
+          filtersTitle.removeAttribute("role");
+          filtersTitle.removeAttribute("tabindex");
+          filtersTitle.removeAttribute(
+            "aria-expanded"
+          );
+          return;
+        }
+  
+        filtersTitle.setAttribute(
+          "role",
+          "button"
+        );
+  
+        filtersTitle.setAttribute(
+          "tabindex",
+          "0"
+        );
+  
+        filtersTitle.setAttribute(
+          "aria-expanded",
+          mobileFiltersOpen ? "true" : "false"
+        );
+      };
+  
+      const setMobileFiltersOpen = (open) => {
+        if (!filtersDropdown) return;
+  
+        if (!isMobileFilters()) {
+          mobileFiltersOpen = false;
+          clearMobileFilterStyles();
+          syncFiltersTitleAria();
+          return;
+        }
+  
+        mobileFiltersOpen = open;
+  
+        window.clearTimeout(
+          mobileFiltersCloseTimer
+        );
+  
+        filtersTitle?.classList.toggle(
+          "is--open",
+          open
+        );
+  
+        filtersDropdown.classList.toggle(
+          "is--open",
+          open
+        );
+  
+        syncFiltersTitleAria();
+  
+        if (open) {
+          filtersDropdown.style.display =
+            "flex";
+          filtersDropdown.style.opacity = "0";
+  
+          void filtersDropdown.offsetWidth;
+  
+          filtersDropdown.style.opacity = "1";
+          return;
+        }
+  
+        filtersDropdown.style.opacity = "0";
+  
+        const hideDropdown = () => {
+          if (mobileFiltersOpen) return;
+          filtersDropdown.style.display = "none";
+        };
+  
+        const reduceMotion =
+          window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+          ).matches;
+  
+        if (reduceMotion) {
+          hideDropdown();
+          return;
+        }
+  
+        mobileFiltersCloseTimer =
+          window.setTimeout(hideDropdown, 360);
+      };
+  
+      if (filtersTitle && filtersDropdown) {
+        syncFiltersTitleAria();
+  
+        filtersTitle.addEventListener(
+          "click",
+          (event) => {
+            if (!isMobileFilters()) return;
+  
+            event.preventDefault();
+            event.stopPropagation();
+  
+            setMobileFiltersOpen(
+              !mobileFiltersOpen
+            );
+          }
+        );
+  
+        filtersTitle.addEventListener(
+          "keydown",
+          (event) => {
+            if (!isMobileFilters()) return;
+  
+            if (
+              event.key === "Enter" ||
+              event.key === " "
+            ) {
+              event.preventDefault();
+              setMobileFiltersOpen(
+                !mobileFiltersOpen
+              );
+            }
+  
+            if (event.key === "Escape") {
+              setMobileFiltersOpen(false);
+            }
+          }
+        );
+  
+        document.addEventListener(
+          "click",
+          (event) => {
+            if (
+              !isMobileFilters() ||
+              !mobileFiltersOpen
+            ) {
+              return;
+            }
+  
+            if (
+              filtersDropdown.contains(
+                event.target
+              )
+            ) {
+              return;
+            }
+  
+            setMobileFiltersOpen(false);
+          }
+        );
+  
+        document.addEventListener(
+          "keydown",
+          (event) => {
+            if (event.key !== "Escape") return;
+            setMobileFiltersOpen(false);
+          }
+        );
+  
+        const onBreakpointChange = () => {
+          mobileFiltersOpen = false;
+          clearMobileFilterStyles();
+          syncFiltersTitleAria();
+        };
+  
+        if (
+          typeof MOBILE_FILTERS_MQ.addEventListener ===
+          "function"
+        ) {
+          MOBILE_FILTERS_MQ.addEventListener(
+            "change",
+            onBreakpointChange
+          );
+        } else if (
+          typeof MOBILE_FILTERS_MQ.addListener ===
+          "function"
+        ) {
+          MOBILE_FILTERS_MQ.addListener(
+            onBreakpointChange
+          );
+        }
       }
   
   

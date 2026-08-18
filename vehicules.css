@@ -504,6 +504,32 @@
   
   
   /* ==========================================================================
+     MOBILE FILTER DROPDOWN  <= 991px
+     Click .filter--card.is--title to reveal .filter--dropdown.
+  ========================================================================== */
+  
+  @media screen and (max-width: 991px) {
+    .section.is--vehicule-filter
+    .filter--card.is--title {
+      cursor: pointer;
+    }
+  
+    .section.is--vehicule-filter
+    .filter--dropdown {
+      display: none;
+      opacity: 0;
+      transition:
+        opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+  
+    .section.is--vehicule-filter
+    .filter--dropdown.is--open {
+      display: flex;
+    }
+  }
+  
+  
+  /* ==========================================================================
      MARQUE DROPDOWN
   ========================================================================== */
   
@@ -715,6 +741,8 @@
     .drop--wrapper,
     .section.is--vehicule-filter
     .drop--8,
+    .section.is--vehicule-filter
+    .filter--dropdown,
     .section.is--vehicule-filter
     .rod--grille,
     .section.is--vehicule-filter
