@@ -1615,6 +1615,7 @@
           filterSelector: '[filter="km"]',
           dataKey: "km",
           format: formatKm,
+          step: 10000,
         },
       };
   
