@@ -51,6 +51,7 @@ window.B4CARS_EASE =
     initScrollAnimations(EASE);
     initImageParallax();
     initParallaxFade(EASE);
+    initCircleRecherche();
     initNavbarScroll();
     initMobileNavbar(EASE);
     initCtaGallery(EASE);
@@ -563,6 +564,44 @@ window.B4CARS_EASE =
           });
         },
       });
+    });
+  }
+
+  /* ========================================================================
+     3c. CIRCLE RECHERCHE
+
+     .circle--recherche  →  opacity 0.5 / scale 0.9  to  1 / 1
+     Scrubbed with scroll as the circle enters the viewport.
+  ======================================================================== */
+
+  function initCircleRecherche() {
+    if (typeof ScrollTrigger === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    document.querySelectorAll(".circle--recherche").forEach((circle) => {
+      if (circle.dataset.circleRechercheReady === "true") return;
+
+      circle.dataset.circleRechercheReady = "true";
+
+      gsap.fromTo(
+        circle,
+        {
+          opacity: 0.5,
+          scale: 0.9,
+        },
+        {
+          opacity: 1,
+          scale: 1,
+          ease: "power2.inOut",
+          scrollTrigger: {
+            trigger: circle,
+            start: "top bottom",
+            end: "center center",
+            scrub: 1.25,
+            invalidateOnRefresh: true,
+          },
+        },
+      );
     });
   }
 
