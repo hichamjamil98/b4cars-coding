@@ -1068,9 +1068,9 @@ window.B4CARS_EASE =
         if (compactLeading) {
           layoutConfig = {
             visibleMin: 0,
-            visibleMax: 2,
+            visibleMax: 1,
             parkMin: -1,
-            parkMax: 3,
+            parkMax: 2,
           };
         } else if (isVenteLeading) {
           layoutConfig = {
@@ -1269,10 +1269,7 @@ window.B4CARS_EASE =
 
         if (isLeading) {
           const nextWidths = compactLeading
-            ? [
-                Math.max(siblingSlideWidth * 2, viewportWidth * 0.18),
-                Math.max(siblingSlideWidth * 1.2, viewportWidth * 0.1),
-              ]
+            ? [Math.max(siblingSlideWidth * 2.4, viewportWidth * 0.22)]
             : [
                 siblingSlideWidth,
                 siblingSlideWidth * 0.72,
