@@ -1749,6 +1749,15 @@
             visibleCount === 0
           );
         }
+  
+        /*
+          Hiding cards shortens the page, so sections below can enter
+          the viewport without their fade ScrollTriggers noticing.
+          refresh(true) recalculates start positions after layout settles.
+        */
+        if (typeof window.ScrollTrigger !== "undefined") {
+          window.ScrollTrigger.refresh(true);
+        }
       };
   
   
