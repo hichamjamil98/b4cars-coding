@@ -204,7 +204,9 @@ body.is--locked {
   color: #031e4d !important;
 }
 
-.navbar.is--scrolled:not(.is--menu-open) .button:hover {
+.navbar.is--scrolled:not(.is--menu-open)
+  [data-wf--slot-item-button--variant="base"]
+  .button:hover {
   color: #f6f9f8 !important;
 }
 
