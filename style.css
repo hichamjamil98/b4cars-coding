@@ -195,13 +195,17 @@ body.is--locked {
 */
 .navbar.is--scrolled:not(.is--menu-open) {
   background-color: #ffffff !important;
-  color: #01070b !important;
+  color: #031e4d !important;
 }
 
 .navbar.is--scrolled:not(.is--menu-open) a,
 .navbar.is--scrolled:not(.is--menu-open) .nav--brand,
 .navbar.is--scrolled:not(.is--menu-open) .menu--trigger {
-  color: #01070b !important;
+  color: #031e4d !important;
+}
+
+.navbar.is--scrolled:not(.is--menu-open) .button:hover {
+  color: #f6f9f8 !important;
 }
 
 /*
