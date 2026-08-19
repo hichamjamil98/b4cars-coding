@@ -10,19 +10,20 @@
   
     document.addEventListener("DOMContentLoaded", () => {
       const contactPage = document.querySelector(".section.is--contact");
-      if (!contactPage) return;
-  
-      document.body.classList.add("is--contact-page");
+      if (contactPage) {
+        document.body.classList.add("is--contact-page");
+      }
+
       initContactPhoneField();
     });
   
     function initContactPhoneField() {
-      const form = document.querySelector("#email-form");
       const phoneInput = document.querySelector("#T-l-phone");
+      const form = phoneInput?.closest("form");
   
       if (!form || !phoneInput) {
         console.warn(
-          "[B4Cars] #email-form ou #T-l-phone est introuvable."
+          "[B4Cars] Formulaire ou #T-l-phone est introuvable."
         );
         return;
       }
