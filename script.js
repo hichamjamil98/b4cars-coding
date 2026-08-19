@@ -148,11 +148,11 @@ window.B4CARS_EASE =
         `${animSelector("load-split")}, ${animSelector("loading-split")}`,
       )
       .forEach((element) => {
-      bindSplitAnimation(element, "load-split", ease, {
-        duration: 0.95,
-        delay: 0.22,
+        bindSplitAnimation(element, "load-split", ease, {
+          duration: 0.95,
+          delay: 0.22,
+        });
       });
-    });
   }
 
   function addLoadTween(timeline, selector, fromVars, position) {
@@ -296,11 +296,7 @@ window.B4CARS_EASE =
         };
       }
 
-      tween = gsap.fromTo(
-        lines,
-        { yPercent: 110, opacity: 0 },
-        vars,
-      );
+      tween = gsap.fromTo(lines, { yPercent: 110, opacity: 0 }, vars);
     };
 
     afterFonts(() => setup(false));
@@ -540,31 +536,33 @@ window.B4CARS_EASE =
   function initParallaxFade(ease) {
     if (typeof ScrollTrigger === "undefined") return;
 
-    document.querySelectorAll(animSelector("parallax-fade")).forEach((element) => {
-      if (element.dataset.parallaxFadeReady === "true") return;
+    document
+      .querySelectorAll(animSelector("parallax-fade"))
+      .forEach((element) => {
+        if (element.dataset.parallaxFadeReady === "true") return;
 
-      element.dataset.parallaxFadeReady = "true";
+        element.dataset.parallaxFadeReady = "true";
 
-      const targetWidth = element.getBoundingClientRect().width;
-      gsap.set(element, { width: 0 });
+        const targetWidth = element.getBoundingClientRect().width;
+        gsap.set(element, { width: 0 });
 
-      ScrollTrigger.create({
-        trigger: element,
-        start: "top 86%",
-        once: true,
-        onEnter: () => {
-          gsap.to(element, {
-            width: targetWidth,
-            opacity: 1,
-            y: 0,
-            duration: 0.85,
-            ease,
-            overwrite: "auto",
-            clearProps: "width,opacity,transform",
-          });
-        },
+        ScrollTrigger.create({
+          trigger: element,
+          start: "top 86%",
+          once: true,
+          onEnter: () => {
+            gsap.to(element, {
+              width: targetWidth,
+              opacity: 1,
+              y: 0,
+              duration: 0.85,
+              ease,
+              overwrite: "auto",
+              clearProps: "width,opacity,transform",
+            });
+          },
+        });
       });
-    });
   }
 
   /* ========================================================================
@@ -609,7 +607,7 @@ window.B4CARS_EASE =
      4. NAVBAR BACKGROUND ON SCROLL
 
      - At the top: restores the background and text color defined in Webflow.
-     - While scrolling: white background, #01070b text.
+     - While scrolling: white background, #031e4d text.
      - While the mobile menu is open: restores Webflow's original styles.
   ======================================================================== */
 
@@ -659,7 +657,7 @@ window.B4CARS_EASE =
 
       if (pageIsScrolled) {
         navbar.style.setProperty("background-color", "#ffffff", "important");
-        navbar.style.setProperty("color", "#01070b", "important");
+        navbar.style.setProperty("color", "#031e4d", "important");
       } else {
         restoreWebflowStyles();
       }
@@ -1052,9 +1050,7 @@ window.B4CARS_EASE =
         wrapper.querySelector(".swiper--btn.is--previous");
       const nextButton =
         wrapper.querySelector("[data-cascading-slider-next]") ||
-        wrapper.querySelector(
-          ".cascading-slider__nav .swiper--btn.is--next",
-        ) ||
+        wrapper.querySelector(".cascading-slider__nav .swiper--btn.is--next") ||
         wrapper.querySelector(".swiper--btn.is--next");
 
       if (!viewport) return;
@@ -1088,9 +1084,8 @@ window.B4CARS_EASE =
             '[data-wf--slot-item-vehicules-slider--variant="vente"]',
           ),
         ) ||
-        wrapper.getAttribute(
-          "data-wf--slot-item-vehicules-slider--variant",
-        ) === "vente";
+        wrapper.getAttribute("data-wf--slot-item-vehicules-slider--variant") ===
+          "vente";
 
       let isLeading = false;
       let layoutConfig = {
@@ -1571,9 +1566,7 @@ window.B4CARS_EASE =
 
           if (!wasInRange && willBeVisible) {
             const entrySlot =
-              travelDirection > 0
-                ? layoutConfig.parkMax
-                : layoutConfig.parkMin;
+              travelDirection > 0 ? layoutConfig.parkMax : layoutConfig.parkMin;
             gsap.set(slide, getSlideProps(entrySlot));
           }
 
@@ -1666,8 +1659,7 @@ window.B4CARS_EASE =
       const defaultFilterItem =
         filterItems.find(function (item) {
           return (
-            normalizeValue(item.getAttribute("filter") || "") ===
-            DEFAULT_FILTER
+            normalizeValue(item.getAttribute("filter") || "") === DEFAULT_FILTER
           );
         }) || filterItems[0];
 
