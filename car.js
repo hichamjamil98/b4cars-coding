@@ -101,43 +101,47 @@
   
       document
         .querySelectorAll(
-          '[format="km"], [format="price"]'
+          '[format="km"], [format="format"], [format="price"]'
         )
         .forEach(
           (
             element
           ) => {
-  
+
             if (
               !element.dataset.b4RawValue
             ) {
-  
+
               element.dataset.b4RawValue =
                 element.textContent.trim();
-  
+
             }
-  
-  
+
+
             const raw =
               parseInteger(
                 element.dataset.b4RawValue
               );
-  
-  
+
+
             if (
               raw === null
             ) {
               return;
             }
-  
-  
-            element.textContent =
+
+
+            const kind =
               element.getAttribute(
                 "format"
-              ) === "km"
-                ? `${formatGrouped(raw)}km`
-                : `${formatGrouped(raw)}€`;
-  
+              );
+
+
+            element.textContent =
+              kind === "price"
+                ? `${formatGrouped(raw)}€`
+                : `${formatGrouped(raw)}km`;
+
           }
         );
   
