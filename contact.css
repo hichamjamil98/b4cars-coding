@@ -2,7 +2,6 @@
    B4CARS — CONTACT PAGE V2
 ========================================================================== */
 
-
 /* ==========================================================================
    NAVBAR — SCROLL STATE
 ========================================================================== */
@@ -23,7 +22,6 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
   position: relative;
   z-index: 1;
 }
-
 
 /* ==========================================================================
    NAVBAR — OPEN TABLET / MOBILE
@@ -78,7 +76,7 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
   display: block !important;
   width: 100% !important;
   height: 100% !important;
-  min-height: inherit !important;
+  min-height: 3.125rem !important;
   margin: 0 !important;
   padding-left: 7.25rem !important;
   color: inherit !important;
@@ -86,7 +84,6 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
   text-align: left !important;
   box-sizing: border-box !important;
 }
-
 
 /* ==========================================================================
    SELECTED COUNTRY — CLOSED FIELD
@@ -112,7 +109,7 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
   min-width: 0 !important;
   height: 100% !important;
   margin: 0 !important;
-  padding: 0 0 0 1.25rem !important;
+  padding: 0 !important;
   color: inherit !important;
   font: inherit !important;
   line-height: inherit !important;
@@ -125,7 +122,7 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
   display: flex !important;
   align-items: center !important;
   gap: 0.35rem !important;
-  padding: 0 !important;
+  padding: 0 0.5rem !important;
 }
 
 .section.is--contact .contact--phone-field .iti__selected-dial-code {
@@ -141,7 +138,6 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
   margin: 0 !important;
   border-top-color: currentColor !important;
 }
-
 
 /* ==========================================================================
    DROPDOWN
@@ -163,7 +159,6 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
   box-shadow: 0 1.5rem 4rem rgba(3, 30, 77, 0.14) !important;
   opacity: 1 !important;
 }
-
 
 /* ==========================================================================
    SEARCH
@@ -196,7 +191,6 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
   border-radius: 0 !important;
   outline: none !important;
 }
-
 
 /* ==========================================================================
    COUNTRY LIST
@@ -237,7 +231,6 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
   opacity: 1 !important;
 }
 
-
 /* ==========================================================================
    FLAGS
 ========================================================================== */
@@ -250,7 +243,6 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
   transform: none !important;
 }
 
-
 /* ==========================================================================
    RESPONSIVE
 ========================================================================== */
@@ -258,10 +250,6 @@ body:has(.section.is--contact) .navbar.is--scrolled > * {
 @media screen and (max-width: 479px) {
   .section.is--contact .contact--phone-field > input[type="tel"] {
     padding-left: 6.75rem !important;
-  }
-
-  .section.is--contact .contact--phone-field .iti__selected-country {
-    padding-left: 1rem !important;
   }
 
   .section.is--contact .contact--phone-field .iti__dropdown-content {
