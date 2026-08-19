@@ -1,77 +1,20 @@
 /* ==========================================================================
    B4CARS — CONTACT PAGE V2
-   Navbar + intl-tel-input loaded automatically
 ========================================================================== */
 
 (() => {
     "use strict";
   
-    const ITI_CSS =
-      "https://cdn.jsdelivr.net/npm/intl-tel-input@25/build/css/intlTelInput.css";
-  
-    const ITI_JS =
-      "https://cdn.jsdelivr.net/npm/intl-tel-input@25/build/js/intlTelInput.min.js";
-  
     const ITI_UTILS =
       "https://cdn.jsdelivr.net/npm/intl-tel-input@25/build/js/utils.js";
   
-    document.addEventListener("DOMContentLoaded", async () => {
+    document.addEventListener("DOMContentLoaded", () => {
       const contactPage = document.querySelector(".section.is--contact");
       if (!contactPage) return;
   
       document.body.classList.add("is--contact-page");
-  
-      try {
-        await loadIntlTelInput();
-        initContactPhoneField();
-      } catch (error) {
-        console.error(
-          "[B4Cars] Impossible de charger intl-tel-input.",
-          error
-        );
-      }
+      initContactPhoneField();
     });
-  
-    function loadIntlTelInput() {
-      loadStylesheet(ITI_CSS);
-  
-      if (typeof window.intlTelInput === "function") {
-        return Promise.resolve();
-      }
-  
-      return new Promise((resolve, reject) => {
-        const existingScript = document.querySelector(
-          'script[data-b4cars-intl-tel-input]'
-        );
-  
-        if (existingScript) {
-          existingScript.addEventListener("load", resolve, { once: true });
-          existingScript.addEventListener("error", reject, { once: true });
-          return;
-        }
-  
-        const script = document.createElement("script");
-        script.src = ITI_JS;
-        script.async = true;
-        script.dataset.b4carsIntlTelInput = "true";
-  
-        script.addEventListener("load", resolve, { once: true });
-        script.addEventListener("error", reject, { once: true });
-  
-        document.head.appendChild(script);
-      });
-    }
-  
-    function loadStylesheet(href) {
-      if (document.querySelector(`link[href="${href}"]`)) return;
-  
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = href;
-      link.dataset.b4carsIntlTelInput = "true";
-  
-      document.head.appendChild(link);
-    }
   
     function initContactPhoneField() {
       const form = document.querySelector("#email-form");
