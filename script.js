@@ -908,9 +908,7 @@ window.B4CARS_EASE =
     const dropdowns = [...document.querySelectorAll(".navdropdown")];
     if (!dropdowns.length) return;
 
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    );
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const hoverMedia = window.matchMedia("(hover: hover) and (pointer: fine)");
     const breakpoint = window.matchMedia("(max-width: 991px)");
     const instances = [];
@@ -988,11 +986,7 @@ window.B4CARS_EASE =
         timeline = gsap.timeline();
         timeline
           .set(list, { display: "flex", pointerEvents: "auto" })
-          .to(
-            list,
-            { opacity: 1, y: 0, duration: 0.42, ease },
-            0,
-          )
+          .to(list, { opacity: 1, y: 0, duration: 0.42, ease }, 0)
           .to(
             items,
             {
@@ -1006,11 +1000,7 @@ window.B4CARS_EASE =
           );
 
         if (icon) {
-          timeline.to(
-            icon,
-            { rotate: 180, duration: 0.4, ease },
-            0,
-          );
+          timeline.to(icon, { rotate: 180, duration: 0.4, ease }, 0);
         }
       }
 
@@ -1916,3 +1906,58 @@ window.B4CARS_EASE =
     }
   }
 })();
+
+// Parallax Image Slider (Smooothy)
+
+function initParallaxImageSlider() {
+  document.querySelectorAll("[data-parallax-init]").forEach((root) => {
+    // The smooothy list
+    const wrapper = root.querySelector("[data-parallax-slider]");
+    if (!wrapper) return;
+
+    // One parallax layer per slide (optional)
+    const parallaxItems = [...wrapper.children].map((slide) =>
+      slide.querySelector("[data-parallax-inner]"),
+    );
+
+    // Parallax amount
+    const amountAttr = wrapper.getAttribute("data-parallax-amount");
+    const amount = amountAttr !== null ? parseFloat(amountAttr) : 12;
+
+    // Snap to a slide
+    const snap = wrapper.getAttribute("data-parallax-snap") !== "false";
+
+    // Loop
+    const infinite = wrapper.getAttribute("data-parallax-infinite") !== "false";
+
+    // Slide smoothing
+    const lerpAttr = wrapper.getAttribute("data-parallax-lerp");
+    const lerp = lerpAttr !== null ? parseFloat(lerpAttr) : 0.3;
+
+    const maxOffset = 25;
+
+    const slider = new Smooothy(wrapper, {
+      infinite,
+      snap,
+      lerpFactor: lerp,
+      onUpdate: ({ parallaxValues }) => {
+        parallaxItems.forEach((item, i) => {
+          if (!item) return;
+          const offset = gsap.utils.clamp(
+            -maxOffset,
+            maxOffset,
+            parallaxValues[i] * amount,
+          );
+          item.style.transform = `translateX(${offset}%)`;
+        });
+      },
+    });
+
+    gsap.ticker.add(() => slider.update());
+  });
+}
+
+// Initialize Parallax Image Slider (Smooothy)
+document.addEventListener("DOMContentLoaded", () => {
+  initParallaxImageSlider();
+});
