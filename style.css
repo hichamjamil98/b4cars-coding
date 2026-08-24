@@ -498,6 +498,28 @@ body.is--locked {
 }
 
 /* ==========================================================================
+   PARALLAX IMAGE SLIDER (SMOOOTHY)
+   Horizontal swipe without blocking vertical page scroll.
+========================================================================== */
+
+[data-parallax-slider] {
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: grab;
+}
+
+[data-parallax-slider]:active {
+  cursor: grabbing;
+}
+
+[data-parallax-slider] img,
+[data-parallax-slider] a {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* ==========================================================================
    ANIMATED FILM GRAIN EFFECT
 ========================================================================== */
 

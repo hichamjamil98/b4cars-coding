@@ -1953,8 +1953,139 @@ function initParallaxImageSlider() {
       },
     });
 
+    enableParallaxSliderSwipe(wrapper, slider);
     gsap.ticker.add(() => slider.update());
   });
+}
+
+function enableParallaxSliderSwipe(wrapper, slider) {
+  const TAP_PX = 10;
+  const TAP_MS = 400;
+  const AXIS_PX = 6;
+
+  wrapper.style.touchAction = "pan-y";
+  wrapper.style.userSelect = "none";
+  wrapper.style.webkitUserSelect = "none";
+
+  wrapper.querySelectorAll("img").forEach((image) => {
+    image.draggable = false;
+    image.style.pointerEvents = "none";
+    image.style.webkitUserDrag = "none";
+  });
+
+  wrapper.querySelectorAll("a").forEach((link) => {
+    link.draggable = false;
+    link.style.pointerEvents = "none";
+  });
+
+  let startX = 0;
+  let startY = 0;
+  let startTime = 0;
+  let startItem = null;
+  let axis = null;
+  let trackingTouch = false;
+
+  function slideFromPoint(x, y) {
+    const stack = document.elementsFromPoint(x, y);
+    return stack.find((node) => node.closest && wrapper.contains(node) && node.closest(".parallax-slider__item"));
+  }
+
+  function navigateFromTap(clientX, clientY) {
+    const item =
+      startItem ||
+      slideFromPoint(clientX, clientY)?.closest(".parallax-slider__item");
+    if (!item || !wrapper.contains(item)) return;
+
+    const button = item.querySelector(".fiche--btn-wrapper a, a.button");
+    if (button) {
+      const rect = button.getBoundingClientRect();
+      const hitButton =
+        clientX >= rect.left &&
+        clientX <= rect.right &&
+        clientY >= rect.top &&
+        clientY <= rect.bottom;
+      if (hitButton) {
+        button.click();
+        return;
+      }
+    }
+
+    const cardLink = item.querySelector(".car--card-link") || item.querySelector("a");
+    if (cardLink) cardLink.click();
+  }
+
+  wrapper.addEventListener("pointerdown", (event) => {
+    if (event.isPrimary === false) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+
+    startX = event.clientX;
+    startY = event.clientY;
+    startTime = Date.now();
+    startItem = event.target.closest(".parallax-slider__item");
+    axis = null;
+  });
+
+  wrapper.addEventListener("pointerup", (event) => {
+    if (!startTime) return;
+
+    const elapsed = Date.now() - startTime;
+    const dx = Math.abs(event.clientX - startX);
+    const dy = Math.abs(event.clientY - startY);
+    const wasTap = dx < TAP_PX && dy < TAP_PX && elapsed < TAP_MS;
+    const wasDragging = slider.isDragging === true;
+
+    startTime = 0;
+    axis = null;
+
+    if (wasDragging || !wasTap) return;
+    navigateFromTap(event.clientX, event.clientY);
+  });
+
+  wrapper.addEventListener("pointercancel", () => {
+    startTime = 0;
+    axis = null;
+    trackingTouch = false;
+  });
+
+  wrapper.addEventListener(
+    "touchstart",
+    (event) => {
+      if (event.touches.length !== 1) return;
+      trackingTouch = true;
+      axis = null;
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
+    },
+    { passive: true },
+  );
+
+  wrapper.addEventListener(
+    "touchmove",
+    (event) => {
+      if (!trackingTouch || event.touches.length !== 1) return;
+
+      const dx = event.touches[0].clientX - startX;
+      const dy = event.touches[0].clientY - startY;
+
+      if (!axis && (Math.abs(dx) > AXIS_PX || Math.abs(dy) > AXIS_PX)) {
+        axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+      }
+
+      if (axis === "x") {
+        event.preventDefault();
+      }
+    },
+    { passive: false },
+  );
+
+  wrapper.addEventListener(
+    "touchend",
+    () => {
+      trackingTouch = false;
+      axis = null;
+    },
+    { passive: true },
+  );
 }
 
 // Initialize Parallax Image Slider (Smooothy)
