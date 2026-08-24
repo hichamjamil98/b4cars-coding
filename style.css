@@ -519,6 +519,68 @@ body.is--locked {
   user-select: none;
 }
 
+/* Same card hover as the vehicles listing. */
+[data-parallax-slider] .car--card {
+  position: relative;
+}
+
+[data-parallax-slider] .car--card .hover--caritem,
+[data-parallax-slider] .car--card .fiche--btn-wrapper {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.45s;
+}
+
+[data-parallax-slider] .car--card .fiche--btn-wrapper {
+  transform: translateY(0.75rem);
+  transition:
+    opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.45s;
+}
+
+[data-parallax-slider] .car--card .caritem--text {
+  transition:
+    color 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-parallax-slider] .car--card .caritem--text * {
+  color: inherit;
+  transition: color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-parallax-slider] .car--card:hover .hover--caritem,
+  [data-parallax-slider] .car--card:hover .fiche--btn-wrapper {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+
+  [data-parallax-slider] .car--card:hover .fiche--btn-wrapper {
+    transform: translateY(0);
+  }
+
+  [data-parallax-slider] .car--card:hover .caritem--text {
+    color: #f6f9f8;
+    background-color: #031e4d;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-parallax-slider] .car--card .hover--caritem,
+  [data-parallax-slider] .car--card .fiche--btn-wrapper,
+  [data-parallax-slider] .car--card .caritem--text,
+  [data-parallax-slider] .car--card .caritem--text * {
+    transition: none !important;
+  }
+}
+
 /* ==========================================================================
    ANIMATED FILM GRAIN EFFECT
 ========================================================================== */
