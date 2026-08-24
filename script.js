@@ -54,6 +54,7 @@ window.B4CARS_EASE =
     initCircleRecherche();
     initNavbarScroll();
     initMobileNavbar(EASE);
+    initNavDropdown(EASE);
     initCtaGallery(EASE);
     initCascadingSlider();
   });
@@ -603,6 +604,8 @@ window.B4CARS_EASE =
     });
   }
 
+  let closeAllNavDropdowns = () => {};
+
   /* ========================================================================
      4. NAVBAR BACKGROUND ON SCROLL
 
@@ -693,7 +696,9 @@ window.B4CARS_EASE =
 
     if (!navbar || !menu || !trigger) return;
 
-    const links = [...menu.querySelectorAll("a")];
+    const links = [
+      ...menu.querySelectorAll(":scope > a, :scope > .navdropdown"),
+    ];
     let isOpen = false;
     let timeline = null;
 
@@ -786,6 +791,7 @@ window.B4CARS_EASE =
       if (!isOpen && !immediate) return;
       isOpen = false;
 
+      closeAllNavDropdowns({ immediate: true });
       timeline?.kill();
       trigger.setAttribute("aria-expanded", "false");
       trigger.setAttribute("aria-label", "Ouvrir le menu");
@@ -884,6 +890,240 @@ window.B4CARS_EASE =
     });
 
     if (breakpoint.matches) setClosedState();
+  }
+
+  /* ========================================================================
+     5b. NAV DROPDOWN
+
+     .navdropdown
+     .navdropdown--trigger
+     .navdropdown--icon
+     .navdropdown--list
+
+     Desktop: open on hover / keyboard focus.
+     Tablet / mobile: tap the trigger to expand.
+  ======================================================================== */
+
+  function initNavDropdown(ease) {
+    const dropdowns = [...document.querySelectorAll(".navdropdown")];
+    if (!dropdowns.length) return;
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
+    const hoverMedia = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const breakpoint = window.matchMedia("(max-width: 991px)");
+    const instances = [];
+
+    const usesHover = () => hoverMedia.matches && !breakpoint.matches;
+
+    function closeOthers(current) {
+      instances.forEach((instance) => {
+        if (instance !== current) instance.close({ immediate: true });
+      });
+    }
+
+    dropdowns.forEach((dropdown) => {
+      const trigger = dropdown.querySelector(".navdropdown--trigger");
+      const list = dropdown.querySelector(".navdropdown--list");
+      const icon = dropdown.querySelector(".navdropdown--icon");
+      const items = list ? [...list.children] : [];
+
+      if (!trigger || !list) return;
+
+      let isOpen = false;
+      let timeline = null;
+      let closeTimer = 0;
+
+      trigger.setAttribute("role", "button");
+      trigger.setAttribute("tabindex", "0");
+      trigger.setAttribute("aria-expanded", "false");
+      trigger.setAttribute("aria-haspopup", "true");
+
+      if (!list.id) {
+        list.id = `navdropdown-list-${instances.length + 1}`;
+      }
+
+      trigger.setAttribute("aria-controls", list.id);
+      list.setAttribute("aria-hidden", "true");
+
+      gsap.set(list, {
+        display: "none",
+        opacity: 0,
+        y: reducedMotion.matches ? 0 : "0.5rem",
+        pointerEvents: "none",
+      });
+
+      gsap.set(items, {
+        opacity: 0,
+        y: reducedMotion.matches ? 0 : "0.6rem",
+      });
+
+      if (icon) gsap.set(icon, { rotate: 0 });
+
+      function open() {
+        window.clearTimeout(closeTimer);
+        if (isOpen) return;
+
+        isOpen = true;
+        closeOthers(instance);
+        timeline?.kill();
+
+        dropdown.classList.add("is--open");
+        trigger.setAttribute("aria-expanded", "true");
+        list.setAttribute("aria-hidden", "false");
+
+        if (reducedMotion.matches) {
+          gsap.set(list, {
+            display: "flex",
+            opacity: 1,
+            y: 0,
+            pointerEvents: "auto",
+          });
+          gsap.set(items, { opacity: 1, y: 0 });
+          if (icon) gsap.set(icon, { rotate: 180 });
+          return;
+        }
+
+        timeline = gsap.timeline();
+        timeline
+          .set(list, { display: "flex", pointerEvents: "auto" })
+          .to(
+            list,
+            { opacity: 1, y: 0, duration: 0.42, ease },
+            0,
+          )
+          .to(
+            items,
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.45,
+              stagger: 0.045,
+              ease,
+            },
+            0.04,
+          );
+
+        if (icon) {
+          timeline.to(
+            icon,
+            { rotate: 180, duration: 0.4, ease },
+            0,
+          );
+        }
+      }
+
+      function close({ immediate = false } = {}) {
+        window.clearTimeout(closeTimer);
+        if (!isOpen && !immediate) return;
+
+        isOpen = false;
+        timeline?.kill();
+        dropdown.classList.remove("is--open");
+        trigger.setAttribute("aria-expanded", "false");
+        list.setAttribute("aria-hidden", "true");
+
+        if (immediate || reducedMotion.matches) {
+          gsap.set(list, {
+            display: "none",
+            opacity: 0,
+            y: reducedMotion.matches ? 0 : "0.5rem",
+            pointerEvents: "none",
+          });
+          gsap.set(items, {
+            opacity: 0,
+            y: reducedMotion.matches ? 0 : "0.6rem",
+          });
+          if (icon) gsap.set(icon, { rotate: 0 });
+          return;
+        }
+
+        timeline = gsap.timeline({
+          onComplete: () => {
+            gsap.set(list, { display: "none", pointerEvents: "none" });
+          },
+        });
+
+        timeline
+          .to(
+            items,
+            {
+              opacity: 0,
+              y: "0.4rem",
+              duration: 0.22,
+              stagger: { each: 0.02, from: "end" },
+              ease,
+            },
+            0,
+          )
+          .to(list, { opacity: 0, y: "0.4rem", duration: 0.28, ease }, 0.04);
+
+        if (icon) {
+          timeline.to(icon, { rotate: 0, duration: 0.32, ease }, 0);
+        }
+      }
+
+      function scheduleClose() {
+        window.clearTimeout(closeTimer);
+        closeTimer = window.setTimeout(() => close(), 120);
+      }
+
+      const instance = { open, close, dropdown };
+      instances.push(instance);
+
+      dropdown.addEventListener("pointerenter", (event) => {
+        if (event.pointerType === "touch") return;
+        if (!usesHover()) return;
+        open();
+      });
+
+      dropdown.addEventListener("pointerleave", (event) => {
+        if (event.pointerType === "touch") return;
+        if (!usesHover()) return;
+        scheduleClose();
+      });
+
+      dropdown.addEventListener("focusin", () => {
+        if (usesHover()) open();
+      });
+
+      dropdown.addEventListener("focusout", (event) => {
+        if (dropdown.contains(event.relatedTarget)) return;
+        close();
+      });
+
+      trigger.addEventListener("click", (event) => {
+        if (usesHover()) return;
+        event.preventDefault();
+        isOpen ? close() : open();
+      });
+
+      trigger.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          isOpen ? close() : open();
+        }
+      });
+    });
+
+    closeAllNavDropdowns = (options = {}) => {
+      instances.forEach((instance) => instance.close(options));
+    };
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeAllNavDropdowns();
+    });
+
+    document.addEventListener("pointerdown", (event) => {
+      if (usesHover()) return;
+      if (event.target.closest(".navdropdown")) return;
+      closeAllNavDropdowns();
+    });
+
+    breakpoint.addEventListener("change", () => {
+      closeAllNavDropdowns({ immediate: true });
+    });
   }
 
   /* ========================================================================

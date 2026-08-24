@@ -200,7 +200,8 @@ body.is--locked {
 
 .navbar.is--scrolled:not(.is--menu-open) a,
 .navbar.is--scrolled:not(.is--menu-open) .nav--brand,
-.navbar.is--scrolled:not(.is--menu-open) .menu--trigger {
+.navbar.is--scrolled:not(.is--menu-open) .menu--trigger,
+.navbar.is--scrolled:not(.is--menu-open) .navdropdown {
   color: #031e4d !important;
 }
 
@@ -217,6 +218,69 @@ body.is--locked {
 */
 .navbar.is--menu-open {
   transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+/* ==========================================================================
+   NAV DROPDOWN
+========================================================================== */
+
+.navdropdown {
+  position: relative;
+}
+
+.navdropdown--trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.navdropdown--trigger:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 0.3rem;
+}
+
+.navdropdown--icon {
+  display: block;
+  width: 0.7em;
+  height: auto;
+  flex-shrink: 0;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.navdropdown--list {
+  display: none;
+  flex-direction: column;
+  align-items: stretch;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+@media screen and (min-width: 992px) {
+  .navbar,
+  .navbar .container--nav,
+  .nav--menu {
+    overflow: visible;
+  }
+
+  .navdropdown--list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1003;
+    min-width: max-content;
+    padding-top: 0.85rem;
+  }
+}
+
+@media screen and (max-width: 991px) {
+  .navdropdown--list {
+    width: 100%;
+    padding: 0.35rem 0 0 0.75rem;
+  }
 }
 
 /* ========================================================================== 
@@ -264,7 +328,8 @@ body.is--locked {
     pointer-events: auto;
   }
 
-  .nav--menu > a {
+  .nav--menu > a,
+  .nav--menu > .navdropdown {
     width: 100%;
     opacity: 0;
     transform: translateY(1.5rem);
@@ -280,7 +345,8 @@ body.is--locked {
     pointer-events: auto !important;
   }
 
-  .nav--menu > a {
+  .nav--menu > a,
+  .nav--menu > .navdropdown {
     opacity: 1 !important;
     transform: none !important;
     filter: none !important;
