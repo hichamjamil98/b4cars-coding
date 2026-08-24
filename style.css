@@ -529,22 +529,18 @@ body.is--locked {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition:
-    opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
     visibility 0s linear 0.45s;
 }
 
 [data-parallax-slider] .car--card .fiche--btn-wrapper {
   transform: translateY(0.75rem);
-  transition:
-    opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-    visibility 0s linear 0.45s;
+  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.45s;
 }
 
 [data-parallax-slider] .car--card .caritem--text {
-  transition:
-    color 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+  transition: color 0.5s cubic-bezier(0.22, 1, 0.36, 1),
     background-color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -568,7 +564,7 @@ body.is--locked {
 
   [data-parallax-slider] .car--card:hover .caritem--text {
     color: #f6f9f8;
-    background-color: #031e4d;
+    background-color: #0c0c0c;
   }
 }
 
