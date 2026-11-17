@@ -50,6 +50,86 @@
         );
   
       if (!page) return;
+
+
+      /* ==========================================================================
+         MERGE MULTI-IMAGE GALLERIES (Galerie 1–4 → one Swiper)
+
+         Webflow Multi-image fields max out at 25 images. The Cars template
+         can expose up to 4 Collection Lists:
+           [data-b4-gallery-target="1"]  → Galerie 1 (primary wrapper)
+           [data-b4-gallery-source="2"]  → Galerie 2
+           [data-b4-gallery-source="3"]  → Galerie 3
+           [data-b4-gallery-source="4"]  → Galerie 4
+
+         This moves every slide into the primary .swiper-wrapper.is--car
+         before the desktop/mobile gallery initializes.
+      ========================================================================== */
+
+      const mergeGallerySources = () => {
+        const targetList =
+          page.querySelector(
+            '[data-b4-gallery-target="1"]'
+          ) ||
+          page.querySelector(
+            ".swiper.is--car"
+          );
+
+        const targetWrapper =
+          targetList?.querySelector(
+            ".swiper-wrapper.is--car"
+          ) ||
+          targetList?.querySelector(
+            ".w-dyn-items"
+          );
+
+        if (!targetWrapper) return;
+
+        const sources = [
+          ...page.querySelectorAll(
+            "[data-b4-gallery-source]"
+          ),
+        ].sort(
+          (a, b) =>
+            Number(
+              a.getAttribute(
+                "data-b4-gallery-source"
+              ) || 0
+            ) -
+            Number(
+              b.getAttribute(
+                "data-b4-gallery-source"
+              ) || 0
+            )
+        );
+
+        sources.forEach((source) => {
+          const slides = [
+            ...source.querySelectorAll(
+              ".swiper-slide.is--car, .w-dyn-item"
+            ),
+          ];
+
+          slides.forEach((slide) => {
+            if (
+              !slide.classList.contains(
+                "swiper-slide"
+              )
+            ) {
+              slide.classList.add(
+                "swiper-slide",
+                "is--car"
+              );
+            }
+
+            targetWrapper.appendChild(slide);
+          });
+
+          source.remove();
+        });
+      };
+
+      mergeGallerySources();
   
   
       /* ==========================================================================
