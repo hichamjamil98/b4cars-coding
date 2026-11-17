@@ -283,6 +283,14 @@ body:has(.section.is--vehiculetemplate-hero)
       opacity;
   }
 
+  /* Side strips are clickable — force pointer on the slide and all children */
+  .section.is--vehiculetemplate-hero
+  .swiper-slide.is--car:not(.b4-car-active):not(.b4-car-hidden),
+  .section.is--vehiculetemplate-hero
+  .swiper-slide.is--car:not(.b4-car-active):not(.b4-car-hidden) * {
+    cursor: pointer !important;
+  }
+
   .section.is--vehiculetemplate-hero
   .swiper-slide.is--car.is-no-transition,
   .section.is--vehiculetemplate-hero
@@ -329,7 +337,12 @@ body:has(.section.is--vehiculetemplate-hero)
     width: 100% !important;
     height: var(--car-active-height);
 
-    cursor: default;
+    cursor: default !important;
+  }
+
+  .section.is--vehiculetemplate-hero
+  .swiper-slide.is--car.b4-car-active * {
+    cursor: default !important;
   }
 
   /* Overlay--40 visible on every slide by default.
@@ -366,7 +379,6 @@ body:has(.section.is--vehiculetemplate-hero)
       );
 
     height: var(--car-side-h-1);
-    cursor: pointer;
   }
 
   .section.is--vehiculetemplate-hero
@@ -382,7 +394,6 @@ body:has(.section.is--vehiculetemplate-hero)
       );
 
     height: var(--car-side-h-2);
-    cursor: pointer;
   }
 
   .section.is--vehiculetemplate-hero
@@ -398,7 +409,6 @@ body:has(.section.is--vehiculetemplate-hero)
       );
 
     height: var(--car-side-h-3);
-    cursor: pointer;
   }
 
 
@@ -418,7 +428,6 @@ body:has(.section.is--vehiculetemplate-hero)
       );
 
     height: var(--car-side-h-1);
-    cursor: pointer;
   }
 
   .section.is--vehiculetemplate-hero
@@ -434,7 +443,6 @@ body:has(.section.is--vehiculetemplate-hero)
       );
 
     height: var(--car-side-h-2);
-    cursor: pointer;
   }
 
   .section.is--vehiculetemplate-hero
@@ -450,7 +458,6 @@ body:has(.section.is--vehiculetemplate-hero)
       );
 
     height: var(--car-side-h-3);
-    cursor: pointer;
   }
 
 
