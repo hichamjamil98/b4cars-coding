@@ -1,0 +1,35 @@
+---
+description: Pin B4Cars Webflow work to this repo’s project MCP only
+alwaysApply: true
+---
+
+# Webflow MCP — B4Cars (`webflow-b4cars`)
+
+## Pinned MCP (this repo only)
+
+- **MCP server name:** `webflow-b4cars`
+- **Site display name:** B4cars
+- **Short name / subdomain:** `b4cars-staging`
+- **Site ID:** `6a69c62a75484a295b382ecc`
+- **Staging URL:** https://b4cars-staging.webflow.io/
+- **Live URL(s):** none on Webflow yet (legacy WordPress still at https://b4-cars.com/)
+- **Custom code host:** Netlify — https://b4cars-coding.netlify.app/
+
+## Hard rules
+
+- Use **only** the project MCP server `webflow-b4cars` for Webflow on this repo.
+- **Never** use `plugin-webflow-webflow` or any other repo’s Webflow MCP connection.
+- If `webflow-b4cars` is missing, unauthenticated, or shows **0 tools**, ask the user to fix/authenticate it — **do not fall back** to another Webflow MCP.
+- Do not publish, edit CMS, or change Designer content until sites have been listed via `webflow-b4cars` and the intended site/workspace access is verified.
+
+## Troubleshooting (0 tools)
+
+If `webflow-b4cars` is green but shows 0 tools:
+
+1. Disable the Webflow plugin MCP (`plugin-webflow-webflow`) in this workspace
+2. Logout/clear auth on `webflow-b4cars`
+3. Authenticate again
+4. In OAuth, select the correct workspace and CHECK this site (greyed-out = not owner/admin → will stay at 0 tools)
+5. Confirm UI shows ~37 tools, not 0
+
+Healthy log signal: `auth=valid` (not `auth=unknown`)
